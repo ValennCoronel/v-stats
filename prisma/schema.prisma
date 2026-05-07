@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  COACH
+  PLAYER
+}
+
+enum Position {
+  SETTER
+  OUTSIDE_HITTER
+  OPPOSITE_HITTER
+  MIDDLE_BLOCKER
+  LIBERO
+  DEFENSIVE_SPECIALIST
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role     @default(COACH)
+  displayName  String?  @map("display_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  ownedTeams    Team[]         @relation("TeamOwner")
+  opponentTeams OpponentTeam[] @relation("OpponentTeamOwner")
+  tournaments   Tournament[]   @relation("TournamentOwner")
+
+  @@map("users")
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  logoUrl   String?  @map("logo_url")
+  ownerId   String   @map("owner_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  owner   User     @relation("TeamOwner", fields: [ownerId], references: [id])
+  players Player[]
+  matches Match[]
+
+  @@map("teams")
+}
+
+model Player {
+  id            String   @id @default(cuid())
+  teamId        String   @map("team_id")
+  name          String
+  number        Int
+  position      Position
+  injuryHistory String?  @map("injury_history")
+  avatarUrl     String?  @map("avatar_url")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  team       Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  matchStats PlayerMatchStats[]
+
+  @@unique([teamId, number])
+  @@map("players")
+}
+
+model Match {
+  id              String   @id @default(cuid())
+  teamId          String   @map("team_id")
+  opponent        String
+  opponentTeamId  String?  @map("opponent_team_id")
+  tournament      String?
+  tournamentId    String?  @map("tournament_id")
+  date            DateTime
+  result          String?  // "WIN" | "LOSS" | "DRAW" | null
+  finalScore      String?  @map("final_score") // "3-1"
+  setScores       Json?    @map("set_scores") // [{us:25,them:20}, ...]
+  status          String   @default("setup") // "setup" | "live" | "finished"
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  team          Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  opponentTeam  OpponentTeam?     @relation(fields: [opponentTeamId], references: [id], onDelete: SetNull)
+  tournamentRef Tournament?       @relation(fields: [tournamentId], references: [id], onDelete: SetNull)
+  playerStats   PlayerMatchStats[]
+  actions       MatchActionLog[]
+
+  @@map("matches")
+}
+
+/// Player metrics per match — aggregated stats
+model PlayerMatchStats {
+  id       String @id @default(cuid())
+  matchId  String @map("match_id")
+  playerId String @map("player_id")
+
+  // Positive actions
+  puntos           Int @default(0)
+  ataquesPositivos Int @default(0) @map("ataques_positivos")
+  ventajasTacticas Int @default(0) @map("ventajas_tacticas")
+  defensasPositivas Int @default(0) @map("defensas_positivas")
+  bloqueosPositivos Int @default(0) @map("bloqueos_positivos")
+  aces             Int @default(0)
+
+  // Negative actions
+  bloqueosErrados   Int @default(0) @map("bloqueos_errados")
+  erroresAtaque     Int @default(0) @map("errores_ataque")
+  erroresRecepcion  Int @default(0) @map("errores_recepcion")
+  erroresSaque      Int @default(0) @map("errores_saque")
+  erroresTacticos   Int @default(0) @map("errores_tacticos")
+
+  match  Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, playerId])
+  @@map("player_match_stats")
+}
+
+/// Raw action log — append-only, for replay/audit
+model MatchActionLog {
+  id        String   @id @default(cuid())
+  matchId   String   @map("match_id")
+  playerId  String?  @map("player_id")
+  action    String   // "punto", "ataque_positivo", "ace", etc.
+  set       Int      // which set (1-5)
+  timestamp DateTime @default(now())
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@index([matchId, set])
+  @@map("match_action_log")
+}
+
+model OpponentTeam {
+  id         String    @id @default(cuid())
+  name       String
+  logoUrl    String?   @map("logo_url")
+  ownerId    String    @map("owner_id")
+  lastUsedAt DateTime? @map("last_used_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  owner   User    @relation("OpponentTeamOwner", fields: [ownerId], references: [id])
+  matches Match[]
+
+  @@map("opponent_teams")
+}
+
+model Tournament {
+  id         String    @id @default(cuid())
+  name       String
+  logoUrl    String?   @map("logo_url")
+  ownerId    String    @map("owner_id")
+  lastUsedAt DateTime? @map("last_used_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  owner   User    @relation("TournamentOwner", fields: [ownerId], references: [id])
+  matches Match[]
+
+  @@map("tournaments")
+}

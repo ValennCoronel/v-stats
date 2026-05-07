@@ -1,0 +1,20 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy dependency files first for layer caching
+COPY package.json package-lock.json* ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy Prisma schema for client generation
+COPY prisma ./prisma
+RUN npx prisma generate
+
+# Copy entrypoint script
+COPY entrypoint.sh ./
+RUN chmod +x entrypoint.sh
+
+# Source code will be bind-mounted via docker-compose volumes
+ENTRYPOINT ["./entrypoint.sh"]
