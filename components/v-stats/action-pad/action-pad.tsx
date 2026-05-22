@@ -1,20 +1,20 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { useMatchStore } from "@/lib/stores/match-store"
 import { CourtView } from "./court-view"
 import { ActionButtons } from "./action-buttons"
 import { Scoreboard } from "./scoreboard"
 import { BenchPanel } from "./bench-panel"
-import { Button } from "@/components/ui/button"
 import { VOLLEYBALL_ACTIONS } from "@/lib/types/volleyball"
 import type { VolleyballActionKey } from "@/lib/types/volleyball"
-import { ArrowLeft, Undo2, Square, ScrollText } from "lucide-react"
+import { ArrowLeft, Undo2, Users, Square, Save } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
-// Memoized action log to avoid re-rendering the pad
+const barlow = { fontFamily: "var(--font-heading, 'Barlow Condensed', sans-serif)" }
+
 const ActionLog = React.memo(function ActionLog() {
   const actions = useMatchStore((s) => s.actions)
   const undoLastAction = useMatchStore((s) => s.undoLastAction)
@@ -23,54 +23,56 @@ const ActionLog = React.memo(function ActionLog() {
 
   if (last5.length === 0) {
     return (
-      <div className="text-center py-4 text-sm text-muted-foreground">
-        Seleccioná un jugador y registrá una acción
+      <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
+        <p className="text-sm text-[#94A3B8]">Sin acciones registradas</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
-          Últimas acciones
+    <div className="bg-white rounded-2xl p-4 shadow-sm">
+      <div className="flex items-center justify-between mb-3">
+        <span style={{ ...barlow, fontSize: "14px", letterSpacing: "1px", color: "#64748B" }}>
+          ÚLTIMAS ACCIONES
         </span>
         {actions.length > 0 && (
           <button
             onClick={undoLastAction}
-            className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-sm font-semibold text-[#1E6FD9] bg-[#1E6FD9]/10 px-3 py-1 rounded-full"
           >
-            <Undo2 className="h-3 w-3" />
-            Deshacer
+            <Undo2 className="size-3.5" />
+            <span style={{ ...barlow, letterSpacing: "0.5px" }}>DESHACER</span>
           </button>
         )}
       </div>
-      {last5.map((action) => {
-        const actionDef = VOLLEYBALL_ACTIONS[action.action as VolleyballActionKey]
-        return (
-          <div
-            key={action.id}
-            className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-xs sm:text-sm"
-          >
-            <div className="flex items-center gap-2">
-              <span className="font-mono font-bold text-primary">
-                #{action.playerNumber}
-              </span>
-              <span className="text-muted-foreground">
-                {action.playerName.split(" ")[0]}
+      <div className="space-y-2">
+        {last5.map((action) => {
+          const actionDef = VOLLEYBALL_ACTIONS[action.action as VolleyballActionKey]
+          return (
+            <div
+              key={action.id}
+              className="flex items-center justify-between rounded-xl bg-[#F4F7FB] px-3 py-2 border border-[#E2E8F0]"
+            >
+              <div className="flex items-center gap-3">
+                <span className="font-bold text-[#1E6FD9]" style={{ ...barlow, fontSize: "16px" }}>
+                  #{action.playerNumber}
+                </span>
+                <span className="text-[14px] font-medium text-[#0D1F33]">
+                  {action.playerName.split(" ")[0]}
+                </span>
+              </div>
+              <span
+                className={cn(
+                  "font-bold px-2 py-0.5 rounded-md text-[12px]",
+                  actionDef?.type === "positive" ? "bg-[#16A34A]/10 text-[#16A34A]" : "bg-[#EF4444]/10 text-[#EF4444]"
+                )}
+              >
+                {actionDef?.shortLabel || action.action}
               </span>
             </div>
-            <span
-              className={cn(
-                "font-semibold text-xs",
-                actionDef?.type === "positive" ? "text-success" : "text-destructive"
-              )}
-            >
-              {actionDef?.shortLabel || action.action}
-            </span>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 })
@@ -79,38 +81,34 @@ export function ActionPad() {
   const status = useMatchStore((s) => s.status)
   const courtPlayers = useMatchStore((s) => s.courtPlayers)
   const opponent = useMatchStore((s) => s.opponent)
-  const tournament = useMatchStore((s) => s.tournament)
   const endMatch = useMatchStore((s) => s.endMatch)
   const resetMatch = useMatchStore((s) => s.resetMatch)
   const actions = useMatchStore((s) => s.actions)
   const sets = useMatchStore((s) => s.sets)
   const currentSet = useMatchStore((s) => s.currentSet)
   const router = useRouter()
-  const [showLog, setShowLog] = useState(false)
   const [showBench, setShowBench] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
   // If no active match, show a message
   if (status === "idle" || status === "setup" || courtPlayers.length === 0) {
     return (
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-screen items-center justify-center bg-[#F4F7FB] p-4">
         <div className="text-center space-y-4">
-          <p className="text-lg text-muted-foreground">
-            No hay un partido activo
-          </p>
-          <Button
+          <p className="text-lg text-[#64748B]">No hay un partido activo</p>
+          <button
             onClick={() => router.push("/match")}
-            className="bg-[#0a67ec] hover:bg-[#0a67ec]/90 text-white"
+            className="bg-[#1E6FD9] hover:bg-[#1557B0] text-white px-6 py-3 rounded-xl"
+            style={{ ...barlow, fontSize: "18px", letterSpacing: "1px" }}
           >
-            Iniciar un Partido
-          </Button>
+            INICIAR PARTIDO
+          </button>
         </div>
       </div>
     )
   }
 
   if (status === "finished") {
-    // Calculate result
     let setsUs = 0, setsThem = 0
     sets.forEach((set, i) => {
       if (i <= currentSet) {
@@ -124,8 +122,6 @@ export function ActionPad() {
       setIsSaving(true)
       try {
         const state = useMatchStore.getState()
-
-        // Save match to DB
         const matchRes = await fetch("/api/matches", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -142,46 +138,41 @@ export function ActionPad() {
             tournament: state.tournament,
           }),
         })
-
-        if (!matchRes.ok) {
-          console.error("Failed to save match")
-        }
       } catch (e) {
         console.error("Error saving match:", e)
       } finally {
         setIsSaving(false)
         resetMatch()
-        router.push("/history")
+        router.push("/dashboard") // Go back to dashboard instead of /history
       }
     }
 
     return (
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold text-foreground">Partido Finalizado</h2>
-          <p className="text-muted-foreground">
-            vs {opponent} — {result} ({setsUs}-{setsThem})
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {actions.length} acciones registradas
-          </p>
-          <div className="flex gap-3 justify-center">
-            <Button
-              variant="outline"
-              onClick={() => {
-                resetMatch()
-                router.push("/match")
-              }}
-            >
-              Descartar
-            </Button>
-            <Button
+      <div className="flex min-h-screen items-center justify-center bg-[#F4F7FB] p-4">
+        <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-sm">
+          <div className="size-16 bg-[#1E6FD9]/10 text-[#1E6FD9] rounded-full flex items-center justify-center mx-auto mb-4">
+            <Save className="size-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-[#0D1F33] mb-2" style={barlow}>Partido Finalizado</h2>
+          <p className="text-[#64748B] mb-1">vs {opponent}</p>
+          <div className="text-[20px] font-bold text-[#1E6FD9] mb-4">{result} ({setsUs}-{setsThem})</div>
+          
+          <div className="space-y-3">
+            <button
               onClick={handleSaveAndExit}
-              className="bg-[#0a67ec] hover:bg-[#0a67ec]/90 text-white gap-2"
+              className="w-full bg-[#1E6FD9] hover:bg-[#1557B0] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2"
+              style={{ ...barlow, fontSize: "16px", letterSpacing: "1px" }}
               disabled={isSaving}
             >
-              {isSaving ? "Guardando..." : "Guardar y Ver Historial"}
-            </Button>
+              {isSaving ? "GUARDANDO..." : "GUARDAR PARTIDO"}
+            </button>
+            <button
+              onClick={() => { resetMatch(); router.push("/match") }}
+              className="w-full bg-white border-2 border-[#E2E8F0] text-[#64748B] hover:text-[#0D1F33] py-3.5 rounded-xl font-bold"
+              style={{ ...barlow, fontSize: "16px", letterSpacing: "1px" }}
+            >
+              DESCARTAR
+            </button>
           </div>
         </div>
       </div>
@@ -189,105 +180,72 @@ export function ActionPad() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="min-h-screen bg-[#F4F7FB] flex flex-col pb-8">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-border bg-card/50">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 sm:h-9 sm:w-9"
+      <div className="bg-[#0D1F33] text-white px-4 pt-10 pb-4 flex items-center justify-between sticky top-0 z-10 shadow-md">
+        <div className="flex items-center gap-3">
+          <button
             onClick={() => router.push("/match")}
+            className="size-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0"
           >
-            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-          </Button>
+            <ArrowLeft className="size-4" />
+          </button>
           <div>
-            <h1 className="text-sm sm:text-base font-bold text-foreground leading-tight">
+            <p style={{ ...barlow, fontSize: "11px", letterSpacing: "1.5px", opacity: 0.55 }}>V-STATS</p>
+            <h1 style={{ ...barlow, fontSize: "20px", fontWeight: 700, lineHeight: 1.1 }} className="truncate max-w-[140px]">
               vs {opponent}
             </h1>
-            {tournament && (
-              <span className="text-[10px] sm:text-xs text-muted-foreground">
-                {tournament}
-              </span>
-            )}
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          {/* Toggle bench on mobile */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 sm:h-9 sm:w-9 md:hidden"
-            onClick={() => {
-              setShowBench(!showBench)
-              setShowLog(false)
-            }}
+        <div className="flex items-center gap-2">
+          {/* Bench Button */}
+          <button
+            onClick={() => setShowBench(true)}
+            className="size-10 rounded-full bg-[#1E6FD9] flex items-center justify-center relative"
           >
-            <svg className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
-            </svg>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 sm:h-9 sm:w-9 md:hidden"
-            onClick={() => {
-              setShowLog(!showLog)
-              setShowBench(false)
-            }}
-          >
-            <ScrollText className="h-4 w-4 sm:h-5 sm:w-5" />
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            className="h-8 sm:h-9 gap-1.5 text-xs sm:text-sm"
+            <Users className="size-5 text-white" />
+          </button>
+          {/* End Match Button */}
+          <button
             onClick={endMatch}
+            className="h-10 px-4 rounded-full bg-red-500 hover:bg-red-600 flex items-center gap-1.5 transition-colors"
           >
-            <Square className="h-3 w-3 sm:h-4 sm:w-4" />
-            Finalizar
-          </Button>
+            <Square className="size-4 text-white" fill="currentColor" />
+            <span style={{ ...barlow, fontSize: "14px", fontWeight: 700, color: "white", letterSpacing: "0.5px" }}>FIN</span>
+          </button>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="flex-1 overflow-auto">
-        <div className="flex flex-col md:flex-row h-full">
-          {/* Left: Action area */}
-          <div className="flex-1 p-3 sm:p-4 space-y-3 sm:space-y-4 overflow-auto">
-            {/* Scoreboard */}
-            <Scoreboard />
+      <div className="flex-1 p-4 max-w-lg mx-auto w-full">
+        {/* Scoreboard */}
+        <Scoreboard />
 
-            {/* Court view */}
-            <CourtView />
+        {/* Court view */}
+        <CourtView />
 
-            {/* Actions */}
-            <ActionButtons />
-
-            {/* Mobile: bench or log toggle */}
-            {showBench && (
-              <div className="md:hidden">
-                <BenchPanel />
-              </div>
-            )}
-            {showLog && (
-              <div className="md:hidden">
-                <ActionLog />
-              </div>
-            )}
-          </div>
-
-          {/* Right: Bench + Log (desktop) */}
-          <div className="hidden md:flex md:flex-col w-72 lg:w-80 border-l border-border overflow-auto bg-card/30">
-            <div className="p-4 flex-1 overflow-auto">
-              <BenchPanel />
-            </div>
-            <div className="border-t border-border p-4">
-              <ActionLog />
-            </div>
-          </div>
+        {/* Action log */}
+        <div className="mb-4">
+          <ActionLog />
         </div>
+
+        {/* Actions */}
+        <ActionButtons />
       </div>
+
+      {/* Bench Modal */}
+      <Dialog open={showBench} onOpenChange={setShowBench}>
+        <DialogContent className="max-w-sm mx-auto rounded-3xl p-0 overflow-hidden bg-[#F4F7FB] border-0">
+          <div className="bg-[#0D1F33] px-6 py-4 flex items-center justify-between">
+            <DialogTitle style={{ ...barlow, fontSize: "20px", fontWeight: 700, color: "white" }}>
+              Banca y Cambios
+            </DialogTitle>
+          </div>
+          <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
+            <BenchPanel />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

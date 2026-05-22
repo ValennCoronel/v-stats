@@ -31,22 +31,39 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  ownedTeams    Team[]         @relation("TeamOwner")
+  ownedClubs    Club[]         @relation("ClubOwner")
   opponentTeams OpponentTeam[] @relation("OpponentTeamOwner")
   tournaments   Tournament[]   @relation("TournamentOwner")
 
   @@map("users")
 }
 
-model Team {
+model Club {
   id        String   @id @default(cuid())
   name      String
-  logoUrl   String?  @map("logo_url")
+  city      String
+  color     String   @default("#1E6FD9")
+  role      String   @default("admin")
   ownerId   String   @map("owner_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  owner   User     @relation("TeamOwner", fields: [ownerId], references: [id])
+  owner   User     @relation("ClubOwner", fields: [ownerId], references: [id])
+  teams   Team[]
+  players Player[]
+
+  @@map("clubs")
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  clubId    String   @map("club_id")
+  name      String
+  logoUrl   String?  @map("logo_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  club    Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
   players Player[]
   matches Match[]
 
@@ -55,7 +72,9 @@ model Team {
 
 model Player {
   id            String   @id @default(cuid())
+  clubId        String   @map("club_id")
   teamId        String   @map("team_id")
+  dni           String
   name          String
   number        Int
   position      Position
@@ -65,10 +84,11 @@ model Player {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
+  club       Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
   team       Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
   matchStats PlayerMatchStats[]
 
-  @@unique([teamId, number])
+  @@unique([clubId, dni])
   @@map("players")
 }
 

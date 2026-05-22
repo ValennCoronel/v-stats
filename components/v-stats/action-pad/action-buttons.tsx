@@ -10,6 +10,8 @@ import {
   type VolleyballActionKey,
 } from "@/lib/types/volleyball"
 
+const barlow = { fontFamily: "var(--font-heading, 'Barlow Condensed', sans-serif)" }
+
 export const ActionButtons = React.memo(function ActionButtons() {
   const selectedPlayerId = useMatchStore((s) => s.selectedPlayerId)
   const recordAction = useMatchStore((s) => s.recordAction)
@@ -20,17 +22,16 @@ export const ActionButtons = React.memo(function ActionButtons() {
     recordAction(action)
   }
 
-  // Disable actions when in substitution mode or no player selected
   const isDisabled = !selectedPlayerId || substitutionMode !== "none"
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Positive actions */}
-      <div className="space-y-1.5">
-        <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-success/80 px-1">
-          Positivas
+      <div>
+        <span style={{ ...barlow, fontSize: "12px", letterSpacing: "1px", color: "#16A34A", display: "block", marginBottom: "8px" }}>
+          ACCIONES POSITIVAS
         </span>
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {POSITIVE_ACTIONS.map((key) => {
             const action = VOLLEYBALL_ACTIONS[key]
             const isPunto = key === "punto" || key === "ace"
@@ -40,18 +41,17 @@ export const ActionButtons = React.memo(function ActionButtons() {
                 onClick={() => handleAction(key)}
                 disabled={isDisabled}
                 className={cn(
-                  "rounded-lg px-2 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold transition-all duration-100 active:scale-95",
-                  "border min-h-[44px]",
+                  "rounded-xl px-2 py-3 flex flex-col items-center justify-center transition-all duration-100 active:scale-95 border-2",
                   isDisabled
-                    ? "border-border bg-muted/30 text-muted-foreground/40 cursor-not-allowed"
+                    ? "border-[#E2E8F0] bg-[#F4F7FB] text-[#94A3B8] cursor-not-allowed"
                     : isPunto
-                      ? "border-success/50 bg-success/20 text-success hover:bg-success/30 active:bg-success/40 ring-1 ring-success/20"
-                      : "border-success/30 bg-success/10 text-success hover:bg-success/20 active:bg-success/30"
+                      ? "border-[#16A34A] bg-[#16A34A]/10 text-[#16A34A] hover:bg-[#16A34A]/20"
+                      : "border-[#E2E8F0] bg-white text-[#0D1F33] hover:border-[#16A34A] hover:text-[#16A34A]"
                 )}
               >
-                {action.shortLabel}
+                <span style={{ ...barlow, fontSize: "16px", fontWeight: 600 }}>{action.shortLabel}</span>
                 {isPunto && !isDisabled && (
-                  <span className="block text-[9px] opacity-60 mt-0.5">+1 punto</span>
+                  <span style={{ fontSize: "10px", fontWeight: 500, color: "#16A34A", marginTop: "2px" }}>+1 PTO</span>
                 )}
               </button>
             )
@@ -60,11 +60,11 @@ export const ActionButtons = React.memo(function ActionButtons() {
       </div>
 
       {/* Negative actions */}
-      <div className="space-y-1.5">
-        <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-destructive/80 px-1">
-          Errores
+      <div>
+        <span style={{ ...barlow, fontSize: "12px", letterSpacing: "1px", color: "#EF4444", display: "block", marginBottom: "8px" }}>
+          ERRORES
         </span>
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {NEGATIVE_ACTIONS.map((key) => {
             const action = VOLLEYBALL_ACTIONS[key]
             return (
@@ -73,14 +73,13 @@ export const ActionButtons = React.memo(function ActionButtons() {
                 onClick={() => handleAction(key)}
                 disabled={isDisabled}
                 className={cn(
-                  "rounded-lg px-2 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold transition-all duration-100 active:scale-95",
-                  "border min-h-[44px]",
+                  "rounded-xl px-2 py-3 flex flex-col items-center justify-center transition-all duration-100 active:scale-95 border-2",
                   isDisabled
-                    ? "border-border bg-muted/30 text-muted-foreground/40 cursor-not-allowed"
-                    : "border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20 active:bg-destructive/30"
+                    ? "border-[#E2E8F0] bg-[#F4F7FB] text-[#94A3B8] cursor-not-allowed"
+                    : "border-[#E2E8F0] bg-white text-[#0D1F33] hover:border-[#EF4444] hover:text-[#EF4444]"
                 )}
               >
-                {action.shortLabel}
+                <span style={{ ...barlow, fontSize: "16px", fontWeight: 600 }}>{action.shortLabel}</span>
               </button>
             )
           })}

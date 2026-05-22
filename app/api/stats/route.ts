@@ -2,17 +2,33 @@ import { NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-export async function GET() {
+export const dynamic = "force-dynamic"
+
+export async function GET(request: Request) {
   try {
     const authUser = await getAuthUser()
     if (!authUser) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     }
 
-    const team = await prisma.team.findFirst({
-      where: { ownerId: authUser.userId },
+    const { searchParams } = new URL(request.url)
+    const clubId = searchParams.get("clubId")
+
+    if (!clubId) {
+      return NextResponse.json({ error: "El ID del club es requerido" }, { status: 400 })
+    }
+
+    const club = await prisma.club.findUnique({
+      where: { id: clubId },
+      include: { teams: true },
     })
 
+    if (!club || club.ownerId !== authUser.userId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 })
+    }
+
+    const team = club.teams[0] // fallback to the first team for aggregate stats, or ideally aggregate across all club's teams.
+    
     if (!team) {
       return NextResponse.json({
         totalMatches: 0,

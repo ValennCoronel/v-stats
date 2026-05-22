@@ -2,36 +2,55 @@ import { NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-// GET /api/players — List all players for the user's team
-export async function GET() {
+export const dynamic = "force-dynamic"
+
+// GET /api/players — List all players for a club or team
+export async function GET(request: Request) {
   try {
     const authUser = await getAuthUser()
     if (!authUser) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     }
 
-    // Find user's team
-    const team = await prisma.team.findFirst({
-      where: { ownerId: authUser.userId },
-    })
+    const { searchParams } = new URL(request.url)
+    const clubId = searchParams.get("clubId")
+    const teamId = searchParams.get("teamId")
 
-    if (!team) {
-      return NextResponse.json({ players: [] })
+    if (!clubId) {
+      return NextResponse.json({ error: "El ID del club es requerido" }, { status: 400 })
+    }
+
+    const club = await prisma.club.findUnique({ where: { id: clubId } })
+    if (!club || club.ownerId !== authUser.userId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 })
+    }
+
+    const whereClause: any = { clubId }
+    if (teamId) {
+      whereClause.teamId = teamId
     }
 
     const players = await prisma.player.findMany({
-      where: { teamId: team.id },
-      orderBy: { number: "asc" },
+      where: whereClause,
+      orderBy: [
+        { teamId: "asc" },
+        { number: "asc" },
+      ],
+      include: {
+        team: {
+          select: { name: true }
+        }
+      }
     })
 
-    return NextResponse.json({ players, teamId: team.id })
+    return NextResponse.json({ players })
   } catch (error) {
     console.error("Players GET error:", error)
     return NextResponse.json({ error: "Error interno" }, { status: 500 })
   }
 }
 
-// POST /api/players — Create a new player
+// POST /api/players — Create a new player in a club
 export async function POST(request: Request) {
   try {
     const authUser = await getAuthUser()
@@ -40,47 +59,46 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { name, number, position, injuryHistory, avatarUrl } = body
+    const { clubId, teamId, dni, name, number, position, injuryHistory, avatarUrl } = body
 
-    if (!name || number === undefined || !position) {
+    if (!clubId || !teamId || !dni || !name || number === undefined || !position) {
       return NextResponse.json(
-        { error: "Nombre, número y posición son requeridos" },
+        { error: "Faltan campos obligatorios (club, equipo, dni, nombre, número, posición)" },
         { status: 400 }
       )
     }
 
-    // Find user's team (auto-create if needed)
-    let team = await prisma.team.findFirst({
-      where: { ownerId: authUser.userId },
-    })
-
-    if (!team) {
-      team = await prisma.team.create({
-        data: { name: "Mi Equipo", ownerId: authUser.userId },
-      })
+    const club = await prisma.club.findUnique({ where: { id: clubId } })
+    if (!club || club.ownerId !== authUser.userId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 })
     }
 
-    // Check for duplicate jersey number
-    const existingPlayer = await prisma.player.findUnique({
-      where: { teamId_number: { teamId: team.id, number: parseInt(number) } },
+    // Check unique DNI inside club
+    const existingDni = await prisma.player.findUnique({
+      where: { clubId_dni: { clubId, dni } },
     })
 
-    if (existingPlayer) {
+    if (existingDni) {
       return NextResponse.json(
-        { error: `Ya existe un jugador con el número #${number}` },
+        { error: `El DNI ${dni} ya está registrado en este club` },
         { status: 409 }
       )
     }
 
     const player = await prisma.player.create({
       data: {
-        teamId: team.id,
+        clubId,
+        teamId,
+        dni,
         name,
         number: parseInt(number),
         position,
         injuryHistory: injuryHistory || null,
         avatarUrl: avatarUrl || null,
       },
+      include: {
+        team: { select: { name: true } }
+      }
     })
 
     return NextResponse.json({ player }, { status: 201 })
@@ -99,38 +117,39 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { id, name, number, position, injuryHistory, avatarUrl, isActive } = body
+    const { id, teamId, dni, name, number, position, injuryHistory, avatarUrl, isActive } = body
 
     if (!id) {
       return NextResponse.json({ error: "ID del jugador es requerido" }, { status: 400 })
     }
 
-    // Verify ownership
     const player = await prisma.player.findUnique({
       where: { id },
-      include: { team: true },
+      include: { club: true },
     })
 
-    if (!player || player.team.ownerId !== authUser.userId) {
+    if (!player || player.club.ownerId !== authUser.userId) {
       return NextResponse.json({ error: "Jugador no encontrado" }, { status: 404 })
     }
 
-    // Check jersey number conflict if changing number
-    if (number !== undefined && parseInt(number) !== player.number) {
+    // Check unique DNI if it changes
+    if (dni !== undefined && dni !== player.dni) {
       const existing = await prisma.player.findUnique({
         where: {
-          teamId_number: { teamId: player.teamId, number: parseInt(number) },
+          clubId_dni: { clubId: player.clubId, dni },
         },
       })
       if (existing) {
         return NextResponse.json(
-          { error: `Ya existe un jugador con el número #${number}` },
+          { error: `El DNI ${dni} ya está registrado en este club` },
           { status: 409 }
         )
       }
     }
 
-    const updateData: Record<string, unknown> = {}
+    const updateData: any = {}
+    if (teamId !== undefined) updateData.teamId = teamId
+    if (dni !== undefined) updateData.dni = dni
     if (name !== undefined) updateData.name = name
     if (number !== undefined) updateData.number = parseInt(number)
     if (position !== undefined) updateData.position = position
@@ -141,6 +160,9 @@ export async function PUT(request: Request) {
     const updatedPlayer = await prisma.player.update({
       where: { id },
       data: updateData,
+      include: {
+        team: { select: { name: true } }
+      }
     })
 
     return NextResponse.json({ player: updatedPlayer })
@@ -165,13 +187,12 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "ID del jugador es requerido" }, { status: 400 })
     }
 
-    // Verify ownership
     const player = await prisma.player.findUnique({
       where: { id },
-      include: { team: true },
+      include: { club: true },
     })
 
-    if (!player || player.team.ownerId !== authUser.userId) {
+    if (!player || player.club.ownerId !== authUser.userId) {
       return NextResponse.json({ error: "Jugador no encontrado" }, { status: 404 })
     }
 

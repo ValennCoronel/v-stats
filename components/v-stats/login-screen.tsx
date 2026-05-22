@@ -3,18 +3,17 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Activity, Eye, EyeOff, Loader2 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuthStore } from "@/lib/stores/auth-store"
 import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
+
+const barlow = { fontFamily: "var(--font-heading, 'Barlow Condensed', sans-serif)" }
 
 export function LoginScreen() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [displayName, setDisplayName] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
   const [isRegister, setIsRegister] = useState(false)
 
   const router = useRouter()
@@ -47,105 +46,108 @@ export function LoginScreen() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md border-border">
-        <CardHeader className="space-y-4 text-center">
-          {/* Logo */}
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary">
-            <Activity className="h-9 w-9 text-primary-foreground" />
-          </div>
-          <div className="space-y-2">
-            <CardTitle className="text-2xl font-bold text-foreground">
-              {isRegister ? "Crear cuenta" : "Bienvenido"}
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              {isRegister
-                ? "Registrate en V-Stats para empezar"
-                : "Iniciá sesión en tu cuenta de V-Stats"
-              }
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isRegister && (
-              <div className="space-y-2">
-                <Label htmlFor="displayName" className="text-foreground">Nombre</Label>
-                <Input
-                  id="displayName"
-                  type="text"
-                  placeholder="Tu nombre"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="bg-input border-border"
-                  disabled={isLoading}
-                />
-              </div>
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6">
+      {/* Logo */}
+      <div className="mb-8 text-center">
+        <h1
+          className="mb-2"
+          style={{
+            ...barlow,
+            fontSize: "56px",
+            fontWeight: 700,
+            lineHeight: 1.2,
+            background: "linear-gradient(135deg, #0D1F33 0%, #1E6FD9 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          V-Stats
+        </h1>
+        <p
+          style={{
+            ...barlow,
+            fontSize: "12px",
+            letterSpacing: "2px",
+            color: "#1E6FD9",
+            textTransform: "uppercase",
+          }}
+        >
+          Datos que ganan partidos
+        </p>
+      </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
+        {isRegister && (
+          <Input
+            type="text"
+            placeholder="Nombre"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            className="h-12 bg-white border-[#E2E8F0]"
+            disabled={isLoading}
+          />
+        )}
+        <Input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="h-12 bg-white border-[#E2E8F0]"
+          required
+          disabled={isLoading}
+        />
+        <Input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="h-12 bg-white border-[#E2E8F0]"
+          required
+          minLength={6}
+          disabled={isLoading}
+        />
+
+        <Button
+          type="submit"
+          className="w-full h-12 bg-[#1E6FD9] hover:bg-[#1557B0] text-white"
+          style={{ ...barlow, letterSpacing: "1px" }}
+          disabled={isLoading}
+        >
+          {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+          {isRegister ? "CREAR CUENTA" : "INICIAR SESIÓN"}
+        </Button>
+
+        <Button
+          type="button"
+          onClick={() => {
+            // Skip login - navigate directly
+            router.push(redirectTo)
+          }}
+          variant="outline"
+          className="w-full h-12 border-[#1E6FD9] text-[#1E6FD9] hover:bg-[#1E6FD9]/5"
+          style={{ ...barlow, letterSpacing: "1px" }}
+          disabled={isLoading}
+        >
+          CONTINUAR SIN CUENTA
+        </Button>
+
+        <div className="text-center pt-4">
+          <button
+            type="button"
+            className="text-sm text-[#64748B] hover:text-[#1E6FD9]"
+            onClick={() => setIsRegister(!isRegister)}
+            disabled={isLoading}
+          >
+            {isRegister ? (
+              <>¿Ya tenés cuenta? <span className="text-[#1E6FD9]">Iniciá sesión</span></>
+            ) : (
+              <>¿No tenés cuenta? <span className="text-[#1E6FD9]">Registrate</span></>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="tu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-input border-border"
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground">Contraseña</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Ingresá tu contraseña"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-input border-border pr-10"
-                  required
-                  minLength={6}
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-            <Button
-              type="submit"
-              className="w-full bg-[#0a67ec] hover:bg-[#0a67ec]/90 text-white"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
-              {isRegister ? "Crear Cuenta" : "Iniciar Sesión"}
-            </Button>
-            <p className="text-center text-sm text-muted-foreground">
-              {isRegister ? "¿Ya tenés cuenta? " : "¿No tenés cuenta? "}
-              <button
-                type="button"
-                className="text-primary hover:underline"
-                onClick={() => setIsRegister(!isRegister)}
-                disabled={isLoading}
-              >
-                {isRegister ? "Iniciá sesión" : "Creá una"}
-              </button>
-            </p>
-          </form>
-        </CardContent>
-      </Card>
+          </button>
+        </div>
+      </form>
     </div>
   )
 }

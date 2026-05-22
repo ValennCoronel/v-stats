@@ -4,7 +4,8 @@ import React from "react"
 import { cn } from "@/lib/utils"
 import { useMatchStore } from "@/lib/stores/match-store"
 import { Button } from "@/components/ui/button"
-import { Plus, Minus } from "lucide-react"
+
+const barlow = { fontFamily: "var(--font-heading, 'Barlow Condensed', sans-serif)" }
 
 export const Scoreboard = React.memo(function Scoreboard() {
   const opponent = useMatchStore((s) => s.opponent)
@@ -12,6 +13,7 @@ export const Scoreboard = React.memo(function Scoreboard() {
   const currentSet = useMatchStore((s) => s.currentSet)
   const pointsPerSet = useMatchStore((s) => s.pointsPerSet)
   const pointsLastSet = useMatchStore((s) => s.pointsLastSet)
+  const addPointUs = useMatchStore((s) => s.addPointUs)
   const addPointRival = useMatchStore((s) => s.addPointRival)
   const removePointUs = useMatchStore((s) => s.removePointUs)
   const removePointRival = useMatchStore((s) => s.removePointRival)
@@ -29,104 +31,109 @@ export const Scoreboard = React.memo(function Scoreboard() {
   })
 
   return (
-    <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
-      {/* Set indicator */}
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Set {currentSet + 1}
-          <span className="text-muted-foreground/50 ml-1.5 normal-case">
-            (a {targetPoints} pts)
-          </span>
-        </span>
-        <div className="flex items-center gap-1.5">
-          {sets.map((_, i) => (
-            <div
-              key={i}
-              className={cn(
-                "h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full",
-                i === currentSet
-                  ? "bg-[#0a67ec]"
-                  : i < currentSet
-                  ? sets[i].us > sets[i].them
-                    ? "bg-success"
-                    : "bg-destructive"
-                  : "bg-border"
-              )}
-            />
-          ))}
+    <div className="bg-white rounded-2xl p-4 shadow-sm relative mb-4">
+      {/* Set indicator Tabs */}
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+        {sets.map((_, i) => (
+          <div
+            key={i}
+            className={cn(
+              "px-4 py-1.5 rounded-full whitespace-nowrap transition-colors",
+              i === currentSet
+                ? "bg-[#1E6FD9] text-white"
+                : "bg-[#F4F7FB] text-[#64748B]"
+            )}
+            style={{ ...barlow, fontSize: "14px", fontWeight: 600, letterSpacing: "0.5px" }}
+          >
+            SET {i + 1}
+          </div>
+        ))}
+        {/* Next set preview */}
+        <div
+          className="px-4 py-1.5 rounded-full bg-white border border-dashed border-[#CBD5E1] text-[#94A3B8] whitespace-nowrap"
+          style={{ ...barlow, fontSize: "14px", fontWeight: 600, letterSpacing: "0.5px" }}
+        >
+          SET {sets.length + 1}
         </div>
       </div>
 
-      {/* Score display */}
       <div className="flex items-center justify-between">
-        {/* Our team — auto-incremented by PTO */}
+        {/* Us */}
         <div className="flex-1 flex flex-col items-center">
-          <span className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-1">
-            Nosotros
-          </span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-6 w-6 sm:h-7 sm:w-7 rounded-full opacity-60"
+          <div style={{ ...barlow, fontSize: "16px", fontWeight: 600, color: "#1E6FD9", marginBottom: "4px" }}>
+            NOSOTROS
+          </div>
+          <div className="flex items-center gap-3">
+            <button
               onClick={removePointUs}
               disabled={currentScore.us === 0}
+              className="size-8 rounded-full bg-[#F4F7FB] text-[#64748B] flex items-center justify-center font-bold disabled:opacity-50"
             >
-              <Minus className="h-3 w-3" />
-            </Button>
-            <span className="text-3xl sm:text-4xl font-bold font-mono text-foreground tabular-nums min-w-[48px] text-center">
+              -
+            </button>
+            <div
+              className="text-[#0D1F33] min-w-[60px] text-center"
+              style={{ ...barlow, fontSize: "54px", fontWeight: 700, lineHeight: 1 }}
+            >
               {currentScore.us}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7 sm:h-8 sm:w-8 rounded-full text-success hover:text-success hover:bg-success/10"
-              onClick={useMatchStore((s) => s.addPointUs)}
+            </div>
+            <button
+              onClick={addPointUs}
+              className="size-8 rounded-full bg-[#1E6FD9]/10 text-[#1E6FD9] flex items-center justify-center font-bold"
             >
-              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
+              +
+            </button>
           </div>
-          <span className="text-[10px] sm:text-xs text-primary font-semibold mt-0.5">
+          <div className="mt-2 text-[#64748B]" style={{ fontSize: "12px", fontWeight: 500 }}>
             Sets: {setsWon.us}
-          </span>
+          </div>
         </div>
 
-        {/* Separator */}
-        <div className="text-2xl sm:text-3xl font-light text-muted-foreground/30 px-2">
-          —
+        {/* Divider */}
+        <div className="flex flex-col items-center justify-center px-4">
+          <div className="h-10 w-px bg-[#E2E8F0] mb-2" />
+          <span className="text-[#94A3B8] text-[10px] font-bold">VS</span>
+          <div className="h-10 w-px bg-[#E2E8F0] mt-2" />
         </div>
 
-        {/* Opponent — manual */}
+        {/* Rival */}
         <div className="flex-1 flex flex-col items-center">
-          <span className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-1 truncate max-w-[100px]">
-            {opponent || "Rival"}
-          </span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-6 w-6 sm:h-7 sm:w-7 rounded-full opacity-60"
+          <div
+            className="truncate max-w-[100px] text-center"
+            style={{ ...barlow, fontSize: "16px", fontWeight: 600, color: "#0D1F33", marginBottom: "4px" }}
+          >
+            {opponent || "RIVAL"}
+          </div>
+          <div className="flex items-center gap-3">
+            <button
               onClick={removePointRival}
               disabled={currentScore.them === 0}
+              className="size-8 rounded-full bg-[#F4F7FB] text-[#64748B] flex items-center justify-center font-bold disabled:opacity-50"
             >
-              <Minus className="h-3 w-3" />
-            </Button>
-            <span className="text-3xl sm:text-4xl font-bold font-mono text-foreground tabular-nums min-w-[48px] text-center">
+              -
+            </button>
+            <div
+              className="text-[#0D1F33] min-w-[60px] text-center"
+              style={{ ...barlow, fontSize: "54px", fontWeight: 700, lineHeight: 1 }}
+            >
               {currentScore.them}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7 sm:h-8 sm:w-8 rounded-full"
+            </div>
+            <button
               onClick={addPointRival}
+              className="size-8 rounded-full bg-[#1E6FD9]/10 text-[#1E6FD9] flex items-center justify-center font-bold"
             >
-              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
+              +
+            </button>
           </div>
-          <span className="text-[10px] sm:text-xs text-destructive font-semibold mt-0.5">
+          <div className="mt-2 text-[#64748B]" style={{ fontSize: "12px", fontWeight: 500 }}>
             Sets: {setsWon.them}
-          </span>
+          </div>
         </div>
+      </div>
+      
+      {/* Target points info */}
+      <div className="absolute top-4 right-4 text-[#94A3B8]" style={{ ...barlow, fontSize: "12px" }}>
+        A {targetPoints} pts
       </div>
     </div>
   )
