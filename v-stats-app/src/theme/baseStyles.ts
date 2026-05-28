@@ -1,0 +1,101 @@
+import { ViewStyle, TextStyle, ImageStyle } from 'react-native';
+
+export type RNStyle = ViewStyle | TextStyle | ImageStyle;
+
+export const baseStyles: Record<string, RNStyle> = {
+  // Flexbox y Layout
+  'flex-1': { flex: 1 },
+  'flex-row': { flexDirection: 'row' },
+  'items-center': { alignItems: 'center' },
+  'justify-center': { justifyContent: 'center' },
+  'justify-between': { justifyContent: 'space-between' },
+  
+  // Espaciados (Paddings y Margins)
+  'p-4': { padding: 16 },
+  'p-6': { padding: 24 },
+  'px-4': { paddingHorizontal: 16 },
+  'px-6': { paddingHorizontal: 24 },
+  'py-3': { paddingVertical: 12 },
+  'm-4': { margin: 16 },
+  'mb-2': { marginBottom: 8 },
+  'mb-4': { marginBottom: 16 },
+  
+  // Bordes
+  'border': { borderWidth: 1 },
+  'rounded-xl': { borderRadius: 12 },
+  'rounded-2xl': { borderRadius: 16 },
+  'rounded-full': { borderRadius: 9999 },
+  
+  // Tipografía
+  'text-xs': { fontSize: 12 },
+  'text-sm': { fontSize: 14 },
+  'text-base': { fontSize: 16 },
+  'text-xl': { fontSize: 20 },
+  'text-2xl': { fontSize: 24 },
+  'text-bold': { fontWeight: 'bold' },
+  'text-black': { fontWeight: '900' },
+  'text-italic': { fontStyle: 'italic' },
+  'text-center': { textAlign: 'center' },
+
+  'w-full': { width: '100%' },
+  'h-12': { height: 48 },
+  'max-w-sm': { maxWidth: 384, width: '100%' },
+  'gap-4': { gap: 16 },
+  'mb-8': { marginBottom: 32 },
+  'mt-4': { marginTop: 16 },
+  'rounded-lg': { borderRadius: 8 },
+  'gap-2': { gap: 8 },
+  'pb-5': { paddingBottom: 20 },
+  'h-screen': { flex: 1 },
+  'overflow-hidden': { overflow: 'hidden' },
+  'flex-col': { flexDirection: 'column' },
+  'flex-shrink-0': { flexShrink: 0 },
+  'gap-1': { gap: 4 },
+  'gap-1.5': { gap: 6 },
+  'pt-3': { paddingTop: 12 },
+  'pb-2': { paddingBottom: 8 },
+  'px-5': { paddingHorizontal: 20 },
+  'py-1': { paddingVertical: 4 },
+  'py-1.5': { paddingVertical: 6 },
+  'px-2.5': { paddingHorizontal: 10 },
+  'py-0.5': { paddingVertical: 2 },
+  // Grillas (Adaptación a Flexbox)
+  'grid-cols-3': { flexWrap: 'wrap', flexDirection: 'row', justifyContent: 'space-between' },
+  'grid-cols-6': { flexWrap: 'wrap', flexDirection: 'row', justifyContent: 'space-between' },
+  'w-1/3': { width: '31%' }, // Para simular grid-cols-3
+  'w-1/6': { width: '14.5%' }, // Para simular grid-cols-6
+  'col-span-2': { width: '32%' }, // Para la tabla final
+  'flex-wrap': { flexWrap: 'wrap' },
+  'bg-white': { backgroundColor: '#ffffff' },
+  'p-2': { padding: 8 },
+  'pb-1': { paddingBottom: 4 },
+  'pb-3': { paddingBottom: 12 },
+  'py-2': { paddingVertical: 8 },
+  'mb-3': { marginBottom: 12 },
+  'gap-3': { gap: 12 },
+  'w-1/4': { width: '24%' }, // Para simular grid-cols-4 con un poco de gap
+  'h-1': { height: 4 },
+  'min-w-0': { flexShrink: 1 },
+  'pb-24': { paddingBottom: 96 },
+  'px-0.5': { paddingHorizontal: 2 },
+  'border-x': { borderLeftWidth: 1, borderRightWidth: 1 },
+  'pb-6': { paddingBottom: 24 },
+  'mb-5': { marginBottom: 20 },
+  'pt-5': { paddingTop: 20 },
+  'gap-5': { gap: 20 },
+  'p-3': { padding: 12 },
+  'mx-4': { marginHorizontal: 16 },
+  'py-4': { paddingVertical: 16 },
+  'pb-7': { paddingBottom: 28 },
+  'pb-12': { paddingBottom: 48 },
+  'px-1': { paddingHorizontal: 4 },
+  'px-3': { paddingHorizontal: 12 },
+  'py-3.5': { paddingVertical: 14 },
+  'pr-3': { paddingRight: 12 },
+  'mt-1': { marginTop: 4 },
+  'mb-6': { marginBottom: 24 },
+  'mb-24': { marginBottom: 96 },
+  'py-6': { paddingVertical: 24 },
+  'border-b': { borderBottomWidth: 1 },
+  'border-b-4': { borderBottomWidth: 4 },
+};
