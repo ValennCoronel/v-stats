@@ -1,35 +1,37 @@
 services:
   db:
     image: postgres:15-alpine
-    restart: unless-stopped
-    volumes:
-      - ./postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-vstats}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vstats_dev_password}
-      POSTGRES_DB: ${POSTGRES_DB:-vstats_db}
+      POSTGRES_USER: vstats
+      POSTGRES_PASSWORD: vstats_password
+      POSTGRES_DB: vstats_db
     ports:
       - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vstats} -d ${POSTGRES_DB:-vstats_db}"]
+      test: [ "CMD-SHELL", "pg_isready -U vstats -d vstats_db" ]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  app:
+  api:
     build:
-      context: .
+      context: ./api
       dockerfile: Dockerfile.dev
-    restart: unless-stopped
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/.next
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-vstats}:${POSTGRES_PASSWORD:-vstats_dev_password}@db:5432/${POSTGRES_DB:-vstats_db}
-      JWT_SECRET: ${JWT_SECRET:-vstats-dev-secret-change-in-production}
+      - DATABASE_URL=postgresql://vstats:vstats_password@db:5432/vstats_db
+      - JWT_SECRET=local_development_secret_key_123
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+      - /app/.next
     depends_on:
       db:
         condition: service_healthy
+    command: sh -c "npx prisma migrate dev && npm run dev"
+
+volumes:
+  db_data:

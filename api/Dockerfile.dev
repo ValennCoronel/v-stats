@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies needed for node-gyp and Prisma
+RUN apk add --no-cache python3 make g++ openssl
+
+# Install dependencies first (caching)
+COPY package.json package-lock.json* ./
+RUN npm install
+
+# Prisma schema will be copied and generated on startup
+# Code will be mounted as a volume in docker-compose.yml
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]
