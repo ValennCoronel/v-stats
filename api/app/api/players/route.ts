@@ -27,18 +27,17 @@ export async function GET(request: Request) {
 
     const whereClause: any = { clubId }
     if (teamId) {
-      whereClause.teamId = teamId
+      whereClause.teams = { some: { id: teamId } }
     }
 
     const players = await prisma.player.findMany({
       where: whereClause,
       orderBy: [
-        { teamId: "asc" },
         { number: "asc" },
       ],
       include: {
-        team: {
-          select: { name: true }
+        teams: {
+          select: { id: true, name: true }
         }
       }
     })
@@ -59,11 +58,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { clubId, teamId, dni, name, number, position, injuryHistory, avatarUrl } = body
+    const { clubId, teamId, teamIds, dni, name, number, position, injuryHistory, avatarUrl } = body
 
-    if (!clubId || !teamId || !dni || !name || number === undefined || !position) {
+    if (!clubId || !dni || !name || number === undefined || !position) {
       return NextResponse.json(
-        { error: "Faltan campos obligatorios (club, equipo, dni, nombre, número, posición)" },
+        { error: "Faltan campos obligatorios (club, dni, nombre, número, posición)" },
         { status: 400 }
       )
     }
@@ -85,19 +84,28 @@ export async function POST(request: Request) {
       )
     }
 
+    let connectTeams: any[] = []
+    if (teamIds && Array.isArray(teamIds)) {
+      connectTeams = teamIds.map((id: string) => ({ id }))
+    } else if (teamId) {
+      connectTeams = [{ id: teamId }]
+    }
+
     const player = await prisma.player.create({
       data: {
         clubId,
-        teamId,
         dni,
         name,
         number: parseInt(number),
         position,
         injuryHistory: injuryHistory || null,
         avatarUrl: avatarUrl || null,
+        teams: {
+          connect: connectTeams
+        }
       },
       include: {
-        team: { select: { name: true } }
+        teams: { select: { id: true, name: true } }
       }
     })
 
@@ -117,7 +125,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { id, teamId, dni, name, number, position, injuryHistory, avatarUrl, isActive } = body
+    const { id, teamId, teamIds, dni, name, number, position, injuryHistory, avatarUrl, isActive } = body
 
     if (!id) {
       return NextResponse.json({ error: "ID del jugador es requerido" }, { status: 400 })
@@ -148,7 +156,6 @@ export async function PUT(request: Request) {
     }
 
     const updateData: any = {}
-    if (teamId !== undefined) updateData.teamId = teamId
     if (dni !== undefined) updateData.dni = dni
     if (name !== undefined) updateData.name = name
     if (number !== undefined) updateData.number = parseInt(number)
@@ -157,11 +164,22 @@ export async function PUT(request: Request) {
     if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl || null
     if (isActive !== undefined) updateData.isActive = isActive
 
+    // Update teams relationship
+    if (teamIds !== undefined && Array.isArray(teamIds)) {
+      updateData.teams = {
+        set: teamIds.map((id: string) => ({ id }))
+      }
+    } else if (teamId !== undefined) {
+      updateData.teams = {
+        connect: [{ id: teamId }] // This just adds one, does not remove others. We assume setting teamIds is preferred for full sync
+      }
+    }
+
     const updatedPlayer = await prisma.player.update({
       where: { id },
       data: updateData,
       include: {
-        team: { select: { name: true } }
+        teams: { select: { id: true, name: true } }
       }
     })
 

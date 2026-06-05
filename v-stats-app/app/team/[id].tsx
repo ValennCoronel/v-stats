@@ -23,7 +23,7 @@ export default function TeamMatchesScreen() {
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([]);
 
   const team = activeProfile.teams.find(t => t.id === id);
-  const roster = team?.roster || [];
+  const roster = activeProfile.players || [];
   const name = team?.name || 'Equipo';
 
   useEffect(() => {

@@ -33,7 +33,7 @@ export default function ConfigScreen() {
 
   // ── Security ──
   const [securityLevel, setSecurityLevel] = useState<SecurityLevel>('none');
-  const [accessRole, setAccessRole] = useState<AccessRole>(activeProfile.role);
+  const [accessRole, setAccessRole] = useState<AccessRole>(activeProfile.role as AccessRole);
   const [pin, setPin] = useState('');
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinStep, setPinStep] = useState<'set' | 'confirm'>('set');
@@ -163,47 +163,7 @@ export default function ConfigScreen() {
 
       <ScrollView contentContainerStyle={styles`px-4 pt-5 pb-12 gap-5`}>
 
-        {/* ── Mis Clubes ── */}
-        <Section title="MIS CLUBES" icon={<Building2 size={16} color="#64748B" />}>
-          {profiles.map((profile, idx) => (
-            <View key={profile.id}>
-              {idx > 0 && <Divider />}
-              <View style={styles`flex-row items-center px-3 py-3 gap-3`}>
-                <TouchableOpacity onPress={() => switchProfile(profile.id)} style={styles`flex-row items-center gap-3 flex-1`}>
-                  <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: `${profile.color}20`, justifyContent: 'center', alignItems: 'center' }}>
-                    <Building2 size={16} color={profile.color} />
-                  </View>
-                  <View style={styles`flex-1`}>
-                    <View style={styles`flex-row items-center gap-2`}>
-                      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#0D1F33' }} numberOfLines={1}>{profile.clubName}</Text>
-                      {profile.id === activeProfileId && (
-                        <View style={{ backgroundColor: profile.color, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 }}>
-                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#fff', letterSpacing: 0.5 }}>ACTIVO</Text>
-                        </View>
-                      )}
-                    </View>
-                    <View style={styles`flex-row items-center gap-1 mt-1`}>
-                      <MapPin size={10} color="#94A3B8" />
-                      <Text style={{ fontSize: 12, color: '#64748B' }}>{profile.city}</Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => setActionSheetProfile(profile)} style={{ width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' }}>
-                  <MoreHorizontal size={20} color="#94A3B8" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-
-          <Divider />
-          <TouchableOpacity onPress={openAddClub} style={styles`flex-row items-center gap-3 px-4 py-3`}>
-            <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(30,111,217,0.1)', justifyContent: 'center', alignItems: 'center' }}>
-              <Plus size={16} color="#1E6FD9" />
-            </View>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', letterSpacing: 0.5, color: '#1E6FD9' }}>AGREGAR CLUB</Text>
-          </TouchableOpacity>
-        </Section>
 
         {/* ── Perfil del entrenador ── */}
         <Section title="PERFIL" icon={<User size={16} color="#64748B" />}>

@@ -73,7 +73,6 @@ model Team {
 model Player {
   id            String   @id @default(cuid())
   clubId        String   @map("club_id")
-  teamId        String   @map("team_id")
   dni           String
   name          String
   number        Int
@@ -85,7 +84,7 @@ model Player {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   club       Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  team       Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teams      Team[]
   matchStats PlayerMatchStats[]
 
   @@unique([clubId, dni])

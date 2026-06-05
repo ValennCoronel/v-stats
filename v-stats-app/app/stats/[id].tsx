@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Home, BarChart3, Settings, TrendingUp, Award, Target, Shield } from 'lucide-react-native';
+import { ArrowLeft, Home, BarChart3, Settings, TrendingUp, Award, Target, Shield, Building2 } from 'lucide-react-native';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../../src/context/ProfileContext';
@@ -237,9 +237,9 @@ export default function StatsScreen() {
           <BarChart3 size={24} color={activeProfile.color} />
           <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: activeProfile.color, marginTop: 4 }}>Stats</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles`items-center`} onPress={() => router.push('/settings')}>
-          <Settings size={24} color="#64748B" />
-          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#64748B', marginTop: 4 }}>Settings</Text>
+        <TouchableOpacity style={styles`items-center`} onPress={() => router.push('/club')}>
+          <Building2 size={24} color="#64748B" />
+          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#64748B', marginTop: 4 }}>Club</Text>
         </TouchableOpacity>
       </View>
     </View>

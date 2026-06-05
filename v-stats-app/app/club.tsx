@@ -1,30 +1,33 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Home, BarChart3, Settings, Plus, ChevronDown, Check, Building2 } from 'lucide-react-native';
+import { ArrowLeft, Home, BarChart3, Settings, Plus, ChevronDown, Check, Building2, Users, ChevronRight } from 'lucide-react-native';
 import { useStyles } from '../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../src/context/ProfileContext';
 import { useAuth } from '../src/context/AuthContext';
+import { playersService } from '../src/services/players.service';
 
-export default function HomeScreen() {
+export default function ClubScreen() {
   const router = useRouter();
   const { styles } = useStyles();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   
-  const { coach, profiles, activeProfile, activeProfileId, switchProfile, addTeam, isLoading } = useProfile();
+  const { coach, profiles, activeProfile, activeProfileId, switchProfile, addTeam, refreshProfiles, isLoading } = useProfile();
   
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [showAddTeam, setShowAddTeam] = useState(false);
   const [teamName, setTeamName] = useState('');
+
+  const [showAddPlayer, setShowAddPlayer] = useState(false);
+  const [playerForm, setPlayerForm] = useState({ name: '', dni: '', number: '', position: 'OUTSIDE_HITTER' });
+  const [isSubmittingPlayer, setIsSubmittingPlayer] = useState(false);
 
   // Redirect to login if not authenticated
   if (!authLoading && !isAuthenticated) {
     router.replace('/');
     return null;
   }
-
-  const initials = coach.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   const roleLabel: Record<string, string> = {
     admin: 'Administrador', coach: 'Entrenador', assistant: 'Asistente',
@@ -42,6 +45,29 @@ export default function HomeScreen() {
     setShowAddTeam(false);
   };
 
+  const handleAddPlayer = async () => {
+    if (!playerForm.name.trim() || !playerForm.dni.trim() || !playerForm.number.trim()) return;
+    setIsSubmittingPlayer(true);
+    try {
+      await playersService.createPlayer({
+        clubId: activeProfile.id,
+        teamId: '', // Dummy or empty if required by type but not by db
+        name: playerForm.name.trim(),
+        dni: playerForm.dni.trim(),
+        number: parseInt(playerForm.number),
+        position: playerForm.position,
+      });
+      await refreshProfiles();
+      setShowAddPlayer(false);
+      setPlayerForm({ name: '', dni: '', number: '', position: 'OUTSIDE_HITTER' });
+    } catch (error) {
+      console.error("Error creating player:", error);
+      alert("Error al crear el jugador. Posiblemente el DNI ya exista.");
+    } finally {
+      setIsSubmittingPlayer(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <View style={[styles`flex-1 bg-screen justify-center items-center`]}>
@@ -51,6 +77,8 @@ export default function HomeScreen() {
     );
   }
 
+  const allClubPlayers = activeProfile.players || [];
+
   return (
     <View style={styles`flex-1 bg-screen`}>
       <StatusBar style="light" />
@@ -58,18 +86,7 @@ export default function HomeScreen() {
       {/* ── Header ── */}
       <View style={[styles`bg-header px-4`, { paddingTop: 60, paddingBottom: 24 }]}>
         <View style={styles`flex-row items-center justify-between mb-4`}>
-          
-          {/* Coach info */}
-          <View style={styles`flex-row items-center gap-4`}>
-            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#1E6FD9', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)' }}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', color: '#fff' }}>{initials}</Text>
-            </View>
-            <View>
-              <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>Bienvenido,</Text>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '700', color: '#fff' }}>{coach.name}</Text>
-            </View>
-          </View>
-
+          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: '#fff' }}>Gestión de Club</Text>
           <TouchableOpacity onPress={() => router.push('/settings')} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' }}>
             <Settings size={18} color="#fff" />
           </TouchableOpacity>
@@ -99,78 +116,83 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* ── Teams List ── */}
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 120 }}>
+        
         {profiles.length === 0 ? (
           <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
             <Building2 size={48} color="#94a3b8" />
             <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '600', color: '#0D1F33', marginTop: 16 }}>Sin clubes aún</Text>
-            <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4, textAlign: 'center' }}>Agregá tu primer club desde Configuración</Text>
-            <TouchableOpacity onPress={() => router.push('/settings')} style={{ marginTop: 16, backgroundColor: '#1E6FD9', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 14, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>IR A CONFIGURACIÓN</Text>
-            </TouchableOpacity>
+            <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4, textAlign: 'center' }}>Por favor crea un club en la configuración.</Text>
           </View>
         ) : (
           <>
+            {/* ── Equipos ── */}
             <View style={styles`flex-row items-center justify-between mb-4`}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', color: '#0D1F33' }}>MIS EQUIPOS</Text>
-              <Text style={styles`text-slate`}>{activeProfile.teams.length} equipos</Text>
+              <View style={styles`flex-row items-center gap-2`}>
+                <Building2 size={20} color="#0D1F33" />
+                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '700', color: '#0D1F33' }}>EQUIPOS</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowAddTeam(true)} style={{ backgroundColor: 'rgba(30,111,217,0.1)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Plus size={16} color="#1E6FD9" />
+                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, fontWeight: '600', color: '#1E6FD9' }}>NUEVO EQUIPO</Text>
+              </TouchableOpacity>
             </View>
 
             {activeProfile.teams.length === 0 ? (
-              <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
-                <Building2 size={48} color="#94a3b8" />
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '600', color: '#0D1F33', marginTop: 16 }}>Sin equipos aún</Text>
-                <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>Agregá el primer equipo de {activeProfile.clubName}</Text>
+              <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 32, backgroundColor: '#fff', borderRadius: 12, marginBottom: 24 }}>
+                <Text style={{ fontSize: 14, color: '#64748B' }}>No hay equipos en este club.</Text>
               </View>
             ) : (
-              activeProfile.teams.map((team) => (
-                <TouchableOpacity 
-                  key={team.id}
-                  activeOpacity={0.9}
-                  style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}
-                  onPress={() => router.push(`/team/${team.id}`)}
-                >
-                  <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: activeProfile.color }} />
-                  
-                  <View style={{ paddingLeft: 8 }}>
-                    <View style={styles`flex-row items-center justify-between mb-4`}>
-                      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '600', color: '#0D1F33' }}>{team.name}</Text>
-                      <View style={{ backgroundColor: activeProfile.color, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
-                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, color: '#fff', letterSpacing: 1 }}>VÓLEY</Text>
-                      </View>
-                    </View>
+              <View style={{ marginBottom: 24 }}>
+                {activeProfile.teams.map((team) => (
+                  <View key={team.id} style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' }}>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '600', color: '#0D1F33' }}>{team.name}</Text>
+                    <ChevronRight size={20} color="#CBD5E1" />
+                  </View>
+                ))}
+              </View>
+            )}
 
-                    <View style={styles`flex-row justify-between`}>
-                      <View>
-                        <Text style={{ fontSize: 12, color: '#64748B' }}>Partidos Jugados</Text>
-                        <Text style={{ fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>{team.matchCount}</Text>
-                      </View>
+            {/* ── Jugadores ── */}
+            <View style={styles`flex-row items-center justify-between mb-4 mt-4`}>
+              <View style={styles`flex-row items-center gap-2`}>
+                <Users size={20} color="#0D1F33" />
+                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '700', color: '#0D1F33' }}>JUGADORES DEL CLUB</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowAddPlayer(true)} style={{ backgroundColor: 'rgba(30,111,217,0.1)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Plus size={16} color="#1E6FD9" />
+                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, fontWeight: '600', color: '#1E6FD9' }}>NUEVO JUGADOR</Text>
+              </TouchableOpacity>
+            </View>
+
+            {allClubPlayers.length === 0 ? (
+              <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 32, backgroundColor: '#fff', borderRadius: 12 }}>
+                <Text style={{ fontSize: 14, color: '#64748B' }}>No hay jugadores registrados en el club.</Text>
+              </View>
+            ) : (
+              <View style={{ gap: 8 }}>
+                {allClubPlayers.map((player) => (
+                  <View key={player.id} style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' }}>
+                    <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: activeProfile.color, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 14, fontWeight: '700', color: '#fff' }}>{player.number}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '600', color: '#0D1F33' }}>{player.name}</Text>
+                      <Text style={{ fontSize: 12, color: '#64748B' }}>{player.position}</Text>
                     </View>
                   </View>
-                </TouchableOpacity>
-              ))
+                ))}
+              </View>
             )}
           </>
         )}
       </ScrollView>
 
-      {/* Floating Action Button */}
-      {profiles.length > 0 && (
-        <TouchableOpacity 
-          activeOpacity={0.8}
-          onPress={() => { setTeamName(''); setShowAddTeam(true); }}
-          style={{ position: 'absolute', bottom: 90, right: 24, width: 60, height: 60, borderRadius: 30, backgroundColor: activeProfile.color, justifyContent: 'center', alignItems: 'center', boxShadow: `0px 4px 8px ${activeProfile.color}66` }}
-        >
-          <Plus size={28} color="#fff" />
-        </TouchableOpacity>
-      )}
-
       {/* Bottom Navigation */}
       <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#E2E8F0', flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, paddingBottom: 24 }}>
-        <TouchableOpacity style={styles`items-center`}>
-          <Home size={24} color={activeProfile.color} />
-          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: activeProfile.color, marginTop: 4 }}>Home</Text>
+        <TouchableOpacity style={styles`items-center`} onPress={() => router.replace('/home')}>
+          <Home size={24} color="#64748B" />
+          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#64748B', marginTop: 4 }}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles`items-center`}
@@ -179,9 +201,9 @@ export default function HomeScreen() {
           <BarChart3 size={24} color="#64748B" />
           <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#64748B', marginTop: 4 }}>Stats</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles`items-center`} onPress={() => router.push('/club')}>
-          <Building2 size={24} color="#64748B" />
-          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#64748B', marginTop: 4 }}>Club</Text>
+        <TouchableOpacity style={styles`items-center`}>
+          <Building2 size={24} color={activeProfile.color} />
+          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: activeProfile.color, marginTop: 4 }}>Club</Text>
         </TouchableOpacity>
       </View>
 
@@ -211,6 +233,54 @@ export default function HomeScreen() {
                 style={{ flex: 1, backgroundColor: teamName.trim() ? activeProfile.color : '#cbd5e1', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
               >
                 <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#fff' }}>AGREGAR</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Add Player Modal ── */}
+      <Modal visible={showAddPlayer} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24 }}>
+            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: '#0D1F33' }}>Nuevo Jugador</Text>
+            <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 20 }}>Agregar jugador al club <Text style={{ fontWeight: 'bold' }}>{activeProfile.clubName}</Text></Text>
+            
+            <TextInput 
+              style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 12, fontSize: 16, marginBottom: 12 }}
+              placeholder="Nombre Completo"
+              value={playerForm.name}
+              onChangeText={t => setPlayerForm(p => ({ ...p, name: t }))}
+            />
+            <TextInput 
+              style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 12, fontSize: 16, marginBottom: 12 }}
+              placeholder="DNI"
+              keyboardType="numeric"
+              value={playerForm.dni}
+              onChangeText={t => setPlayerForm(p => ({ ...p, dni: t }))}
+            />
+            <TextInput 
+              style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 12, fontSize: 16, marginBottom: 24 }}
+              placeholder="Número de Camiseta"
+              keyboardType="numeric"
+              value={playerForm.number}
+              onChangeText={t => setPlayerForm(p => ({ ...p, number: t }))}
+            />
+
+            <View style={styles`flex-row gap-4`}>
+              <TouchableOpacity onPress={() => setShowAddPlayer(false)} style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}>
+                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={handleAddPlayer}
+                disabled={isSubmittingPlayer || !playerForm.name || !playerForm.dni || !playerForm.number}
+                style={{ flex: 1, backgroundColor: playerForm.name && playerForm.dni ? activeProfile.color : '#cbd5e1', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                {isSubmittingPlayer ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#fff' }}>AGREGAR</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -247,7 +317,6 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
-
     </View>
   );
 }

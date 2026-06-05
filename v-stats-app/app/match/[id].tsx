@@ -91,7 +91,7 @@ export default function LiveMatchScreen() {
   const { activeProfile } = useProfile();
 
   const team = activeProfile.teams.find(t => t.id === teamId);
-  const fullRoster = team?.roster ?? [];
+  const fullRoster = activeProfile.players || [];
   const playerIds: string[] = players ? JSON.parse(players) : [];
   const convocados = fullRoster.filter(p => playerIds.includes(p.id));
 

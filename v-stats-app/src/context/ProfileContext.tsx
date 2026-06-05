@@ -28,6 +28,7 @@ export type ClubProfile = {
   role: string;
   color: string;
   teams: TeamProfile[];
+  players: Player[];
 };
 
 export type Coach = {
@@ -60,6 +61,7 @@ const EMPTY_PROFILE: ClubProfile = {
   role: 'coach',
   color: '#1E6FD9',
   teams: [],
+  players: [],
 };
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -130,6 +132,18 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
           }
         }
 
+        // Load players for this club directly
+        const clubPlayersRes = await playersService.getPlayers(club.id);
+        const clubPlayers: Player[] = (clubPlayersRes.data?.players || [])
+          .filter((p: ApiPlayer) => p.isActive)
+          .map((p: ApiPlayer) => ({
+            id: p.id,
+            name: p.name,
+            number: p.number,
+            position: p.position,
+            isActive: p.isActive,
+          }));
+
         clubProfiles.push({
           id: club.id,
           clubName: club.name,
@@ -137,6 +151,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
           role: club.role,
           color: club.color,
           teams,
+          players: clubPlayers,
         });
       }
 
