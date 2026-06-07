@@ -13,6 +13,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const clubId = searchParams.get("clubId")
+    const teamId = searchParams.get("teamId")
 
     if (!clubId) {
       return NextResponse.json({ error: "El ID del club es requerido" }, { status: 400 })
@@ -27,7 +28,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 })
     }
 
-    const teamIds = club.teams.map(t => t.id)
+    const requestedTeam = teamId ? club.teams.find((team) => team.id === teamId) : null
+    if (teamId && !requestedTeam) {
+      return NextResponse.json({ error: "Equipo no encontrado" }, { status: 404 })
+    }
+
+    const selectedTeam = requestedTeam ? { id: requestedTeam.id, name: requestedTeam.name } : null
+    const teamIds = selectedTeam ? [selectedTeam.id] : club.teams.map(t => t.id)
 
     if (teamIds.length === 0) {
       return NextResponse.json({
@@ -40,10 +47,29 @@ export async function GET(request: Request) {
         totalPoints: 0,
         topScorers: [],
         recentMatches: [],
+        teamBreakdown: club.teams.map((team) => ({
+          id: team.id,
+          name: team.name,
+          matches: 0,
+          wins: 0,
+          losses: 0,
+          winRate: 0,
+        })),
+        selectedTeam,
+        attacks: 0,
+        defenses: 0,
+        blocks: 0,
+        aces: 0,
+        errors: 0,
+        positiveActions: 0,
+        negativeActions: 0,
+        totalActions: 0,
+        avgActionsPerPoint: 0,
+        pointsPerMatch: 0,
       })
     }
 
-    // 1. Matches statistics (across all teams in the club)
+    // 1. Matches statistics
     const matches = await prisma.match.findMany({
       where: { teamId: { in: teamIds }, status: "finished" },
       orderBy: { date: "desc" },
@@ -66,6 +92,26 @@ export async function GET(request: Request) {
       }
     }
 
+    const allClubMatches = await prisma.match.findMany({
+      where: { teamId: { in: club.teams.map(t => t.id) }, status: "finished" },
+      select: { teamId: true, result: true },
+    })
+
+    const teamBreakdown = club.teams.map((team) => {
+      const teamMatches = allClubMatches.filter((match) => match.teamId === team.id)
+      const teamWins = teamMatches.filter((match) => match.result === "WIN").length
+      const teamLosses = teamMatches.filter((match) => match.result === "LOSS").length
+
+      return {
+        id: team.id,
+        name: team.name,
+        matches: teamMatches.length,
+        wins: teamWins,
+        losses: teamLosses,
+        winRate: teamMatches.length > 0 ? Math.round((teamWins / teamMatches.length) * 100) : 0,
+      }
+    })
+
     // 2. Player statistics (aggregate all PlayerMatchStats)
     const playerStats = await prisma.playerMatchStats.groupBy({
       by: ['playerId'],
@@ -86,7 +132,7 @@ export async function GET(request: Request) {
         matchId: true,
       },
       where: {
-        match: { teamId: { in: teamIds } }
+        match: { teamId: { in: teamIds }, status: "finished" }
       }
     })
 
@@ -122,8 +168,28 @@ export async function GET(request: Request) {
       .filter(p => p.name)
       .sort((a, b) => b.puntos - a.puntos)
 
+    const attacks = playerStats.reduce((sum, stat) => sum + (stat._sum.ataquesPositivos || 0), 0)
+    const defenses = playerStats.reduce((sum, stat) => sum + (stat._sum.defensasPositivas || 0), 0)
+    const blocks = playerStats.reduce((sum, stat) => sum + (stat._sum.bloqueosPositivos || 0), 0)
+    const aces = playerStats.reduce((sum, stat) => sum + (stat._sum.aces || 0), 0)
+    const tacticalAdvantages = playerStats.reduce((sum, stat) => sum + (stat._sum.ventajasTacticas || 0), 0)
+    const errors = playerStats.reduce((sum, stat) =>
+      sum
+      + (stat._sum.erroresAtaque || 0)
+      + (stat._sum.erroresRecepcion || 0)
+      + (stat._sum.erroresSaque || 0)
+      + (stat._sum.bloqueosErrados || 0)
+      + (stat._sum.erroresTacticos || 0),
+    0)
+
+    const positiveActions = attacks + defenses + blocks + aces + tacticalAdvantages
+    const negativeActions = errors
+    const totalActions = positiveActions + negativeActions
+
     // Compute total points
     const totalPoints = topScorers.reduce((sum, p) => sum + p.puntos, 0)
+    const avgActionsPerPoint = totalPoints > 0 ? Number((totalActions / totalPoints).toFixed(1)) : 0
+    const pointsPerMatch = totalMatches > 0 ? Number((totalPoints / totalMatches).toFixed(1)) : 0
 
     // 3. Recent matches (with details)
     const recentMatches = await prisma.match.findMany({
@@ -144,6 +210,18 @@ export async function GET(request: Request) {
       setsWon,
       setsLost,
       totalPoints,
+      selectedTeam,
+      teamBreakdown,
+      attacks,
+      defenses,
+      blocks,
+      aces,
+      errors,
+      positiveActions,
+      negativeActions,
+      totalActions,
+      avgActionsPerPoint,
+      pointsPerMatch,
       topScorers,
       recentMatches,
     })

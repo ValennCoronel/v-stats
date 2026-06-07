@@ -8,6 +8,28 @@ export type ClubStats = {
   setsWon: number;
   setsLost: number;
   totalPoints: number;
+  attacks: number;
+  defenses: number;
+  blocks: number;
+  aces: number;
+  errors: number;
+  positiveActions: number;
+  negativeActions: number;
+  totalActions: number;
+  avgActionsPerPoint: number;
+  pointsPerMatch: number;
+  selectedTeam: {
+    id: string;
+    name: string;
+  } | null;
+  teamBreakdown: {
+    id: string;
+    name: string;
+    matches: number;
+    wins: number;
+    losses: number;
+    winRate: number;
+  }[];
   topScorers: {
     id: string;
     name: string;
@@ -27,7 +49,8 @@ export type ClubStats = {
 };
 
 export const statsService = {
-  async getClubStats(clubId: string) {
-    return api.get<ClubStats>(`/api/stats?clubId=${clubId}`);
+  async getClubStats(clubId: string, teamId?: string) {
+    const teamParam = teamId ? `&teamId=${teamId}` : '';
+    return api.get<ClubStats>(`/api/stats?clubId=${clubId}${teamParam}`);
   },
 };

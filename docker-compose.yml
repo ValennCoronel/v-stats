@@ -31,7 +31,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: sh -c "npx prisma migrate dev --name update && npm run dev"
+    command: sh -c "npx prisma migrate dev --name update && npm run seed:local && npm run dev"
 
 volumes:
   db_data:
