@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server"
+
 
 export default function Home() {
-  return NextResponse.json({
+  const data = {
     name: "V-Stats API",
     version: "1.0.0",
     status: "running",
@@ -30,5 +30,12 @@ export default function Home() {
       "GET  /api/tournaments",
       "POST /api/tournaments",
     ],
-  })
+  };
+
+  return (
+    <div style={{ padding: '2rem', fontFamily: 'monospace' }}>
+      <h1>V-Stats API</h1>
+      <pre>{JSON.stringify(data, null, 2)}</pre>
+    </div>
+  );
 }
