@@ -411,7 +411,7 @@ export default function LiveMatchScreen() {
                     ...borderStyle,
                   }}
                 >
-                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 13, letterSpacing: 0.5, color: '#fff' }}>{isPast ? `${set}✓` : `S${set}`}</Text>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 13, letterSpacing: 0.5, color: '#fff' }}>{isPast ? `${set}✓` : `S${set}`}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -420,16 +420,16 @@ export default function LiveMatchScreen() {
 
         <View style={styles`flex-row items-center justify-between px-5 pb-1`}>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, letterSpacing: 1, color: 'rgba(255,255,255,0.6)' }}>EQUIPO LOCAL</Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 54, fontWeight: '700', lineHeight: 60, color: '#3D8EF5' }}>{homeScore}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1, color: 'rgba(255,255,255,0.6)' }}>EQUIPO LOCAL</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 54, fontWeight: '700', lineHeight: 60, color: '#3D8EF5' }}>{homeScore}</Text>
           </View>
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 4 }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 13, letterSpacing: 2, color: 'rgba(255,255,255,0.4)' }}>VS</Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>{setsWon.home} – {setsWon.away}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 13, letterSpacing: 2, color: 'rgba(255,255,255,0.4)' }}>VS</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>{setsWon.home} – {setsWon.away}</Text>
           </View>
           <View style={{ flex: 1, alignItems: 'flex-end' }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, letterSpacing: 1, color: 'rgba(255,255,255,0.6)' }}>VISITANTE</Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 54, fontWeight: '700', lineHeight: 60, color: '#fff' }}>{awayScore}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1, color: 'rgba(255,255,255,0.6)' }}>VISITANTE</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 54, fontWeight: '700', lineHeight: 60, color: '#fff' }}>{awayScore}</Text>
           </View>
         </View>
       </View>
@@ -442,10 +442,10 @@ export default function LiveMatchScreen() {
             {/* ① JUGADORES */}
             <View>
               <View style={styles`flex-row justify-between items-center mb-2`}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', letterSpacing: 0.5, color: '#0D1F33' }}>① JUGADOR EN CANCHA</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', letterSpacing: 0.5, color: '#0D1F33' }}>① JUGADOR EN CANCHA</Text>
                   {courtPlayers.length > 0 && (
                   <TouchableOpacity onPress={openSubstitution} disabled={selectedPlayer === null} style={{ backgroundColor: selectedPlayer !== null ? '#1E6FD9' : '#94A3B8', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 6, opacity: selectedPlayer !== null ? 1 : 0.4 }}>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, letterSpacing: 1, color: '#fff' }}>CAMBIO →</Text>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1, color: '#fff' }}>CAMBIO →</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -461,7 +461,7 @@ export default function LiveMatchScreen() {
                           onPress={() => setSelectedPlayer(player.id)}
                           style={[styles`w-1/3 bg-white rounded-lg p-2`, { borderWidth: 2, borderColor: selectedPlayer === player.id ? '#1E6FD9' : 'transparent', backgroundColor: selectedPlayer === player.id ? 'rgba(30,111,217,0.05)' : '#fff' }]}
                         >
-                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: '#1E6FD9', lineHeight: 28 }}>{player.number}</Text>
+                          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#1E6FD9', lineHeight: 28 }}>{player.number}</Text>
                           <Text style={{ fontSize: 10, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{player.name}</Text>
                           <Text style={{ fontSize: 9, color: '#64748B' }}>{player.position}</Text>
                         </TouchableOpacity>
@@ -472,7 +472,7 @@ export default function LiveMatchScreen() {
                           style={[styles`w-1/3 rounded-lg`, { borderWidth: 2, borderStyle: 'dashed', borderColor: '#CBD5E1', padding: 12, alignItems: 'center', justifyContent: 'center', minHeight: 80, backgroundColor: 'rgba(0,0,0,0.02)' }]}
                         >
                           <Plus size={22} color="#94A3B8" />
-                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#94A3B8', marginTop: 4, textAlign: 'center' }}>AGREGAR JUGADOR</Text>
+                          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, color: '#94A3B8', marginTop: 4, textAlign: 'center' }}>AGREGAR JUGADOR</Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -482,9 +482,9 @@ export default function LiveMatchScreen() {
                     <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
                       <TouchableOpacity onPress={() => setSelectedPlayer(assignedSlots[6]!.id)} style={{ width: '31%', backgroundColor: '#FEF9C3', borderRadius: 8, padding: 8, borderWidth: 2, borderColor: selectedPlayer === assignedSlots[6]!.id ? '#1E6FD9' : '#FDE047', alignItems: 'center' }}>
                         <View style={{ backgroundColor: '#FDE047', paddingHorizontal: 8, paddingVertical: 1, borderRadius: 4, marginBottom: 2 }}>
-                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, fontWeight: '700', color: '#92400E' }}>LÍBERO</Text>
+                          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, fontWeight: '700', color: '#92400E' }}>LÍBERO</Text>
                         </View>
-                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#92400E', lineHeight: 26 }}>{assignedSlots[6]!.number}</Text>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#92400E', lineHeight: 26 }}>{assignedSlots[6]!.number}</Text>
                         <Text style={{ fontSize: 9, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{assignedSlots[6]!.name}</Text>
                         <Text style={{ fontSize: 8, color: '#92400E' }}>{assignedSlots[6]!.position}</Text>
                       </TouchableOpacity>
@@ -495,7 +495,7 @@ export default function LiveMatchScreen() {
                       style={{ width: '100%', borderRadius: 8, padding: 12, borderWidth: 2, borderStyle: 'dashed', borderColor: '#1E6FD9', backgroundColor: 'rgba(30,111,217,0.05)', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                     >
                       <Plus size={20} color="#1E6FD9" />
-                      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 13, color: '#1E6FD9', fontWeight: '600' }}>AGREGAR LÍBERO</Text>
+                      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 13, color: '#1E6FD9', fontWeight: '600' }}>AGREGAR LÍBERO</Text>
                     </TouchableOpacity>
                   )}
                 </>
@@ -504,7 +504,7 @@ export default function LiveMatchScreen() {
                   <View style={styles`flex-row flex-wrap justify-between gap-2 mb-2`}>
                     {courtPlayers.map((player) => (
                       <TouchableOpacity key={player.id} onPress={() => setSelectedPlayer(player.id)} style={[styles`w-1/3 bg-white rounded-lg p-2`, { borderWidth: 2, borderColor: selectedPlayer === player.id ? '#1E6FD9' : 'transparent', backgroundColor: selectedPlayer === player.id ? 'rgba(30,111,217,0.05)' : '#fff' }]}>
-                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: '#1E6FD9', lineHeight: 28 }}>{player.number}</Text>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#1E6FD9', lineHeight: 28 }}>{player.number}</Text>
                         <Text style={{ fontSize: 10, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{player.name}</Text>
                         <Text style={{ fontSize: 9, color: '#64748B' }}>{player.position}</Text>
                       </TouchableOpacity>
@@ -514,9 +514,9 @@ export default function LiveMatchScreen() {
                     <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
                       <TouchableOpacity onPress={() => setSelectedPlayer(liberoPlayer.id)} style={{ width: '31%', backgroundColor: '#FEF9C3', borderRadius: 8, padding: 8, borderWidth: 2, borderColor: selectedPlayer === liberoPlayer.id ? '#1E6FD9' : '#FDE047', alignItems: 'center' }}>
                         <View style={{ backgroundColor: '#FDE047', paddingHorizontal: 8, paddingVertical: 1, borderRadius: 4, marginBottom: 2 }}>
-                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, fontWeight: '700', color: '#92400E' }}>LÍBERO</Text>
+                          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, fontWeight: '700', color: '#92400E' }}>LÍBERO</Text>
                         </View>
-                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#92400E', lineHeight: 26 }}>{liberoPlayer.number}</Text>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#92400E', lineHeight: 26 }}>{liberoPlayer.number}</Text>
                         <Text style={{ fontSize: 9, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{liberoPlayer.name}</Text>
                         <Text style={{ fontSize: 8, color: '#92400E' }}>{liberoPlayer.position}</Text>
                       </TouchableOpacity>
@@ -528,12 +528,12 @@ export default function LiveMatchScreen() {
 
             {/* ② ACCIÓN */}
             <View>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', letterSpacing: 0.5, color: '#0D1F33', marginBottom: 8 }}>② ACCIÓN</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', letterSpacing: 0.5, color: '#0D1F33', marginBottom: 8 }}>② ACCIÓN</Text>
               <View style={styles`flex-row flex-wrap justify-between gap-1.5`}>
                 {actions.map((action) => (
                   <TouchableOpacity key={action.id} disabled={!isGameReady} onPress={() => setSelectedAction(action.id)} style={[styles`bg-white rounded-lg items-center justify-center py-2`, { flex: 1, height: 60, borderWidth: 2, borderColor: selectedAction === action.id ? '#1E6FD9' : 'transparent', backgroundColor: selectedAction === action.id ? 'rgba(30,111,217,0.05)' : '#fff', opacity: isGameReady ? 1 : 0.4 }]}>
                     <Text style={{ fontSize: 18 }}>{action.icon}</Text>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 8, letterSpacing: 0.3, color: '#0D1F33', marginTop: 3 }}>{action.name}</Text>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 8, letterSpacing: 0.3, color: '#0D1F33', marginTop: 3 }}>{action.name}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -541,12 +541,12 @@ export default function LiveMatchScreen() {
 
             {/* ③ RESULTADO */}
             <View>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', letterSpacing: 0.5, color: '#0D1F33', marginBottom: 8 }}>③ RESULTADO</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', letterSpacing: 0.5, color: '#0D1F33', marginBottom: 8 }}>③ RESULTADO</Text>
               <View style={styles`flex-row flex-wrap justify-between gap-1.5 mb-3`}>
                 {results.map((result) => (
-                  <TouchableOpacity key={result.id} disabled={!isGameReady} onPress={() => setSelectedResult(result.id)} style={[styles`w-1/3 items-center justify-center py-2 rounded-lg`, { height: 64, backgroundColor: result.color, borderWidth: 2, borderColor: selectedResult === result.id ? '#0D1F33' : 'transparent', opacity: isGameReady ? 1 : 0.35 }]}>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', color: '#fff' }}>{result.symbol}</Text>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 8, color: '#fff' }}>{result.label}</Text>
+                  <TouchableOpacity key={result.id} disabled={!isGameReady} onPress={() => setSelectedResult(result.id)} style={[styles`w-1/6 items-center justify-center py-2 rounded-lg`, { height: 60, backgroundColor: result.color, borderWidth: 2, borderColor: selectedResult === result.id ? '#0D1F33' : 'transparent', opacity: isGameReady ? 1 : 0.35 }]}>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: '#fff' }}>{result.symbol}</Text>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 8, color: '#fff' }}>{result.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -554,7 +554,7 @@ export default function LiveMatchScreen() {
               {/* Hint Line */}
               {selectedAction && selectedResult && (
                 <View style={{ backgroundColor: ((selectedAction === "ataque" || selectedAction === "saque" || selectedAction === "bloqueo") && selectedResult === "dbl") ? '#DCFCE7' : selectedResult === "err" ? '#FEE2E2' : '#F4F7FB', padding: 8, borderRadius: 8, alignItems: 'center', marginBottom: 8 }}>
-                   <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 0.5, color: ((selectedAction === "ataque" || selectedAction === "saque" || selectedAction === "bloqueo") && selectedResult === "dbl") ? '#15803D' : selectedResult === "err" ? '#DC2626' : '#64748B' }}>
+                   <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 0.5, color: ((selectedAction === "ataque" || selectedAction === "saque" || selectedAction === "bloqueo") && selectedResult === "dbl") ? '#15803D' : selectedResult === "err" ? '#DC2626' : '#64748B' }}>
                     {((selectedAction === "ataque" || selectedAction === "saque" || selectedAction === "bloqueo") && selectedResult === "dbl") ? "✅ PUNTO PROPIO" : selectedResult === "err" ? "❌ PUNTO RIVAL" : "—"}
                    </Text>
                 </View>
@@ -570,25 +570,25 @@ export default function LiveMatchScreen() {
                 {/* RESUMEN DEL SET */}
                 <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
                   <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' }}>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#94A3B8', letterSpacing: 1, marginBottom: 4 }}>PUNTOS</Text>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 28, fontWeight: '700', color: '#F59E0B' }}>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, color: '#94A3B8', letterSpacing: 1, marginBottom: 4 }}>PUNTOS</Text>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 28, fontWeight: '700', color: '#F59E0B' }}>
                       {viewSetStats.reduce((acc, p) => acc + p.puntos, 0) + actionHistory.filter(a => a.set === selectedViewSet && a.playerId === 'rival').length}
                     </Text>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, color: '#94A3B8' }}>del set</Text>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 9, color: '#94A3B8' }}>del set</Text>
                   </View>
                   <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' }}>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#94A3B8', letterSpacing: 1, marginBottom: 4 }}>GANADOS</Text>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 28, fontWeight: '700', color: '#10B981' }}>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, color: '#94A3B8', letterSpacing: 1, marginBottom: 4 }}>GANADOS</Text>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 28, fontWeight: '700', color: '#10B981' }}>
                       {viewSetStats.reduce((acc, p) => acc + p.puntos, 0) + actionHistory.filter(a => a.set === selectedViewSet && a.playerId === 'rival').length}
                     </Text>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, color: '#94A3B8' }}>en acción</Text>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 9, color: '#94A3B8' }}>en acción</Text>
                   </View>
                   <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' }}>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#94A3B8', letterSpacing: 1, marginBottom: 4 }}>ERRORES</Text>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 28, fontWeight: '700', color: '#EF4444' }}>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, color: '#94A3B8', letterSpacing: 1, marginBottom: 4 }}>ERRORES</Text>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 28, fontWeight: '700', color: '#EF4444' }}>
                       {viewSetStats.reduce((acc, p) => acc + p.errores, 0)}
                     </Text>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, color: '#94A3B8' }}>propios</Text>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 9, color: '#94A3B8' }}>propios</Text>
                   </View>
                 </View>
 
@@ -603,13 +603,13 @@ export default function LiveMatchScreen() {
                     return (
                       <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, color: '#64748B', fontWeight: '500' }}>Ataque</Text>
-                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '700', color: '#10B981' }}>{pct}%</Text>
+                          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, color: '#64748B', fontWeight: '500' }}>Ataque</Text>
+                          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 20, fontWeight: '700', color: '#10B981' }}>{pct}%</Text>
                         </View>
                         <View style={{ backgroundColor: '#F1F5F9', borderRadius: 4, height: 5, overflow: 'hidden' }}>
                           <View style={{ width: `${pct}%`, height: '100%', backgroundColor: '#10B981', borderRadius: 4 }} />
                         </View>
-                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, color: '#94A3B8', marginTop: 4 }}>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 9, color: '#94A3B8', marginTop: 4 }}>
                           {pos} pos · {setActs.filter(a => a.result === 'err').length} err · {total} tot
                         </Text>
                       </View>
@@ -624,13 +624,13 @@ export default function LiveMatchScreen() {
                     return (
                       <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, color: '#64748B', fontWeight: '500' }}>Recepción</Text>
-                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '700', color: '#F59E0B' }}>{pct}%</Text>
+                          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, color: '#64748B', fontWeight: '500' }}>Recepción</Text>
+                          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 20, fontWeight: '700', color: '#F59E0B' }}>{pct}%</Text>
                         </View>
                         <View style={{ backgroundColor: '#F1F5F9', borderRadius: 4, height: 5, overflow: 'hidden' }}>
                           <View style={{ width: `${pct}%`, height: '100%', backgroundColor: '#F59E0B', borderRadius: 4 }} />
                         </View>
-                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, color: '#94A3B8', marginTop: 4 }}>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 9, color: '#94A3B8', marginTop: 4 }}>
                           {pos} pos · {setActs.filter(a => a.result === 'err').length} err · {total} tot
                         </Text>
                       </View>
@@ -641,22 +641,22 @@ export default function LiveMatchScreen() {
                 {/* ERRORES PROPIOS vs RIVAL */}
                 <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
                   <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#EF4444', fontWeight: '600', letterSpacing: 0.5, marginBottom: 4 }}>ERRORES PROPIOS</Text>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 32, fontWeight: '700', color: '#EF4444', lineHeight: 36 }}>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, color: '#EF4444', fontWeight: '600', letterSpacing: 0.5, marginBottom: 4 }}>ERRORES PROPIOS</Text>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 32, fontWeight: '700', color: '#EF4444', lineHeight: 36 }}>
                       {viewSetStats.reduce((acc, p) => acc + p.errores, 0)}
                     </Text>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, color: '#94A3B8', marginTop: 4, lineHeight: 14 }}>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 9, color: '#94A3B8', marginTop: 4, lineHeight: 14 }}>
                       Saque: {actionHistory.filter(a => a.set === selectedViewSet && a.action === 'saque' && a.result === 'err').length}{'\n'}
                       Ataque: {actionHistory.filter(a => a.set === selectedViewSet && a.action === 'ataque' && a.result === 'err').length}{'\n'}
                       Recep: {actionHistory.filter(a => a.set === selectedViewSet && a.action === 'recepcion' && a.result === 'err').length}
                     </Text>
                   </View>
                   <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#10B981', fontWeight: '600', letterSpacing: 0.5, marginBottom: 4 }}>ERRORES RIVAL</Text>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 32, fontWeight: '700', color: '#10B981', lineHeight: 36 }}>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, color: '#10B981', fontWeight: '600', letterSpacing: 0.5, marginBottom: 4 }}>ERRORES RIVAL</Text>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 32, fontWeight: '700', color: '#10B981', lineHeight: 36 }}>
                       {actionHistory.filter(a => a.set === selectedViewSet && a.playerId === 'rival').length}
                     </Text>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, color: '#94A3B8', marginTop: 4, lineHeight: 14 }}>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 9, color: '#94A3B8', marginTop: 4, lineHeight: 14 }}>
                       Saque: {actionHistory.filter(a => a.set === selectedViewSet && a.action === 'rival_saque').length}{'\n'}
                       Ataque: {actionHistory.filter(a => a.set === selectedViewSet && a.action === 'rival_ataque').length}
                     </Text>
@@ -665,7 +665,7 @@ export default function LiveMatchScreen() {
 
                 {/* TITULO TABLA */}
                 <View style={{ alignItems: 'center', marginBottom: 10 }}>
-                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', color: '#0D1F33', letterSpacing: 0.5 }}>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: '#0D1F33', letterSpacing: 0.5 }}>
                     Resultados — Set {selectedViewSet}
                   </Text>
                 </View>
@@ -674,30 +674,30 @@ export default function LiveMatchScreen() {
                 <View style={{ backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: '#E2E8F0', overflow: 'hidden' }}>
                   {/* Header */}
                   <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#F8FAFC', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
-                    <Text style={{ flex: 2, fontFamily: 'Barlow Condensed', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5 }}>JUGADOR</Text>
-                    <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 11, color: '#F59E0B', textAlign: 'center', letterSpacing: 0.5 }}>PTS</Text>
-                    <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 11, color: '#10B981', textAlign: 'center', letterSpacing: 0.5 }}>ATK</Text>
-                    <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 11, color: '#1E6FD9', textAlign: 'center', letterSpacing: 0.5 }}>SAQ</Text>
-                    <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 11, color: '#F59E0B', textAlign: 'center', letterSpacing: 0.5 }}>BLQ</Text>
-                    <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 11, color: '#EF4444', textAlign: 'center', letterSpacing: 0.5 }}>ERR</Text>
+                    <Text style={{ flex: 2, fontFamily: 'Gotham Rounded', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5 }}>JUGADOR</Text>
+                    <Text style={{ width: 40, fontFamily: 'Gotham Rounded', fontSize: 11, color: '#F59E0B', textAlign: 'center', letterSpacing: 0.5 }}>PTS</Text>
+                    <Text style={{ width: 40, fontFamily: 'Gotham Rounded', fontSize: 11, color: '#10B981', textAlign: 'center', letterSpacing: 0.5 }}>ATK</Text>
+                    <Text style={{ width: 40, fontFamily: 'Gotham Rounded', fontSize: 11, color: '#1E6FD9', textAlign: 'center', letterSpacing: 0.5 }}>SAQ</Text>
+                    <Text style={{ width: 40, fontFamily: 'Gotham Rounded', fontSize: 11, color: '#F59E0B', textAlign: 'center', letterSpacing: 0.5 }}>BLQ</Text>
+                    <Text style={{ width: 40, fontFamily: 'Gotham Rounded', fontSize: 11, color: '#EF4444', textAlign: 'center', letterSpacing: 0.5 }}>ERR</Text>
                   </View>
 
                   {viewSetStats.length === 0 ? (
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, color: '#94A3B8', textAlign: 'center', paddingVertical: 40 }}>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, color: '#94A3B8', textAlign: 'center', paddingVertical: 40 }}>
                       No hay acciones registradas
                     </Text>
                   ) : (
                     viewSetStats.map((p, index) => (
                       <View key={p.id} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: index === 0 ? 0 : 1, borderTopColor: '#F1F5F9' }}>
                         <View style={{ flex: 2 }}>
-                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>#{p.number}</Text>
+                          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>#{p.number}</Text>
                           <Text style={{ fontSize: 10, color: '#64748B' }} numberOfLines={1}>{p.name.split(' ')[0]}</Text>
                         </View>
-                        <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', textAlign: 'center', color: p.puntos > 0 ? '#F59E0B' : '#CBD5E1' }}>{p.puntos}</Text>
-                        <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 16, textAlign: 'center', color: p.ataquesPts > 0 ? '#10B981' : '#CBD5E1' }}>{p.ataquesPts}</Text>
-                        <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 16, textAlign: 'center', color: p.saquesPts > 0 ? '#1E6FD9' : '#CBD5E1' }}>{p.saquesPts}</Text>
-                        <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 16, textAlign: 'center', color: p.bloqueosPts > 0 ? '#F59E0B' : '#CBD5E1' }}>{p.bloqueosPts}</Text>
-                        <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 16, textAlign: 'center', color: p.errores > 0 ? '#EF4444' : '#CBD5E1' }}>{p.errores}</Text>
+                        <Text style={{ width: 40, fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', textAlign: 'center', color: p.puntos > 0 ? '#F59E0B' : '#CBD5E1' }}>{p.puntos}</Text>
+                        <Text style={{ width: 40, fontFamily: 'Gotham Rounded', fontSize: 16, textAlign: 'center', color: p.ataquesPts > 0 ? '#10B981' : '#CBD5E1' }}>{p.ataquesPts}</Text>
+                        <Text style={{ width: 40, fontFamily: 'Gotham Rounded', fontSize: 16, textAlign: 'center', color: p.saquesPts > 0 ? '#1E6FD9' : '#CBD5E1' }}>{p.saquesPts}</Text>
+                        <Text style={{ width: 40, fontFamily: 'Gotham Rounded', fontSize: 16, textAlign: 'center', color: p.bloqueosPts > 0 ? '#F59E0B' : '#CBD5E1' }}>{p.bloqueosPts}</Text>
+                        <Text style={{ width: 40, fontFamily: 'Gotham Rounded', fontSize: 16, textAlign: 'center', color: p.errores > 0 ? '#EF4444' : '#CBD5E1' }}>{p.errores}</Text>
                       </View>
                     ))
                   )}
@@ -714,7 +714,7 @@ export default function LiveMatchScreen() {
         <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 32 }}>
           <TouchableOpacity onPress={() => setSelectedViewSet(null)} style={{ backgroundColor: '#1E6FD9', paddingVertical: 16, borderRadius: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 10 }}>
             <Text style={{ fontSize: 20 }}>▶</Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>
               VOLVER AL JUEGO EN VIVO (SET {currentSet})
             </Text>
           </TouchableOpacity>
@@ -723,7 +723,7 @@ export default function LiveMatchScreen() {
         <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 8, paddingBottom: 16, gap: 6 }}>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 12, justifyContent: 'center', paddingHorizontal: 16, borderWidth: 1, borderColor: '#E2E8F0' }}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 14, color: '#64748B' }}>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 14, color: '#64748B' }}>
                 {selectedPlayer !== null && selectedAction !== null && selectedResult !== null
                   ? "✅ Acción registrada"
                   : selectedPlayer !== null && selectedAction !== null
@@ -740,10 +740,10 @@ export default function LiveMatchScreen() {
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TouchableOpacity disabled={!isGameReady} onPress={() => handleRivalError("saque")} style={{ flex: 1, backgroundColor: '#0D1F33', paddingVertical: 10, borderRadius: 8, alignItems: 'center', opacity: isGameReady ? 1 : 0.35 }}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#fff' }}>🚀 ERR. SAQUE RIVAL</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#fff' }}>🚀 ERR. SAQUE RIVAL</Text>
             </TouchableOpacity>
             <TouchableOpacity disabled={!isGameReady} onPress={() => handleRivalError("ataque")} style={{ flex: 1, backgroundColor: '#0D1F33', paddingVertical: 10, borderRadius: 8, alignItems: 'center', opacity: isGameReady ? 1 : 0.35 }}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#fff' }}>💥 ERR. ATAQUE RIVAL</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#fff' }}>💥 ERR. ATAQUE RIVAL</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -753,7 +753,7 @@ export default function LiveMatchScreen() {
       <Modal visible={showSubstitution} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: Dimensions.get('window').height * 0.8 }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '700', marginBottom: 16 }}>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 20, fontWeight: '700', marginBottom: 16 }}>
               ¿Quién entra por {courtPlayers.find(p => p.id === playerOutId)?.name ?? "..."}?
             </Text>
             
@@ -764,10 +764,10 @@ export default function LiveMatchScreen() {
                 bench.map((player) => (
                   <TouchableOpacity key={player.id} onPress={() => handleSelectIn(player)} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, marginBottom: 8 }}>
                     <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(30,111,217,0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', color: '#1E6FD9' }}>{player.number}</Text>
+                      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: '#1E6FD9' }}>{player.number}</Text>
                     </View>
                     <View>
-                      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>{player.name}</Text>
+                      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>{player.name}</Text>
                       <Text style={{ fontSize: 12, color: '#64748B' }}>{player.position}</Text>
                     </View>
                   </TouchableOpacity>
@@ -775,7 +775,7 @@ export default function LiveMatchScreen() {
               )}
             </ScrollView>
             <TouchableOpacity onPress={() => setShowSubstitution(false)} style={{ width: '100%', borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 16 }}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -785,7 +785,7 @@ export default function LiveMatchScreen() {
       <Modal visible={showRosterPicker} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: Dimensions.get('window').height * 0.75 }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '700', marginBottom: 4 }}>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 20, fontWeight: '700', marginBottom: 4 }}>
               {pickerSlotIndex === 6 ? 'Seleccionar Líbero' : 'Seleccionar Jugador'}
             </Text>
             <Text style={{ fontSize: 13, color: '#64748B', marginBottom: 16 }}>Jugadores convocados</Text>
@@ -816,10 +816,10 @@ export default function LiveMatchScreen() {
                       }}
                     >
                       <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: alreadyAssigned ? '#CBD5E1' : '#1E6FD9', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', color: '#fff' }}>{rp.number}</Text>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: '#fff' }}>{rp.number}</Text>
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>{rp.name}</Text>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>{rp.name}</Text>
                       </View>
                       {alreadyAssigned && (
                         <Text style={{ fontSize: 10, color: '#94A3B8' }}>YA ASIGNADO</Text>
@@ -831,7 +831,7 @@ export default function LiveMatchScreen() {
             </ScrollView>
 
             <TouchableOpacity onPress={() => { setShowRosterPicker(false); setPickerSlotIndex(null); }} style={{ width: '100%', borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 16 }}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -842,11 +842,11 @@ export default function LiveMatchScreen() {
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24, alignItems: 'center' }}>
             <Text style={{ fontSize: 48, marginBottom: 12 }}>🏐</Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', marginBottom: 8 }}>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', marginBottom: 8 }}>
               {pendingSetEnd && pendingSetEnd.home > pendingSetEnd.away ? "¡Ganaron el Set!" : "¡Perdieron el Set!"}
             </Text>
             {pendingSetEnd && (
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 36, fontWeight: '700', marginBottom: 8 }}>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 36, fontWeight: '700', marginBottom: 8 }}>
                 <Text style={{ color: '#3D8EF5' }}>{pendingSetEnd.home}</Text>
                 <Text style={{ color: 'rgba(0,0,0,0.2)' }}> - </Text>
                 <Text>{pendingSetEnd.away}</Text>
@@ -855,10 +855,10 @@ export default function LiveMatchScreen() {
             <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 24 }}>Set {currentSet} finalizado</Text>
             <View style={styles`flex-row gap-3`}>
               <TouchableOpacity onPress={() => { setShowEndSet(false); setPendingSetEnd(null); }} style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={confirmEndSet} style={{ flex: 1, backgroundColor: '#1E6FD9', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#fff' }}>{setsWon.home >= 3 || setsWon.away >= 3 ? "FINALIZAR PARTIDO" : "INICIAR SIGUIENTE"}</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>{setsWon.home >= 3 || setsWon.away >= 3 ? "FINALIZAR PARTIDO" : "INICIAR SIGUIENTE"}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -870,10 +870,10 @@ export default function LiveMatchScreen() {
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24, alignItems: 'center' }}>
             <Text style={{ fontSize: 48, marginBottom: 16 }}>{setsWon.home > setsWon.away ? "🏆" : "💪"}</Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 26, fontWeight: '700', color: '#0D1F33', marginBottom: 8 }}>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 26, fontWeight: '700', color: '#0D1F33', marginBottom: 8 }}>
               {setsWon.home > setsWon.away ? "¡Partido Ganado!" : "Partido Finalizado"}
             </Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 40, fontWeight: '700', marginBottom: 16 }}>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 40, fontWeight: '700', marginBottom: 16 }}>
               <Text style={{ color: '#3D8EF5' }}>{setsWon.home}</Text>
               <Text style={{ color: 'rgba(0,0,0,0.2)' }}> - </Text>
               <Text>{setsWon.away}</Text>
@@ -886,7 +886,7 @@ export default function LiveMatchScreen() {
                 style={{ width: '100%', backgroundColor: isSubmitting ? '#94A3B8' : '#1E6FD9', paddingVertical: 14, borderRadius: 8, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}
             >
               {isSubmitting && <ActivityIndicator color="#fff" />}
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>
                 {isSubmitting ? 'GUARDANDO...' : 'FINALIZAR Y GUARDAR'}
               </Text>
             </TouchableOpacity>

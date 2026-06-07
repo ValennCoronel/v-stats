@@ -66,8 +66,8 @@ export default function StatsScreen() {
             <ArrowLeft size={16} color="#fff" />
           </TouchableOpacity>
           <View style={styles`flex-1`}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.55)' }}>ESTADÍSTICAS</Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#fff', lineHeight: 26 }}>{activeProfile.clubName}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.55)' }}>ESTADÍSTICAS</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#fff', lineHeight: 26 }}>{activeProfile.clubName}</Text>
           </View>
           <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: activeProfile.color }} />
         </View>
@@ -81,8 +81,8 @@ export default function StatsScreen() {
             { label: 'EFECT.', value: `${winRate}%`, color: '#3D8EF5' },
           ].map(({ label, value, color }) => (
             <View key={label} style={[styles`w-1/4 rounded-xl py-3 items-center`, { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color, lineHeight: 22 }}>{value}</Text>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, letterSpacing: 0.8, color: 'rgba(255,255,255,0.6)', marginTop: 3 }}>{label}</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color, lineHeight: 22 }}>{value}</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 9, letterSpacing: 0.8, color: 'rgba(255,255,255,0.6)', marginTop: 3 }}>{label}</Text>
             </View>
           ))}
         </View>
@@ -95,7 +95,7 @@ export default function StatsScreen() {
           <View>
             <View style={styles`flex-row items-center gap-1.5 mb-3 px-0.5`}>
               <Award size={16} color="#64748B" />
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>LÍDERES DE TEMPORADA</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>LÍDERES DE TEMPORADA</Text>
             </View>
             
             <View style={styles`flex-row justify-between gap-2`}>
@@ -108,8 +108,8 @@ export default function StatsScreen() {
                   <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: `${color}18`, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
                     {icon}
                   </View>
-                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, letterSpacing: 0.8, color: '#94A3B8', marginBottom: 4 }}>{label}</Text>
-                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color, lineHeight: 22 }}>{value}</Text>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 9, letterSpacing: 0.8, color: '#94A3B8', marginBottom: 4 }}>{label}</Text>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color, lineHeight: 22 }}>{value}</Text>
                   <Text style={{ fontSize: 10, color: '#0D1F33', marginTop: 4, fontWeight: '500' }}>{player?.name?.split(' ')[0] ?? '-'}</Text>
                 </View>
               ))}
@@ -122,7 +122,7 @@ export default function StatsScreen() {
           <View>
             <View style={styles`flex-row items-center gap-1.5 mb-3 px-0.5`}>
               <BarChart3 size={16} color="#64748B" />
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>RENDIMIENTO INDIVIDUAL</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>RENDIMIENTO INDIVIDUAL</Text>
             </View>
             
             <View style={styles`gap-2`}>
@@ -136,16 +136,16 @@ export default function StatsScreen() {
                       
                       {idx >= 3 && (
                         <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: '#F4F7FB', justifyContent: 'center', alignItems: 'center' }}>
-                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#94A3B8', fontWeight: '600' }}>{idx + 1}</Text>
+                          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, color: '#94A3B8', fontWeight: '600' }}>{idx + 1}</Text>
                         </View>
                       )}
 
                       <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: activeProfile.color, justifyContent: 'center', alignItems: 'center' }}>
-                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 13, fontWeight: '700', color: '#fff' }}>{initials}</Text>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 13, fontWeight: '700', color: '#fff' }}>{initials}</Text>
                       </View>
                       
                       <View style={styles`flex-1 min-w-0`}>
-                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>
                           #{player.number} {player.name?.split(' ')[0]}
                         </Text>
                         <Text style={{ fontSize: 11, color: '#94A3B8' }}>{player.position}</Text>
@@ -186,27 +186,27 @@ export default function StatsScreen() {
         <View>
           <View style={styles`flex-row items-center gap-1.5 mb-3 px-0.5`}>
             <Target size={16} color="#64748B" />
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>TEMPORADA</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>TEMPORADA</Text>
           </View>
           
           <View style={[styles`bg-white px-4 py-4 rounded-xl`, { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)' }]}>
             <View style={styles`flex-row justify-between items-center`}>
               
               <View style={styles`flex-1 items-center`}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 4 }}>SETS WON</Text>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 28, fontWeight: '700', color: '#1E6FD9', lineHeight: 28 }}>{setsWon}</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 4 }}>SETS WON</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 28, fontWeight: '700', color: '#1E6FD9', lineHeight: 28 }}>{setsWon}</Text>
                 <Text style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>de {setsWon + setsLost}</Text>
               </View>
               
               <View style={[styles`flex-1 items-center border-x`, { borderColor: '#F4F7FB' }]}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 4 }}>PUNTOS</Text>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 28, fontWeight: '700', color: '#0D1F33', lineHeight: 28 }}>{totalPoints}</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 4 }}>PUNTOS</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 28, fontWeight: '700', color: '#0D1F33', lineHeight: 28 }}>{totalPoints}</Text>
                 <Text style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>en total</Text>
               </View>
               
               <View style={styles`flex-1 items-center`}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 4 }}>SETS %</Text>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 28, fontWeight: '700', color: '#16A34A', lineHeight: 28 }}>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 4 }}>SETS %</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 28, fontWeight: '700', color: '#16A34A', lineHeight: 28 }}>
                   {Math.round((setsWon / Math.max(setsWon + setsLost, 1)) * 100)}%
                 </Text>
                 <Text style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>efectividad</Text>
@@ -231,15 +231,15 @@ export default function StatsScreen() {
       <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#E2E8F0', flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, paddingBottom: 24 }}>
         <TouchableOpacity style={styles`items-center`} onPress={() => router.replace('/home')}>
           <Home size={24} color="#64748B" />
-          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#64748B', marginTop: 4 }}>Home</Text>
+          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#64748B', marginTop: 4 }}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles`items-center`}>
           <BarChart3 size={24} color={activeProfile.color} />
-          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: activeProfile.color, marginTop: 4 }}>Stats</Text>
+          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: activeProfile.color, marginTop: 4 }}>Stats</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles`items-center`} onPress={() => router.push('/club')}>
           <Building2 size={24} color="#64748B" />
-          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#64748B', marginTop: 4 }}>Club</Text>
+          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#64748B', marginTop: 4 }}>Club</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -251,8 +251,8 @@ export default function StatsScreen() {
 function StatKpi({ label, value, unit, color }: { label: string; value: number | string; unit?: string; color: string }) {
   return (
     <View style={{ alignItems: 'center' }}>
-      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 2 }}>{label}</Text>
-      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color, lineHeight: 22 }}>
+      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 2 }}>{label}</Text>
+      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color, lineHeight: 22 }}>
         {value}{unit && <Text style={{ fontSize: 13, fontWeight: '500' }}>{unit}</Text>}
       </Text>
     </View>

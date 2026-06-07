@@ -28,6 +28,14 @@ export const authService = {
     return res;
   },
 
+  async loginWithGoogleToken(idToken: string) {
+    const res = await api.post<LoginResponse>('/api/auth/google', { idToken });
+    if (res.data?.token) {
+      await setToken(res.data.token);
+    }
+    return res;
+  },
+
   async getMe() {
     return api.get<MeResponse>('/api/auth/me');
   },

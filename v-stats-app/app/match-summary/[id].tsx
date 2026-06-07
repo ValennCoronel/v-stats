@@ -66,15 +66,15 @@ export default function MatchSummaryScreen() {
             <ArrowLeft size={16} color="#fff" />
           </TouchableOpacity>
           <View style={styles`flex-1`}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.55)' }}>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.55)' }}>
               {tournamentName.toUpperCase() || 'PARTIDO'}
             </Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#fff', lineHeight: 26 }}>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#fff', lineHeight: 26 }}>
               Resumen del Partido
             </Text>
           </View>
           <View style={{ backgroundColor: isWinner ? '#16A34A' : '#EF4444', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>
               {isWinner ? 'VICTORIA' : 'DERROTA'}
             </Text>
           </View>
@@ -88,17 +88,17 @@ export default function MatchSummaryScreen() {
           <View style={[styles`flex-row items-center justify-between px-6 py-6 border-b`, { borderColor: '#F4F7FB' }]}>
             <View style={styles`items-center flex-1`}>
               <View style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: `${activeProfile.color}15`, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '700', color: activeProfile.color }}>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 20, fontWeight: '700', color: activeProfile.color }}>
                   {activeProfile.clubName.substring(0, 3).toUpperCase()}
                 </Text>
               </View>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#0D1F33', textAlign: 'center' }}>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33', textAlign: 'center' }}>
                 {activeProfile.clubName}
               </Text>
             </View>
 
             <View style={styles`items-center px-4`}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 40, fontWeight: '700', color: '#0D1F33', lineHeight: 40 }}>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 40, fontWeight: '700', color: '#0D1F33', lineHeight: 40 }}>
                 {teamSets} - {oppSets}
               </Text>
               <Text style={{ fontSize: 11, color: '#94A3B8', marginTop: 4, fontWeight: '500' }}>FINAL</Text>
@@ -106,11 +106,11 @@ export default function MatchSummaryScreen() {
 
             <View style={styles`items-center flex-1`}>
               <View style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '700', color: '#64748B' }}>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 20, fontWeight: '700', color: '#64748B' }}>
                   {opponentName.substring(0, 3).toUpperCase()}
                 </Text>
               </View>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#0D1F33', textAlign: 'center' }}>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33', textAlign: 'center' }}>
                 {opponentName}
               </Text>
             </View>
@@ -125,9 +125,9 @@ export default function MatchSummaryScreen() {
                   <View key={idx} style={{ alignItems: 'center', minWidth: 44 }}>
                     <Text style={{ fontSize: 10, color: '#94A3B8', marginBottom: 4 }}>S{idx + 1}</Text>
                     <View style={{ backgroundColor: wonSet ? activeProfile.color : '#fff', borderWidth: wonSet ? 0 : 1, borderColor: '#E2E8F0', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 8, alignItems: 'center', width: '100%' }}>
-                      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '700', color: wonSet ? '#fff' : '#0D1F33', lineHeight: 18 }}>{set.teamPts}</Text>
+                      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: wonSet ? '#fff' : '#0D1F33', lineHeight: 18 }}>{set.teamPts}</Text>
                       <View style={{ width: '80%', height: 1, backgroundColor: wonSet ? 'rgba(255,255,255,0.3)' : '#E2E8F0', marginVertical: 2 }} />
-                      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '700', color: wonSet ? 'rgba(255,255,255,0.7)' : '#64748B', lineHeight: 18 }}>{set.oppPts}</Text>
+                      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: wonSet ? 'rgba(255,255,255,0.7)' : '#64748B', lineHeight: 18 }}>{set.oppPts}</Text>
                     </View>
                   </View>
                 );
@@ -144,7 +144,7 @@ export default function MatchSummaryScreen() {
             </View>
             <View>
               <Text style={{ fontSize: 11, color: '#94A3B8' }}>Fecha</Text>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{matchDate || '-'}</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{matchDate || '-'}</Text>
             </View>
           </View>
           <View style={[styles`flex-1 bg-white p-3 rounded-xl flex-row items-center gap-3`, { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.03)' }]}>
@@ -153,7 +153,7 @@ export default function MatchSummaryScreen() {
             </View>
             <View>
               <Text style={{ fontSize: 11, color: '#94A3B8' }}>Puntos</Text>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{data.teamStats.puntosTotales}</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{data.teamStats.puntosTotales}</Text>
             </View>
           </View>
         </View>
@@ -163,7 +163,7 @@ export default function MatchSummaryScreen() {
           <View>
             <View style={styles`flex-row items-center gap-1.5 mb-3 px-1`}>
               <Trophy size={16} color="#64748B" />
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>DESTACADOS DEL PARTIDO</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>DESTACADOS DEL PARTIDO</Text>
             </View>
             <View style={styles`flex-row gap-2`}>
               {data.topPerformers.map((player, idx) => {
@@ -172,9 +172,9 @@ export default function MatchSummaryScreen() {
                 return (
                   <View key={idx} style={[styles`flex-1 bg-white p-3 rounded-xl items-center border-b-4`, { borderColor: color, boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)' }]}>
                     <Icon size={20} color={color} style={{ marginBottom: 8 }} />
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '700', color: '#0D1F33', lineHeight: 22 }}>{player.stat}</Text>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 20, fontWeight: '700', color: '#0D1F33', lineHeight: 22 }}>{player.stat}</Text>
                     <Text style={{ fontSize: 10, color: '#94A3B8', marginTop: 2 }}>{player.type}</Text>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 13, fontWeight: '600', color: '#0D1F33', marginTop: 6, textAlign: 'center' }}>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 13, fontWeight: '600', color: '#0D1F33', marginTop: 6, textAlign: 'center' }}>
                       {player.name}
                     </Text>
                   </View>
@@ -188,7 +188,7 @@ export default function MatchSummaryScreen() {
         <View>
           <View style={styles`flex-row items-center gap-1.5 mb-3 px-1`}>
             <Activity size={16} color="#64748B" />
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>RENDIMIENTO GLOBAL</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>RENDIMIENTO GLOBAL</Text>
           </View>
           <View style={[styles`bg-white rounded-xl p-4`, { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)' }]}>
             <View style={styles`flex-row justify-between mb-4`}>
@@ -205,28 +205,28 @@ export default function MatchSummaryScreen() {
           <View>
             <View style={styles`flex-row items-center gap-1.5 mb-3 px-1`}>
               <Target size={16} color="#64748B" />
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>PLANILLA INDIVIDUAL</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>PLANILLA INDIVIDUAL</Text>
             </View>
             
             <View style={[styles`bg-white rounded-xl overflow-hidden`, { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)' }]}>
               <View style={[styles`flex-row px-4 py-3 bg-screen border-b`, { borderColor: '#E2E8F0' }]}>
-                <Text style={{ flex: 2, fontFamily: 'Barlow Condensed', fontSize: 11, fontWeight: '600', color: '#64748B' }}>JUGADOR</Text>
-                <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Barlow Condensed', fontSize: 11, fontWeight: '600', color: '#64748B' }}>PTS</Text>
-                <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Barlow Condensed', fontSize: 11, fontWeight: '600', color: '#64748B' }}>ATK</Text>
-                <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Barlow Condensed', fontSize: 11, fontWeight: '600', color: '#64748B' }}>BLQ</Text>
-                <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Barlow Condensed', fontSize: 11, fontWeight: '600', color: '#64748B' }}>ACE</Text>
+                <Text style={{ flex: 2, fontFamily: 'Gotham Rounded', fontSize: 11, fontWeight: '600', color: '#64748B' }}>JUGADOR</Text>
+                <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Gotham Rounded', fontSize: 11, fontWeight: '600', color: '#64748B' }}>PTS</Text>
+                <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Gotham Rounded', fontSize: 11, fontWeight: '600', color: '#64748B' }}>ATK</Text>
+                <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Gotham Rounded', fontSize: 11, fontWeight: '600', color: '#64748B' }}>BLQ</Text>
+                <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Gotham Rounded', fontSize: 11, fontWeight: '600', color: '#64748B' }}>ACE</Text>
               </View>
 
               {data.playerStats.map((p: any, idx: number) => (
                 <View key={idx} style={[styles`flex-row items-center px-4 py-3 border-b`, { borderColor: '#F4F7FB' }]}>
                   <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 14, fontWeight: '700', color: '#94A3B8', width: 18 }}>{p.player?.number}</Text>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{p.player?.name?.split(' ')[0]}</Text>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 14, fontWeight: '700', color: '#94A3B8', width: 18 }}>{p.player?.number}</Text>
+                    <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{p.player?.name?.split(' ')[0]}</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '700', color: activeProfile.color }}>{p.puntos}</Text>
-                  <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{p.ataquesPositivos}</Text>
-                  <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{p.bloqueosPositivos}</Text>
-                  <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{p.aces}</Text>
+                  <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: activeProfile.color }}>{p.puntos}</Text>
+                  <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{p.ataquesPositivos}</Text>
+                  <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{p.bloqueosPositivos}</Text>
+                  <Text style={{ flex: 1, textAlign: 'center', fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{p.aces}</Text>
                 </View>
               ))}
             </View>
@@ -244,7 +244,7 @@ function StatCircle({ label, value, color }: { label: string; value: number; col
   return (
     <View style={styles`items-center`}>
       <View style={{ width: 56, height: 56, borderRadius: 28, borderWidth: 3, borderColor: `${color}30`, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color }}>{value}</Text>
+        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color }}>{value}</Text>
       </View>
       <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '500' }}>{label}</Text>
     </View>
