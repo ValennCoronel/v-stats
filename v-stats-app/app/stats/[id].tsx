@@ -74,8 +74,8 @@ export default function StatsScreen() {
             <ArrowLeft size={16} color="#fff" />
           </TouchableOpacity>
           <View style={styles`flex-1`}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.55)' }}>ESTADISTICAS</Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#fff', lineHeight: 26 }}>{activeProfile.clubName}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.55)' }}>ESTADÍSTICAS</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#fff', lineHeight: 26 }}>{activeProfile.clubName}</Text>
             <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>{scopeLabel}</Text>
           </View>
           <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: activeProfile.color }} />
@@ -89,8 +89,8 @@ export default function StatsScreen() {
             { label: 'EFECT.', value: `${winRate}%`, color: '#3D8EF5' },
           ].map(({ label, value, color }) => (
             <View key={label} style={[styles`w-1/4 rounded-xl py-3 items-center`, { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color, lineHeight: 22 }}>{value}</Text>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, letterSpacing: 0.8, color: 'rgba(255,255,255,0.6)', marginTop: 3 }}>{label}</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color, lineHeight: 22 }}>{value}</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 9, letterSpacing: 0.8, color: 'rgba(255,255,255,0.6)', marginTop: 3 }}>{label}</Text>
             </View>
           ))}
         </View>
@@ -131,9 +131,9 @@ export default function StatsScreen() {
                   <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: `${metric.color}18`, justifyContent: 'center', alignItems: 'center' }}>
                     {metric.icon}
                   </View>
-                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: metric.color, lineHeight: 24 }}>{metric.value}</Text>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: metric.color, lineHeight: 24 }}>{metric.value}</Text>
                 </View>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, letterSpacing: 1, color: '#64748B', fontWeight: '600' }}>{metric.label}</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1, color: '#64748B', fontWeight: '600' }}>{metric.label}</Text>
               </View>
             ))}
           </View>
@@ -149,7 +149,7 @@ export default function StatsScreen() {
 
         {topScorer && (
           <View>
-            <SectionTitle icon={<Award size={16} color="#64748B" />} label="LIDERES DE TEMPORADA" />
+            <SectionTitle icon={<Award size={16} color="#64748B" />} label="LÍDERES DE TEMPORADA" />
             <View style={styles`flex-row justify-between gap-2`}>
               {[
                 { label: 'PUNTOS', player: topScorer, value: topScorer?.puntos, icon: <TrendingUp size={16} color="#1E6FD9" />, color: '#1E6FD9' },
@@ -160,8 +160,8 @@ export default function StatsScreen() {
                   <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: `${color}18`, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
                     {icon}
                   </View>
-                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, letterSpacing: 0.8, color: '#94A3B8', marginBottom: 4 }}>{label}</Text>
-                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color, lineHeight: 22 }}>{value}</Text>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 9, letterSpacing: 0.8, color: '#94A3B8', marginBottom: 4 }}>{label}</Text>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color, lineHeight: 22 }}>{value}</Text>
                   <Text style={{ fontSize: 10, color: '#0D1F33', marginTop: 4, fontWeight: '500' }} numberOfLines={1}>{player?.name?.split(' ')[0] ?? '-'}</Text>
                 </View>
               ))}
@@ -181,14 +181,14 @@ export default function StatsScreen() {
                       <MedalIcon rank={idx + 1} />
                       {idx >= 3 && (
                         <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: '#F4F7FB', justifyContent: 'center', alignItems: 'center' }}>
-                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#94A3B8', fontWeight: '600' }}>{idx + 1}</Text>
+                          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, color: '#94A3B8', fontWeight: '600' }}>{idx + 1}</Text>
                         </View>
                       )}
                       <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: activeProfile.color, justifyContent: 'center', alignItems: 'center' }}>
-                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 13, fontWeight: '700', color: '#fff' }}>{initials}</Text>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 13, fontWeight: '700', color: '#fff' }}>{initials}</Text>
                       </View>
                       <View style={styles`flex-1 min-w-0`}>
-                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#0D1F33' }} numberOfLines={1}>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }} numberOfLines={1}>
                           #{player.number} {player.name}
                         </Text>
                         <Text style={{ fontSize: 11, color: '#94A3B8' }}>{player.position}</Text>
@@ -239,15 +239,15 @@ export default function StatsScreen() {
       <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#E2E8F0', flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, paddingBottom: 24 }}>
         <TouchableOpacity style={styles`items-center`} onPress={() => router.replace('/home')}>
           <Home size={24} color="#64748B" />
-          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#64748B', marginTop: 4 }}>Home</Text>
+          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#64748B', marginTop: 4 }}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles`items-center`}>
           <BarChart3 size={24} color={activeProfile.color} />
-          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: activeProfile.color, marginTop: 4 }}>Stats</Text>
+          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: activeProfile.color, marginTop: 4 }}>Stats</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles`items-center`} onPress={() => router.push('/club')}>
           <Building2 size={24} color="#64748B" />
-          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#64748B', marginTop: 4 }}>Club</Text>
+          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#64748B', marginTop: 4 }}>Club</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -258,7 +258,7 @@ function SectionTitle({ icon, label }: { icon: React.ReactNode; label: string })
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12, paddingHorizontal: 2 }}>
       {icon}
-      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>{label}</Text>
+      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>{label}</Text>
     </View>
   );
 }
@@ -278,7 +278,7 @@ function TeamFilterChip({ label, subLabel, active, color, onPress }: { label: st
         borderColor: active ? color : '#E2E8F0',
       }}
     >
-      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '700', color: active ? '#fff' : '#0D1F33' }} numberOfLines={1}>{label}</Text>
+      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: active ? '#fff' : '#0D1F33' }} numberOfLines={1}>{label}</Text>
       <Text style={{ fontSize: 11, color: active ? 'rgba(255,255,255,0.72)' : '#64748B', marginTop: 2 }} numberOfLines={1}>{subLabel}</Text>
     </TouchableOpacity>
   );
@@ -287,8 +287,8 @@ function TeamFilterChip({ label, subLabel, active, color, onPress }: { label: st
 function ActionKpi({ label, value, color }: { label: string; value: number | string; color: string }) {
   return (
     <View style={{ flex: 1, alignItems: 'center' }}>
-      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 4 }}>{label}</Text>
-      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 26, fontWeight: '700', color, lineHeight: 26 }}>{value}</Text>
+      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 4 }}>{label}</Text>
+      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 26, fontWeight: '700', color, lineHeight: 26 }}>{value}</Text>
     </View>
   );
 }
@@ -296,8 +296,8 @@ function ActionKpi({ label, value, color }: { label: string; value: number | str
 function StatKpi({ label, value, unit, color }: { label: string; value: number | string; unit?: string; color: string }) {
   return (
     <View style={{ alignItems: 'center' }}>
-      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 2 }}>{label}</Text>
-      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color, lineHeight: 22 }}>
+      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 2 }}>{label}</Text>
+      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color, lineHeight: 22 }}>
         {value}{unit && <Text style={{ fontSize: 13, fontWeight: '500' }}>{unit}</Text>}
       </Text>
     </View>
@@ -307,8 +307,8 @@ function StatKpi({ label, value, unit, color }: { label: string; value: number |
 function SeasonKpi({ label, value, detail, color, border }: { label: string; value: number | string; detail: string; color: string; border?: boolean }) {
   return (
     <View style={[{ flex: 1, alignItems: 'center' }, border ? { borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#F4F7FB' } : null]}>
-      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 4 }}>{label}</Text>
-      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 28, fontWeight: '700', color, lineHeight: 28 }}>{value}</Text>
+      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 4 }}>{label}</Text>
+      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 28, fontWeight: '700', color, lineHeight: 28 }}>{value}</Text>
       <Text style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>{detail}</Text>
     </View>
   );

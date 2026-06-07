@@ -137,8 +137,8 @@ export default function ConfigScreen() {
             <ArrowLeft size={16} color="#fff" />
           </TouchableOpacity>
           <View style={styles`flex-1`}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.55)' }}>V-STATS</Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: '#fff' }}>Configuración</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.55)' }}>V-STATS</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#fff' }}>Configuración</Text>
           </View>
         </View>
 
@@ -146,13 +146,13 @@ export default function ConfigScreen() {
         <View style={styles`items-center pb-7 px-4`}>
           <View style={{ marginBottom: 12 }}>
             <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: '#1E6FD9', justifyContent: 'center', alignItems: 'center', borderWidth: 4, borderColor: 'rgba(255,255,255,0.2)' }}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 28, fontWeight: '700', color: '#fff' }}>{initials}</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 28, fontWeight: '700', color: '#fff' }}>{initials}</Text>
             </View>
             <TouchableOpacity onPress={handleAvatarChange} style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, backgroundColor: '#3D8EF5', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#0D1F33' }}>
               <Camera size={14} color="#fff" />
             </TouchableOpacity>
           </View>
-          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '700', color: '#fff' }}>{coach.name}</Text>
+          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 20, fontWeight: '700', color: '#fff' }}>{coach.name}</Text>
           <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>{coach.email}</Text>
           <View style={styles`flex-row items-center gap-2 mt-4`}>
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: activeProfile.color }} />
@@ -175,7 +175,7 @@ export default function ConfigScreen() {
         {/* ── Seguridad ── */}
         <Section title="SEGURIDAD" icon={<Shield size={16} color="#64748B" />}>
           <View style={styles`px-4 pt-3 pb-1`}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 1, color: '#64748B' }}>NIVEL DE PROTECCIÓN</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1, color: '#64748B' }}>NIVEL DE PROTECCIÓN</Text>
           </View>
           <View style={styles`flex-row px-3 pb-3 gap-2`}>
             {([
@@ -199,7 +199,7 @@ export default function ConfigScreen() {
                 </View>
                 
                 <Text style={{ 
-                    fontFamily: 'Barlow Condensed', 
+                    fontFamily: 'Gotham Rounded', 
                     fontSize: 12, 
                     color: securityLevel === opt.id ? '#1E6FD9' : '#0D1F33', 
                     fontWeight: securityLevel === opt.id ? '600' : '400',
@@ -262,7 +262,7 @@ export default function ConfigScreen() {
       <Modal visible={actionSheetProfile !== null} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '700', marginBottom: 16 }}>Opciones: {actionSheetProfile?.clubName}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 20, fontWeight: '700', marginBottom: 16 }}>Opciones: {actionSheetProfile?.clubName}</Text>
             
             <TouchableOpacity onPress={() => openEditClub(actionSheetProfile!)} style={styles`flex-row items-center gap-3 py-4`}>
               <Pencil size={20} color="#64748B" />
@@ -277,7 +277,7 @@ export default function ConfigScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => setActionSheetProfile(null)} style={{ width: '100%', borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 12, alignItems: 'center', marginTop: 16 }}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -287,17 +287,17 @@ export default function ConfigScreen() {
       <Modal visible={editingProfile} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24 }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#0D1F33', marginBottom: 16 }}>Editar Perfil</Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 1, color: '#64748B', marginBottom: 4 }}>NOMBRE</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#0D1F33', marginBottom: 16 }}>Editar Perfil</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1, color: '#64748B', marginBottom: 4 }}>NOMBRE</Text>
             <TextInput value={tempName} onChangeText={setTempName} style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, padding: 12, marginBottom: 16 }} />
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 1, color: '#64748B', marginBottom: 4 }}>CORREO ELECTRÓNICO</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1, color: '#64748B', marginBottom: 4 }}>CORREO ELECTRÓNICO</Text>
             <TextInput value={tempEmail} onChangeText={setTempEmail} keyboardType="email-address" autoCapitalize="none" style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, padding: 12, marginBottom: 24 }} />
             <View style={styles`flex-row gap-3`}>
               <TouchableOpacity onPress={() => setEditingProfile(false)} style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={saveProfile} style={{ flex: 1, backgroundColor: '#1E6FD9', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#fff' }}>GUARDAR</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>GUARDAR</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -308,15 +308,15 @@ export default function ConfigScreen() {
       <Modal visible={clubModal !== null} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24 }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#0D1F33', marginBottom: 16 }}>{clubModal?.mode === 'add' ? 'Agregar Club' : 'Editar Club'}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#0D1F33', marginBottom: 16 }}>{clubModal?.mode === 'add' ? 'Agregar Club' : 'Editar Club'}</Text>
             
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 1, color: '#64748B', marginBottom: 4 }}>NOMBRE DEL CLUB</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1, color: '#64748B', marginBottom: 4 }}>NOMBRE DEL CLUB</Text>
             <TextInput value={clubForm.clubName} onChangeText={t => setClubForm(f => ({ ...f, clubName: t }))} style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, padding: 12, marginBottom: 12 }} />
             
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 1, color: '#64748B', marginBottom: 4 }}>CIUDAD / SEDE</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1, color: '#64748B', marginBottom: 4 }}>CIUDAD / SEDE</Text>
             <TextInput value={clubForm.city} onChangeText={t => setClubForm(f => ({ ...f, city: t }))} style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, padding: 12, marginBottom: 16 }} />
 
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 1, color: '#64748B', marginBottom: 8 }}>COLOR DE PERFIL</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1, color: '#64748B', marginBottom: 8 }}>COLOR DE PERFIL</Text>
             <View style={styles`flex-row gap-2 mb-24`}>
               {PROFILE_COLORS.map(color => (
                 <TouchableOpacity key={color} onPress={() => setClubForm(f => ({ ...f, color }))} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: color, justifyContent: 'center', alignItems: 'center' }}>
@@ -327,10 +327,10 @@ export default function ConfigScreen() {
 
             <View style={styles`flex-row gap-3`}>
               <TouchableOpacity onPress={() => setClubModal(null)} style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
               </TouchableOpacity>
               <TouchableOpacity disabled={!clubForm.clubName.trim()} onPress={saveClub} style={{ flex: 1, backgroundColor: clubForm.color, paddingVertical: 12, borderRadius: 8, alignItems: 'center', opacity: clubForm.clubName.trim() ? 1 : 0.5 }}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#fff' }}>{clubModal?.mode === 'add' ? 'AGREGAR' : 'GUARDAR'}</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>{clubModal?.mode === 'add' ? 'AGREGAR' : 'GUARDAR'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -344,7 +344,7 @@ export default function ConfigScreen() {
             <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(30,111,217,0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
               <Lock size={20} color="#1E6FD9" />
             </View>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: '#0D1F33', marginBottom: 4 }}>{pinStep === 'set' ? 'Crear PIN' : 'Confirmar PIN'}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#0D1F33', marginBottom: 4 }}>{pinStep === 'set' ? 'Crear PIN' : 'Confirmar PIN'}</Text>
             <Text style={{ fontSize: 13, color: '#64748B', textAlign: 'center', marginBottom: 20 }}>{pinStep === 'set' ? 'Ingresá un PIN de 4 dígitos' : 'Ingresá el PIN nuevamente para confirmar'}</Text>
             
             {pinError ? <Text style={{ color: '#EF4444', fontSize: 13, marginBottom: 12 }}>{pinError}</Text> : null}
@@ -358,7 +358,7 @@ export default function ConfigScreen() {
             <View style={[styles`flex-row flex-wrap justify-between`, { width: 240, gap: 12 }]}>
                {['1','2','3','4','5','6','7','8','9','','0','⌫'].map((key, i) => (
                 <TouchableOpacity key={i} onPress={() => { if (key === '⌫') setPinInput(p => p.slice(0, -1)); else if (key) handlePinDigit(key); }} disabled={key === ''} style={{ width: 68, height: 56, borderRadius: 12, backgroundColor: key ? '#F4F7FB' : 'transparent', justifyContent: 'center', alignItems: 'center' }}>
-                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '600', color: '#0D1F33' }}>{key}</Text>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '600', color: '#0D1F33' }}>{key}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -376,14 +376,14 @@ export default function ConfigScreen() {
              <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: '#FEF2F2', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
               <LogOut size={24} color="#EF4444" />
             </View>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#0D1F33', marginBottom: 8 }}>¿Cerrar sesión?</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#0D1F33', marginBottom: 8 }}>¿Cerrar sesión?</Text>
             <Text style={{ fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 24 }}>Vas a salir de tu cuenta. Tus datos quedarán guardados.</Text>
             <View style={styles`flex-row gap-3`}>
               <TouchableOpacity onPress={() => setShowLogoutModal(false)} style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => { logout(); router.replace('/'); }} style={{ flex: 1, backgroundColor: '#EF4444', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#fff' }}>SALIR</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>SALIR</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -400,7 +400,7 @@ function Section({ title, icon, children }: { title: string; icon: React.ReactNo
     <View>
       <View style={styles`flex-row items-center gap-1.5 mb-2 px-1`}>
         {icon}
-        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>{title}</Text>
+        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1.5, color: '#64748B', fontWeight: '600' }}>{title}</Text>
       </View>
       <View style={{ backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#E2E8F0' }}>{children}</View>
     </View>
@@ -451,7 +451,7 @@ function RolePill({ role, small }: { role: AccessRole; small?: boolean }) {
   const { label, color, bg } = map[role];
   return (
     <View style={{ backgroundColor: bg, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 12 }}>
-      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: small ? 11 : 12, letterSpacing: 0.5, color, fontWeight: '600' }}>{label}</Text>
+      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: small ? 11 : 12, letterSpacing: 0.5, color, fontWeight: '600' }}>{label}</Text>
     </View>
   );
 }

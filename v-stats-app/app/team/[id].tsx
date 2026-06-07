@@ -89,27 +89,27 @@ export default function TeamMatchesScreen() {
           </TouchableOpacity>
 
           <View style={styles`flex-1`}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.55)' }}>MIS EQUIPOS</Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: '#fff' }}>{name}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.55)' }}>MIS EQUIPOS</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#fff' }}>{name}</Text>
           </View>
 
           <View style={{ backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center' }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', color: '#fff' }}>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: '#fff' }}>
               {wins}-{losses}
             </Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.5 }}>RÉCORD</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.5 }}>RÉCORD</Text>
           </View>
         </View>
 
         {/* Stats strip */}
         <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' }}>
           <View style={{ flex: 1, alignItems: 'center', paddingVertical: 12 }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#fff' }}>{matches.length}</Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, letterSpacing: 1, color: 'rgba(255,255,255,0.5)' }}>JUGADOS</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#fff' }}>{matches.length}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, letterSpacing: 1, color: 'rgba(255,255,255,0.5)' }}>JUGADOS</Text>
           </View>
           <View style={{ flex: 1, alignItems: 'center', paddingVertical: 12 }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#4ADE80' }}>{wins}</Text>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, letterSpacing: 1, color: 'rgba(255,255,255,0.5)' }}>VICTORIAS</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#4ADE80' }}>{wins}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, letterSpacing: 1, color: 'rgba(255,255,255,0.5)' }}>VICTORIAS</Text>
           </View>
         </View>
       </View>
@@ -128,7 +128,7 @@ export default function TeamMatchesScreen() {
           style={{ backgroundColor: '#1E6FD9', borderRadius: 12, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 24 }}
         >
           <Plus size={20} color="#fff" />
-          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>NUEVO PARTIDO</Text>
+          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>NUEVO PARTIDO</Text>
         </TouchableOpacity>
 
         {isLoading ? (
@@ -162,11 +162,11 @@ export default function TeamMatchesScreen() {
               {/* Handle */}
               <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#E2E8F0', alignSelf: 'center', marginBottom: 20 }} />
 
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: '#0D1F33' }}>Nuevo Partido</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#0D1F33' }}>Nuevo Partido</Text>
               <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 20 }}>{name}</Text>
 
               {/* Rival */}
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#64748B', letterSpacing: 1, marginBottom: 8 }}>RIVAL (REQUERIDO)</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#64748B', letterSpacing: 1, marginBottom: 8 }}>RIVAL (REQUERIDO)</Text>
               <TextInput
                 style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 16, fontSize: 16, marginBottom: 16 }}
                 placeholder="Nombre del rival"
@@ -175,7 +175,7 @@ export default function TeamMatchesScreen() {
               />
 
               {/* Torneo */}
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#64748B', letterSpacing: 1, marginBottom: 8 }}>TORNEO (OPCIONAL)</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#64748B', letterSpacing: 1, marginBottom: 8 }}>TORNEO (OPCIONAL)</Text>
               <TextInput
                 style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 16, fontSize: 16, marginBottom: 16 }}
                 placeholder="Ej: Liga Metropolitana"
@@ -187,9 +187,9 @@ export default function TeamMatchesScreen() {
             {/* Players section */}
             <View style={{ paddingHorizontal: 24, marginBottom: 8 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 14, color: '#64748B', letterSpacing: 1 }}>JUGADORES CONVOCADOS</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 14, color: '#64748B', letterSpacing: 1 }}>JUGADORES CONVOCADOS</Text>
                 <View style={{ backgroundColor: '#1E6FD9', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
-                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 13, fontWeight: '700', color: '#fff' }}>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 13, fontWeight: '700', color: '#fff' }}>
                     {selectedPlayerIds.length} {selectedPlayerIds.length === 1 ? 'jugador' : 'jugadores'} seleccionados
                   </Text>
                 </View>
@@ -220,12 +220,12 @@ export default function TeamMatchesScreen() {
                         backgroundColor: isSelected ? '#1E6FD9' : '#E2E8F0',
                         justifyContent: 'center', alignItems: 'center', marginRight: 12,
                       }}>
-                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '700', color: isSelected ? '#fff' : '#64748B' }}>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '700', color: isSelected ? '#fff' : '#64748B' }}>
                           {item.number}
                         </Text>
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>{item.name}</Text>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>{item.name}</Text>
                       </View>
                       <View style={{
                         width: 24, height: 24, borderRadius: 6,
@@ -252,7 +252,7 @@ export default function TeamMatchesScreen() {
                   onPress={() => setShowCreateModal(false)}
                   style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
                 >
-                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleCreateMatch}
@@ -262,7 +262,7 @@ export default function TeamMatchesScreen() {
                     paddingVertical: 14, borderRadius: 12, alignItems: 'center',
                   }}
                 >
-                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#fff' }}>COMENZAR PARTIDO</Text>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>COMENZAR PARTIDO</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -279,7 +279,7 @@ function SectionTitle({ label, color, dot }: { label: string; color: string; dot
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
       {dot && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />}
-      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 14, fontWeight: '700', letterSpacing: 1.5, color }}>{label}</Text>
+      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 14, fontWeight: '700', letterSpacing: 1.5, color }}>{label}</Text>
     </View>
   );
 }
@@ -297,14 +297,14 @@ function FinishedCard({ match, onPress }: { match: Match; onPress: () => void })
         <CheckCircle2 size={24} color={isWin ? '#16A34A' : '#EF4444'} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '600', color: '#0D1F33' }}>{opponentName}</Text>
+        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '600', color: '#0D1F33' }}>{opponentName}</Text>
         <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>{matchDate}</Text>
       </View>
       <View style={{ alignItems: 'flex-end', marginRight: 4 }}>
-        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: isWin ? '#16A34A' : '#EF4444' }}>
+        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: isWin ? '#16A34A' : '#EF4444' }}>
           {setsWon}-{setsLost}
         </Text>
-        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#64748B', letterSpacing: 0.5 }}>SETS</Text>
+        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, color: '#64748B', letterSpacing: 0.5 }}>SETS</Text>
       </View>
       <ChevronRight size={16} color="#CBD5E1" />
     </TouchableOpacity>
