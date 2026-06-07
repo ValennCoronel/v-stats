@@ -1,11 +1,93 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, Dimensions, TextInput, FlatList, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Plus, Check, Users, ChevronRight, CheckCircle2 } from 'lucide-react-native';
+import { ArrowLeft, Plus, Check, Users, ChevronRight, CheckCircle2, Calendar, Clock } from 'lucide-react-native';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../../src/context/ProfileContext';
 import { matchesService, Match } from '../../src/services/matches.service';
+import { MIN_PLAYERS_REQUIRED, canStartMatch as canStartMatchForm, hasMinimumPlayersSelected, toggleAllPlayers as toggleAllPlayersForm } from '../../src/features/matches/create-match-form';
+
+const WEEK_DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => hour);
+const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, minute) => minute);
+
+function createDefaultMatchDate() {
+  return new Date();
+}
+
+function formatDateButton(date: Date) {
+  return date.toLocaleDateString('es-AR', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function formatTimeButton(date: Date) {
+  return date.toLocaleTimeString('es-AR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+}
+
+function formatMonthLabel(date: Date) {
+  const label = date.toLocaleDateString('es-AR', {
+    month: 'long',
+    year: 'numeric',
+  });
+
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function sameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+function setDateParts(base: Date, source: Date) {
+  const next = new Date(base);
+  next.setFullYear(source.getFullYear(), source.getMonth(), source.getDate());
+  return next;
+}
+
+function setTimeParts(base: Date, hour: number, minute: number) {
+  const next = new Date(base);
+  next.setHours(hour, minute, 0, 0);
+  return next;
+}
+
+function buildCalendarDays(monthDate: Date) {
+  const startOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+  const endOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+  const startWeekDay = (startOfMonth.getDay() + 6) % 7;
+  const totalDays = endOfMonth.getDate();
+  const cells: Array<{ date: Date; inMonth: boolean }> = [];
+
+  for (let index = 0; index < startWeekDay; index++) {
+    const date = new Date(startOfMonth);
+    date.setDate(startOfMonth.getDate() - (startWeekDay - index));
+    cells.push({ date, inMonth: false });
+  }
+
+  for (let day = 1; day <= totalDays; day++) {
+    cells.push({ date: new Date(monthDate.getFullYear(), monthDate.getMonth(), day), inMonth: true });
+  }
+
+  while (cells.length % 7 !== 0) {
+    const lastDate = cells[cells.length - 1]?.date ?? endOfMonth;
+    const nextDate = new Date(lastDate);
+    nextDate.setDate(lastDate.getDate() + 1);
+    cells.push({ date: nextDate, inMonth: false });
+  }
+
+  return cells;
+}
 
 export default function TeamMatchesScreen() {
   const router = useRouter();
@@ -18,13 +100,19 @@ export default function TeamMatchesScreen() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formRival, setFormRival] = useState('');
-  const [formFecha, setFormFecha] = useState(new Date().toISOString().split('T')[0]); // Default to today YYYY-MM-DD
+  const [formMatchDate, setFormMatchDate] = useState(createDefaultMatchDate());
   const [formTorneo, setFormTorneo] = useState('');
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([]);
+  const [showDatePickerModal, setShowDatePickerModal] = useState(false);
+  const [showTimePickerModal, setShowTimePickerModal] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
 
   const team = activeProfile.teams.find(t => t.id === id);
   const roster = activeProfile.players || [];
   const name = team?.name || 'Equipo';
+  const calendarDays = useMemo(() => buildCalendarDays(calendarMonth), [calendarMonth]);
+  const hasEnoughSelectedPlayers = hasMinimumPlayersSelected(selectedPlayerIds);
+  const canStartMatch = canStartMatchForm(formRival, selectedPlayerIds);
 
   useEffect(() => {
     loadMatches();
@@ -48,8 +136,12 @@ export default function TeamMatchesScreen() {
     );
   }, []);
 
+  const toggleAllPlayers = useCallback(() => {
+    setSelectedPlayerIds(prev => toggleAllPlayersForm(prev, roster.map(player => player.id)));
+  }, [roster]);
+
   const handleCreateMatch = useCallback(() => {
-    if (!formRival.trim() || selectedPlayerIds.length === 0) return;
+    if (!formRival.trim() || selectedPlayerIds.length < MIN_PLAYERS_REQUIRED) return;
 
     setShowCreateModal(false);
     
@@ -59,12 +151,12 @@ export default function TeamMatchesScreen() {
       params: {
         teamId: id,
         rival: formRival.trim(),
-        fecha: formFecha.trim(),
+        fecha: formMatchDate.toISOString(),
         torneo: formTorneo.trim(),
         players: JSON.stringify(selectedPlayerIds),
       }
     });
-  }, [formRival, formFecha, formTorneo, selectedPlayerIds, id, router]);
+  }, [formRival, formMatchDate, formTorneo, selectedPlayerIds, id, router]);
 
   const handleMatchPress = (matchId: string) => {
     router.push(`/match-summary/${matchId}`);
@@ -120,8 +212,11 @@ export default function TeamMatchesScreen() {
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => {
+            const now = createDefaultMatchDate();
             setFormRival('');
             setFormTorneo('');
+            setFormMatchDate(now);
+            setCalendarMonth(new Date(now.getFullYear(), now.getMonth(), 1));
             setSelectedPlayerIds(roster.map(p => p.id)); // select all by default
             setShowCreateModal(true);
           }}
@@ -174,6 +269,41 @@ export default function TeamMatchesScreen() {
                 onChangeText={setFormRival}
               />
 
+              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#64748B', letterSpacing: 1, marginBottom: 8 }}>FECHA Y HORA</Text>
+              <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => setShowDatePickerModal(true)}
+                  style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#F8FAFC' }}
+                >
+                  <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(30,111,217,0.12)', justifyContent: 'center', alignItems: 'center' }}>
+                    <Calendar size={18} color="#1E6FD9" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 11, color: '#94A3B8' }}>Fecha</Text>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>
+                      {formatDateButton(formMatchDate)}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => setShowTimePickerModal(true)}
+                  style={{ width: 132, borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#F8FAFC' }}
+                >
+                  <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(30,111,217,0.12)', justifyContent: 'center', alignItems: 'center' }}>
+                    <Clock size={18} color="#1E6FD9" />
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 11, color: '#94A3B8' }}>Hora</Text>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>
+                      {formatTimeButton(formMatchDate)}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
               {/* Torneo */}
               <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#64748B', letterSpacing: 1, marginBottom: 8 }}>TORNEO (OPCIONAL)</Text>
               <TextInput
@@ -193,6 +323,20 @@ export default function TeamMatchesScreen() {
                     {selectedPlayerIds.length} {selectedPlayerIds.length === 1 ? 'jugador' : 'jugadores'} seleccionados
                   </Text>
                 </View>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
+                <Text style={{ fontSize: 12, color: hasEnoughSelectedPlayers ? '#64748B' : '#EF4444' }}>
+                  Se necesitan al menos {MIN_PLAYERS_REQUIRED} jugadoras para comenzar.
+                </Text>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={toggleAllPlayers}
+                  style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: '#F1F5F9' }}
+                >
+                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 13, fontWeight: '600', color: '#1E6FD9' }}>
+                    {selectedPlayerIds.length === roster.length ? 'DESMARCAR TODO' : 'MARCAR TODO'}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -255,16 +399,195 @@ export default function TeamMatchesScreen() {
                   <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
+                  testID="start-match-button"
                   onPress={handleCreateMatch}
-                  disabled={!formRival.trim() || selectedPlayerIds.length === 0}
+                  disabled={!canStartMatch}
                   style={{
-                    flex: 1, backgroundColor: (formRival.trim() && selectedPlayerIds.length > 0) ? '#1E6FD9' : '#CBD5E1',
+                    flex: 1, backgroundColor: canStartMatch ? '#1E6FD9' : '#CBD5E1',
                     paddingVertical: 14, borderRadius: 12, alignItems: 'center',
                   }}
                 >
                   <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#fff' }}>COMENZAR PARTIDO</Text>
                 </TouchableOpacity>
               </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showDatePickerModal} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24 }}>
+            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: '#0D1F33', marginBottom: 4 }}>Elegir fecha</Text>
+            <Text style={{ fontSize: 13, color: '#64748B', marginBottom: 20 }}>El partido arranca con la fecha de hoy por defecto.</Text>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <TouchableOpacity
+                onPress={() => setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+                style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' }}
+              >
+                <Text style={{ fontSize: 18, color: '#0D1F33' }}>‹</Text>
+              </TouchableOpacity>
+              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '600', color: '#0D1F33' }}>
+                {formatMonthLabel(calendarMonth)}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+                style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' }}
+              >
+                <Text style={{ fontSize: 18, color: '#0D1F33' }}>›</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+              {WEEK_DAYS.map(day => (
+                <View key={day} style={{ flex: 1, alignItems: 'center' }}>
+                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 13, color: '#94A3B8' }}>{day}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 20 }}>
+              {calendarDays.map(({ date, inMonth }) => {
+                const isSelected = sameDay(date, formMatchDate);
+                const isToday = sameDay(date, new Date());
+                return (
+                  <TouchableOpacity
+                    key={date.toISOString()}
+                    activeOpacity={0.8}
+                    onPress={() => setFormMatchDate(prev => setDateParts(prev, date))}
+                    style={{
+                      width: '14.2857%',
+                      paddingVertical: 10,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: 19,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: isSelected ? '#1E6FD9' : 'transparent',
+                        borderWidth: !isSelected && isToday ? 1 : 0,
+                        borderColor: '#1E6FD9',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: 'Barlow Condensed',
+                          fontSize: 18,
+                          fontWeight: isSelected ? '700' : '500',
+                          color: isSelected ? '#fff' : inMonth ? '#0D1F33' : '#CBD5E1',
+                        }}
+                      >
+                        {date.getDate()}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                onPress={() => {
+                  const today = new Date();
+                  setFormMatchDate(prev => setDateParts(prev, today));
+                  setCalendarMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+                }}
+                style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, paddingVertical: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>HOY</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowDatePickerModal(false)}
+                style={{ flex: 1, backgroundColor: '#1E6FD9', borderRadius: 12, paddingVertical: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#fff' }}>LISTO</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showTimePickerModal} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24 }}>
+            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: '#0D1F33', marginBottom: 4 }}>Elegir hora</Text>
+            <Text style={{ fontSize: 13, color: '#64748B', marginBottom: 20 }}>Usamos la hora actual como punto de partida.</Text>
+
+            <View style={{ flexDirection: 'row', gap: 16, marginBottom: 20 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 14, color: '#64748B', letterSpacing: 1, marginBottom: 10 }}>HORA</Text>
+                <ScrollView style={{ maxHeight: 220 }} showsVerticalScrollIndicator={false}>
+                  {HOUR_OPTIONS.map(hour => {
+                    const isSelected = formMatchDate.getHours() === hour;
+                    return (
+                      <TouchableOpacity
+                        key={hour}
+                        onPress={() => setFormMatchDate(prev => setTimeParts(prev, hour, prev.getMinutes()))}
+                        style={{
+                          paddingVertical: 12,
+                          borderRadius: 10,
+                          alignItems: 'center',
+                          marginBottom: 6,
+                          backgroundColor: isSelected ? '#1E6FD9' : '#F8FAFC',
+                        }}
+                      >
+                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '600', color: isSelected ? '#fff' : '#0D1F33' }}>
+                          {String(hour).padStart(2, '0')}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 14, color: '#64748B', letterSpacing: 1, marginBottom: 10 }}>MINUTOS</Text>
+                <ScrollView style={{ maxHeight: 220 }} showsVerticalScrollIndicator={false}>
+                  {MINUTE_OPTIONS.map(minute => {
+                    const isSelected = formMatchDate.getMinutes() === minute;
+                    return (
+                      <TouchableOpacity
+                        key={minute}
+                        onPress={() => setFormMatchDate(prev => setTimeParts(prev, prev.getHours(), minute))}
+                        style={{
+                          paddingVertical: 12,
+                          borderRadius: 10,
+                          alignItems: 'center',
+                          marginBottom: 6,
+                          backgroundColor: isSelected ? '#1E6FD9' : '#F8FAFC',
+                        }}
+                      >
+                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '600', color: isSelected ? '#fff' : '#0D1F33' }}>
+                          {String(minute).padStart(2, '0')}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                onPress={() => setFormMatchDate(prev => {
+                  const now = new Date();
+                  return setTimeParts(prev, now.getHours(), now.getMinutes());
+                })}
+                style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, paddingVertical: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>AHORA</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowTimePickerModal(false)}
+                style={{ flex: 1, backgroundColor: '#1E6FD9', borderRadius: 12, paddingVertical: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#fff' }}>LISTO</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -290,6 +613,7 @@ function FinishedCard({ match, onPress }: { match: Match; onPress: () => void })
   const setsLost = match.setScores?.filter((s: any) => s.oppPts > s.teamPts).length || 0;
   const opponentName = match.opponentTeam?.name || match.opponent;
   const matchDate = new Date(match.date).toLocaleDateString('es-AR');
+  const matchTime = new Date(match.date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
 
   return (
     <TouchableOpacity activeOpacity={0.7} onPress={onPress} style={{ backgroundColor: '#fff', borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 16, borderWidth: 1, borderColor: '#E2E8F0' }}>
@@ -298,7 +622,7 @@ function FinishedCard({ match, onPress }: { match: Match; onPress: () => void })
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '600', color: '#0D1F33' }}>{opponentName}</Text>
-        <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>{matchDate}</Text>
+        <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>{matchDate} · {matchTime}</Text>
       </View>
       <View style={{ alignItems: 'flex-end', marginRight: 4 }}>
         <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: isWin ? '#16A34A' : '#EF4444' }}>

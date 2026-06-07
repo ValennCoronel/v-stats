@@ -47,6 +47,7 @@ export default function MatchSummaryScreen() {
   const opponentName = match.opponentTeam?.name || match.opponent || 'Rival';
   const tournamentName = match.tournamentRef?.name || match.tournament || '';
   const matchDate = match.date ? new Date(match.date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+  const matchTime = match.date ? new Date(match.date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
 
   const iconMap: Record<string, any> = { MVP: Trophy, Muro: Shield, Saque: Zap };
   const colorMap: Record<string, string> = { MVP: '#F59E0B', Muro: '#7C3AED', Saque: '#16A34A' };
@@ -149,11 +150,11 @@ export default function MatchSummaryScreen() {
           </View>
           <View style={[styles`flex-1 bg-white p-3 rounded-xl flex-row items-center gap-3`, { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.03)' }]}>
             <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: '#F4F7FB', justifyContent: 'center', alignItems: 'center' }}>
-              <Trophy size={16} color="#64748B" />
+              <Clock size={16} color="#64748B" />
             </View>
             <View>
-              <Text style={{ fontSize: 11, color: '#94A3B8' }}>Puntos</Text>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{data.teamStats.puntosTotales}</Text>
+              <Text style={{ fontSize: 11, color: '#94A3B8' }}>Hora</Text>
+              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{matchTime || '-'}</Text>
             </View>
           </View>
         </View>
