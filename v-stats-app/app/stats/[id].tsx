@@ -7,6 +7,17 @@ import { useStyles } from '../../src/hooks/useStyles';
 import { useProfile } from '../../src/context/ProfileContext';
 import { ClubStats, statsService } from '../../src/services/stats.service';
 
+const POSITIONS = [
+  { id: 'SETTER', label: 'Armador' },
+  { id: 'OUTSIDE_HITTER', label: 'Punta' },
+  { id: 'OPPOSITE_HITTER', label: 'Opuesto' },
+  { id: 'MIDDLE_BLOCKER', label: 'Central' },
+  { id: 'LIBERO', label: 'Líbero' },
+  { id: 'DEFENSIVE_SPECIALIST', label: 'Especialista' },
+];
+
+const getPositionLabel = (pos: string) => POSITIONS.find(p => p.id === pos)?.label || pos;
+
 export default function StatsScreen() {
   const router = useRouter();
   const { styles } = useStyles();
@@ -124,9 +135,9 @@ export default function StatsScreen() {
 
         <View>
           <SectionTitle icon={<Activity size={16} color="#64748B" />} label="ACCIONES DEL EQUIPO" />
-          <View style={styles`flex-row flex-wrap gap-2`}>
+          <View style={styles`flex-row flex-wrap justify-between`}>
             {actionMetrics.map((metric) => (
-              <View key={metric.label} style={[styles`bg-white p-3 rounded-xl`, { width: '48%', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)' }]}>
+              <View key={metric.label} style={[styles`bg-white p-3 rounded-xl mb-3`, { width: '48%', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)' }]}>
                 <View style={styles`flex-row items-center justify-between mb-3`}>
                   <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: `${metric.color}18`, justifyContent: 'center', alignItems: 'center' }}>
                     {metric.icon}
@@ -138,10 +149,10 @@ export default function StatsScreen() {
             ))}
           </View>
 
-          <View style={[styles`bg-white rounded-xl p-4 mt-2`, { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)' }]}>
+          <View style={[styles`bg-white rounded-xl p-4 mt-1`, { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)' }]}>
             <View style={styles`flex-row justify-between items-center`}>
-              <ActionKpi label="ACCIONES/PUNTO" value={stats?.avgActionsPerPoint || 0} color={activeProfile.color} />
-              <ActionKpi label="PUNTOS/PARTIDO" value={stats?.pointsPerMatch || 0} color="#0D1F33" />
+              <ActionKpi label="ACC/PUNTO" value={stats?.avgActionsPerPoint || 0} color={activeProfile.color} />
+              <ActionKpi label="PTS/PART" value={stats?.pointsPerMatch || 0} color="#0D1F33" />
               <ActionKpi label="ERRORES" value={stats?.errors || 0} color="#EF4444" />
             </View>
           </View>
@@ -191,7 +202,7 @@ export default function StatsScreen() {
                         <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }} numberOfLines={1}>
                           #{player.number} {player.name}
                         </Text>
-                        <Text style={{ fontSize: 11, color: '#94A3B8' }}>{player.position}</Text>
+                        <Text style={{ fontSize: 11, color: '#94A3B8' }}>{getPositionLabel(player.position)}</Text>
                       </View>
                       <View style={styles`flex-row gap-4 flex-shrink-0`}>
                         <StatKpi label="PTS" value={player.puntos} color="#1E6FD9" />
@@ -287,7 +298,7 @@ function TeamFilterChip({ label, subLabel, active, color, onPress }: { label: st
 function ActionKpi({ label, value, color }: { label: string; value: number | string; color: string }) {
   return (
     <View style={{ flex: 1, alignItems: 'center' }}>
-      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 4 }}>{label}</Text>
+      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, color: '#94A3B8', letterSpacing: 0.5, marginBottom: 4 }} numberOfLines={1} adjustsFontSizeToFit>{label}</Text>
       <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 26, fontWeight: '700', color, lineHeight: 26 }}>{value}</Text>
     </View>
   );

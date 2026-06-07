@@ -23,6 +23,7 @@ services:
       - "3000:3000"
     environment:
       - DATABASE_URL=postgresql://vstats:vstats_password@db:5432/vstats_db
+      - DIRECT_URL=postgresql://vstats:vstats_password@db:5432/vstats_db
       - JWT_SECRET=local_development_secret_key_123
     volumes:
       - ./api:/app

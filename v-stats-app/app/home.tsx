@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Home, BarChart3, Settings, Plus, ChevronDown, Check, Building2 } from 'lucide-react-native';
+import { Home, BarChart3, Settings, Plus, ChevronDown, Check, Building2, X } from 'lucide-react-native';
 import { useStyles } from '../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../src/context/ProfileContext';
@@ -189,8 +189,15 @@ export default function HomeScreen() {
       <Modal visible={showAddTeam} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24 }}>
-            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#0D1F33' }}>Nuevo Equipo</Text>
-            <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 20 }}>Agregar equipo en <Text style={{ fontWeight: 'bold' }}>{activeProfile.clubName}</Text></Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#0D1F33' }}>Nuevo Equipo</Text>
+                <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 20 }}>Agregar equipo en <Text style={{ fontWeight: 'bold' }}>{activeProfile.clubName}</Text></Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowAddTeam(false)} style={{ padding: 4, backgroundColor: '#F1F5F9', borderRadius: 16 }}>
+                <X size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
             
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#64748B', letterSpacing: 1, marginBottom: 8 }}>NOMBRE DEL EQUIPO</Text>
             <TextInput 
@@ -202,13 +209,10 @@ export default function HomeScreen() {
             />
 
             <View style={styles`flex-row gap-4`}>
-              <TouchableOpacity onPress={() => setShowAddTeam(false)} style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
-              </TouchableOpacity>
               <TouchableOpacity 
                 onPress={handleAddTeam}
                 disabled={!teamName.trim()}
-                style={{ flex: 1, backgroundColor: teamName.trim() ? activeProfile.color : '#cbd5e1', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+                style={{ flex: 1, backgroundColor: teamName.trim() ? '#16A34A' : '#cbd5e1', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
               >
                 <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>AGREGAR</Text>
               </TouchableOpacity>
@@ -218,9 +222,13 @@ export default function HomeScreen() {
       </Modal>
 
       {/* ── Switcher Modal ── */}
-      <Modal visible={showSwitcher} transparent animationType="slide">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 }}>
+      <Modal visible={showSwitcher} transparent animationType="slide" onRequestClose={() => setShowSwitcher(false)}>
+        <TouchableOpacity 
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+          activeOpacity={1}
+          onPress={() => setShowSwitcher(false)}
+        >
+          <TouchableOpacity activeOpacity={1} style={{ backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 }}>
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#0D1F33' }}>Cambiar de Club</Text>
             <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 20 }}>{coach.email}</Text>
 
@@ -244,8 +252,8 @@ export default function HomeScreen() {
                 )}
               </TouchableOpacity>
             ))}
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
 
     </View>

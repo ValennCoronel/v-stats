@@ -9,6 +9,7 @@ import { playersService, Player as ApiPlayer } from '../services/players.service
 export type Player = {
   id: string;
   name: string;
+  dni: string;
   number: number;
   position: string;
   isActive: boolean;
@@ -118,6 +119,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
               .map((p: ApiPlayer) => ({
                 id: p.id,
                 name: p.name,
+                dni: p.dni,
                 number: p.number,
                 position: p.position,
                 isActive: p.isActive,
@@ -139,6 +141,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
           .map((p: ApiPlayer) => ({
             id: p.id,
             name: p.name,
+            dni: p.dni,
             number: p.number,
             position: p.position,
             isActive: p.isActive,

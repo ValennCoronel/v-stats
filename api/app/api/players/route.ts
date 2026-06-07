@@ -78,10 +78,39 @@ export async function POST(request: Request) {
     })
 
     if (existingDni) {
-      return NextResponse.json(
-        { error: `El DNI ${dni} ya está registrado en este club` },
-        { status: 409 }
-      )
+      if (existingDni.isActive) {
+        return NextResponse.json(
+          { error: `El DNI ${dni} ya está registrado en este club` },
+          { status: 409 }
+        )
+      } else {
+        // Jugador existe pero está "eliminado" (soft delete). Lo revivimos.
+        let connectTeams: any[] = []
+        if (teamIds && Array.isArray(teamIds)) {
+          connectTeams = teamIds.map((id: string) => ({ id }))
+        } else if (teamId) {
+          connectTeams = [{ id: teamId }]
+        }
+
+        const reactivatedPlayer = await prisma.player.update({
+          where: { id: existingDni.id },
+          data: {
+            name,
+            number: parseInt(number),
+            position,
+            injuryHistory: injuryHistory || null,
+            avatarUrl: avatarUrl || null,
+            isActive: true,
+            teams: {
+              set: connectTeams
+            }
+          },
+          include: {
+            teams: { select: { id: true, name: true } }
+          }
+        })
+        return NextResponse.json({ player: reactivatedPlayer }, { status: 200 })
+      }
     }
 
     let connectTeams: any[] = []
@@ -214,7 +243,11 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Jugador no encontrado" }, { status: 404 })
     }
 
-    await prisma.player.delete({ where: { id } })
+    // Soft delete en vez de borrado físico para mantener estadísticas
+    await prisma.player.update({
+      where: { id },
+      data: { isActive: false }
+    })
 
     return NextResponse.json({ success: true })
   } catch (error) {

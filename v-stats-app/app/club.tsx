@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Home, BarChart3, Settings, Plus, ChevronDown, Check, Building2, Users, ChevronRight } from 'lucide-react-native';
+import { ArrowLeft, Home, BarChart3, Settings, Plus, ChevronDown, Check, Building2, Users, ChevronRight, X } from 'lucide-react-native';
 import { useStyles } from '../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../src/context/ProfileContext';
 import { useAuth } from '../src/context/AuthContext';
 import { playersService } from '../src/services/players.service';
+import { teamsService } from '../src/services/teams.service';
 
 export default function ClubScreen() {
   const router = useRouter();
@@ -17,11 +18,31 @@ export default function ClubScreen() {
   
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [showAddTeam, setShowAddTeam] = useState(false);
+  const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [teamName, setTeamName] = useState('');
 
+  const [confirmDialog, setConfirmDialog] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+
   const [showAddPlayer, setShowAddPlayer] = useState(false);
+  const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [playerForm, setPlayerForm] = useState({ name: '', dni: '', number: '', position: 'OUTSIDE_HITTER' });
   const [isSubmittingPlayer, setIsSubmittingPlayer] = useState(false);
+
+  const POSITIONS = [
+    { id: 'SETTER', label: 'Armador' },
+    { id: 'OUTSIDE_HITTER', label: 'Punta' },
+    { id: 'OPPOSITE_HITTER', label: 'Opuesto' },
+    { id: 'MIDDLE_BLOCKER', label: 'Central' },
+    { id: 'LIBERO', label: 'Líbero' },
+    { id: 'DEFENSIVE_SPECIALIST', label: 'Especialista' },
+  ];
+
+  const getPositionLabel = (pos: string) => POSITIONS.find(p => p.id === pos)?.label || pos;
 
   // Redirect to login if not authenticated
   if (!authLoading && !isAuthenticated) {
@@ -38,34 +59,124 @@ export default function ClubScreen() {
     setShowSwitcher(false);
   };
 
-  const handleAddTeam = async () => {
-    if (!teamName.trim()) return;
-    await addTeam(activeProfile.id, { name: teamName.trim() });
-    setTeamName('');
-    setShowAddTeam(false);
+  const handleEditTeam = (team: any) => {
+    setEditingTeamId(team.id);
+    setTeamName(team.name);
+    setShowAddTeam(true);
   };
 
-  const handleAddPlayer = async () => {
+  const executeDeleteTeam = async (id: string) => {
+    try {
+      await teamsService.deleteTeam(id);
+      await refreshProfiles();
+      setShowAddTeam(false);
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "No se pudo eliminar el equipo.");
+    }
+  };
+
+  const handleDeleteTeam = (id: string) => {
+    setConfirmDialog({
+      visible: true,
+      title: "Eliminar Equipo",
+      message: "¿Estás seguro de eliminar este equipo? Se perderán todos sus partidos.",
+      onConfirm: () => executeDeleteTeam(id)
+    });
+  };
+
+  const handleAddTeam = async () => {
+    if (!teamName.trim()) return;
+    try {
+      if (editingTeamId) {
+        await teamsService.updateTeam(editingTeamId, { name: teamName.trim() });
+      } else {
+        await addTeam(activeProfile.id, { name: teamName.trim() });
+      }
+      await refreshProfiles();
+      setTeamName('');
+      setShowAddTeam(false);
+      setEditingTeamId(null);
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", "Ocurrió un error al guardar el equipo.");
+    }
+  };
+
+  const openAddTeam = () => {
+    setEditingTeamId(null);
+    setTeamName('');
+    setShowAddTeam(true);
+  };
+
+  const handleEditPlayer = (player: any) => {
+    setEditingPlayerId(player.id);
+    setPlayerForm({ 
+      name: player.name, 
+      dni: player.dni, 
+      number: player.number.toString(), 
+      position: player.position || 'OUTSIDE_HITTER' 
+    });
+    setShowAddPlayer(true);
+  };
+
+  const executeDeletePlayer = async (id: string) => {
+    try {
+      await playersService.deletePlayer(id);
+      await refreshProfiles();
+      setShowAddPlayer(false);
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "No se pudo eliminar el jugador.");
+    }
+  };
+
+  const handleDeletePlayer = (id: string) => {
+    setConfirmDialog({
+      visible: true,
+      title: "Eliminar Jugador",
+      message: "¿Estás seguro de que quieres eliminar este jugador de la base de datos?",
+      onConfirm: () => executeDeletePlayer(id)
+    });
+  };
+
+  const handleSubmitPlayer = async () => {
     if (!playerForm.name.trim() || !playerForm.dni.trim() || !playerForm.number.trim()) return;
     setIsSubmittingPlayer(true);
     try {
-      await playersService.createPlayer({
-        clubId: activeProfile.id,
-        teamId: '', // Dummy or empty if required by type but not by db
-        name: playerForm.name.trim(),
-        dni: playerForm.dni.trim(),
-        number: parseInt(playerForm.number),
-        position: playerForm.position,
-      });
+      if (editingPlayerId) {
+        await playersService.updatePlayer(editingPlayerId, {
+          name: playerForm.name.trim(),
+          dni: playerForm.dni.trim(),
+          number: parseInt(playerForm.number),
+          position: playerForm.position,
+        });
+      } else {
+        await playersService.createPlayer({
+          clubId: activeProfile.id,
+          teamId: '', // Dummy or empty if required by type but not by db
+          name: playerForm.name.trim(),
+          dni: playerForm.dni.trim(),
+          number: parseInt(playerForm.number),
+          position: playerForm.position,
+        });
+      }
       await refreshProfiles();
       setShowAddPlayer(false);
+      setEditingPlayerId(null);
       setPlayerForm({ name: '', dni: '', number: '', position: 'OUTSIDE_HITTER' });
     } catch (error) {
-      console.error("Error creating player:", error);
-      alert("Error al crear el jugador. Posiblemente el DNI ya exista.");
+      console.error("Error saving player:", error);
+      alert("Error al guardar el jugador. Posiblemente el DNI ya exista.");
     } finally {
       setIsSubmittingPlayer(false);
     }
+  };
+
+  const openAddPlayer = () => {
+    setEditingPlayerId(null);
+    setPlayerForm({ name: '', dni: '', number: '', position: 'OUTSIDE_HITTER' });
+    setShowAddPlayer(true);
   };
 
   if (isLoading) {
@@ -132,9 +243,8 @@ export default function ClubScreen() {
                 <Building2 size={20} color="#0D1F33" />
                 <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 20, fontWeight: '700', color: '#0D1F33' }}>EQUIPOS</Text>
               </View>
-              <TouchableOpacity onPress={() => setShowAddTeam(true)} style={{ backgroundColor: 'rgba(30,111,217,0.1)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Plus size={16} color="#1E6FD9" />
-                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, fontWeight: '600', color: '#1E6FD9' }}>NUEVO EQUIPO</Text>
+              <TouchableOpacity onPress={openAddTeam} style={{ backgroundColor: 'rgba(30,111,217,0.1)', width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' }}>
+                <Plus size={20} color="#1E6FD9" />
               </TouchableOpacity>
             </View>
 
@@ -145,10 +255,9 @@ export default function ClubScreen() {
             ) : (
               <View style={{ marginBottom: 24 }}>
                 {activeProfile.teams.map((team) => (
-                  <View key={team.id} style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' }}>
+                  <TouchableOpacity key={team.id} onPress={() => handleEditTeam(team)} style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' }}>
                     <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '600', color: '#0D1F33' }}>{team.name}</Text>
-                    <ChevronRight size={20} color="#CBD5E1" />
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </View>
             )}
@@ -157,11 +266,10 @@ export default function ClubScreen() {
             <View style={styles`flex-row items-center justify-between mb-4 mt-4`}>
               <View style={styles`flex-row items-center gap-2`}>
                 <Users size={20} color="#0D1F33" />
-                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 20, fontWeight: '700', color: '#0D1F33' }}>JUGADORES DEL CLUB</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 20, fontWeight: '700', color: '#0D1F33' }}>JUGADORES</Text>
               </View>
-              <TouchableOpacity onPress={() => setShowAddPlayer(true)} style={{ backgroundColor: 'rgba(30,111,217,0.1)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Plus size={16} color="#1E6FD9" />
-                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, fontWeight: '600', color: '#1E6FD9' }}>NUEVO JUGADOR</Text>
+              <TouchableOpacity onPress={openAddPlayer} style={{ backgroundColor: 'rgba(30,111,217,0.1)', width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' }}>
+                <Plus size={20} color="#1E6FD9" />
               </TouchableOpacity>
             </View>
 
@@ -172,15 +280,15 @@ export default function ClubScreen() {
             ) : (
               <View style={{ gap: 8 }}>
                 {allClubPlayers.map((player) => (
-                  <View key={player.id} style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' }}>
+                  <TouchableOpacity key={player.id} onPress={() => handleEditPlayer(player)} style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' }}>
                     <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: activeProfile.color, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
                       <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 14, fontWeight: '700', color: '#fff' }}>{player.number}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '600', color: '#0D1F33' }}>{player.name}</Text>
-                      <Text style={{ fontSize: 12, color: '#64748B' }}>{player.position}</Text>
+                      <Text style={{ fontSize: 12, color: '#64748B' }}>{getPositionLabel(player.position)}</Text>
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </View>
             )}
@@ -211,8 +319,20 @@ export default function ClubScreen() {
       <Modal visible={showAddTeam} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24 }}>
-            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#0D1F33' }}>Nuevo Equipo</Text>
-            <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 20 }}>Agregar equipo en <Text style={{ fontWeight: 'bold' }}>{activeProfile.clubName}</Text></Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#0D1F33' }}>
+                  {editingTeamId ? 'Editar Equipo' : 'Nuevo Equipo'}
+                </Text>
+                <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 20 }}>
+                  {editingTeamId ? 'Modificar datos del equipo' : 'Agregar equipo en '} 
+                  {!editingTeamId && <Text style={{ fontWeight: 'bold' }}>{activeProfile.clubName}</Text>}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowAddTeam(false)} style={{ padding: 4, backgroundColor: '#F1F5F9', borderRadius: 16 }}>
+                <X size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
             
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#64748B', letterSpacing: 1, marginBottom: 8 }}>NOMBRE DEL EQUIPO</Text>
             <TextInput 
@@ -220,19 +340,25 @@ export default function ClubScreen() {
               placeholder="Ej: Equipo Masculino Superior"
               value={teamName}
               onChangeText={setTeamName}
-              autoFocus
+              autoFocus={!editingTeamId}
             />
 
             <View style={styles`flex-row gap-4`}>
-              <TouchableOpacity onPress={() => setShowAddTeam(false)} style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
-              </TouchableOpacity>
+              {editingTeamId && (
+                <TouchableOpacity 
+                  onPress={() => handleDeleteTeam(editingTeamId)}
+                  style={{ flex: 1, backgroundColor: '#EF4444', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+                >
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>ELIMINAR</Text>
+                </TouchableOpacity>
+              )}
+
               <TouchableOpacity 
                 onPress={handleAddTeam}
                 disabled={!teamName.trim()}
-                style={{ flex: 1, backgroundColor: teamName.trim() ? activeProfile.color : '#cbd5e1', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+                style={{ flex: 1, backgroundColor: teamName.trim() ? '#16A34A' : '#cbd5e1', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
               >
-                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>AGREGAR</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>GUARDAR</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -243,8 +369,20 @@ export default function ClubScreen() {
       <Modal visible={showAddPlayer} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24 }}>
-            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#0D1F33' }}>Nuevo Jugador</Text>
-            <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 20 }}>Agregar jugador al club <Text style={{ fontWeight: 'bold' }}>{activeProfile.clubName}</Text></Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#0D1F33' }}>
+                  {editingPlayerId ? 'Editar Jugador' : 'Nuevo Jugador'}
+                </Text>
+                <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 20 }}>
+                  {editingPlayerId ? 'Modificar datos del jugador' : `Agregar jugador al club `}
+                  {!editingPlayerId && <Text style={{ fontWeight: 'bold' }}>{activeProfile.clubName}</Text>}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowAddPlayer(false)} style={{ padding: 4, backgroundColor: '#F1F5F9', borderRadius: 16 }}>
+                <X size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
             
             <TextInput 
               style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 12, fontSize: 16, marginBottom: 12 }}
@@ -253,33 +391,76 @@ export default function ClubScreen() {
               onChangeText={t => setPlayerForm(p => ({ ...p, name: t }))}
             />
             <TextInput 
-              style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 12, fontSize: 16, marginBottom: 12 }}
+              style={{ 
+                borderWidth: 1, 
+                borderColor: '#E2E8F0', 
+                borderRadius: 12, 
+                padding: 12, 
+                fontSize: 16, 
+                marginBottom: 12,
+                backgroundColor: editingPlayerId ? '#F1F5F9' : '#fff',
+                color: editingPlayerId ? '#94A3B8' : '#0D1F33'
+              }}
               placeholder="DNI"
               keyboardType="numeric"
               value={playerForm.dni}
               onChangeText={t => setPlayerForm(p => ({ ...p, dni: t }))}
+              editable={!editingPlayerId}
             />
             <TextInput 
-              style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 12, fontSize: 16, marginBottom: 24 }}
+              style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 12, fontSize: 16, marginBottom: 16 }}
               placeholder="Número de Camiseta"
               keyboardType="numeric"
               value={playerForm.number}
               onChangeText={t => setPlayerForm(p => ({ ...p, number: t }))}
             />
 
-            <View style={styles`flex-row gap-4`}>
-              <TouchableOpacity onPress={() => setShowAddPlayer(false)} style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
-              </TouchableOpacity>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#64748B', letterSpacing: 1, marginBottom: 8 }}>POSICIÓN</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 24, maxHeight: 40 }}>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {POSITIONS.map(pos => (
+                  <TouchableOpacity
+                    key={pos.id}
+                    onPress={() => setPlayerForm(p => ({ ...p, position: pos.id }))}
+                    style={{
+                      paddingHorizontal: 16,
+                      paddingVertical: 8,
+                      borderRadius: 20,
+                      backgroundColor: playerForm.position === pos.id ? activeProfile.color : '#F1F5F9',
+                    }}
+                  >
+                    <Text style={{ 
+                      fontSize: 14, 
+                      fontWeight: '600', 
+                      color: playerForm.position === pos.id ? '#fff' : '#64748B' 
+                    }}>
+                      {pos.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+
+            <View style={styles`flex-row gap-4 mt-4`}>
+              {editingPlayerId && (
+                <TouchableOpacity 
+                  onPress={() => handleDeletePlayer(editingPlayerId)}
+                  disabled={isSubmittingPlayer}
+                  style={{ flex: 1, backgroundColor: '#EF4444', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+                >
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>ELIMINAR</Text>
+                </TouchableOpacity>
+              )}
+
               <TouchableOpacity 
-                onPress={handleAddPlayer}
+                onPress={handleSubmitPlayer}
                 disabled={isSubmittingPlayer || !playerForm.name || !playerForm.dni || !playerForm.number}
-                style={{ flex: 1, backgroundColor: playerForm.name && playerForm.dni ? activeProfile.color : '#cbd5e1', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+                style={{ flex: 1, backgroundColor: playerForm.name && playerForm.dni ? '#16A34A' : '#cbd5e1', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
               >
                 {isSubmittingPlayer ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>AGREGAR</Text>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>GUARDAR</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -288,9 +469,13 @@ export default function ClubScreen() {
       </Modal>
 
       {/* ── Switcher Modal ── */}
-      <Modal visible={showSwitcher} transparent animationType="slide">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 }}>
+      <Modal visible={showSwitcher} transparent animationType="slide" onRequestClose={() => setShowSwitcher(false)}>
+        <TouchableOpacity 
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+          activeOpacity={1}
+          onPress={() => setShowSwitcher(false)}
+        >
+          <TouchableOpacity activeOpacity={1} style={{ backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 }}>
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#0D1F33' }}>Cambiar de Club</Text>
             <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 20 }}>{coach.email}</Text>
 
@@ -314,9 +499,47 @@ export default function ClubScreen() {
                 )}
               </TouchableOpacity>
             ))}
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+      {/* ── Confirm Modal ── */}
+      <Modal visible={!!confirmDialog?.visible} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View style={{ flex: 1, paddingRight: 16 }}>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#0D1F33' }}>
+                  {confirmDialog?.title}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setConfirmDialog(null)} style={{ padding: 4, backgroundColor: '#F1F5F9', borderRadius: 16 }}>
+                <X size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+            <Text style={{ fontSize: 15, color: '#64748B', marginTop: 12, marginBottom: 24, lineHeight: 22 }}>
+              {confirmDialog?.message}
+            </Text>
+            <View style={styles`flex-row gap-4`}>
+              <TouchableOpacity 
+                onPress={() => setConfirmDialog(null)}
+                style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>CANCELAR</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => {
+                  if (confirmDialog?.onConfirm) confirmDialog.onConfirm();
+                  setConfirmDialog(null);
+                }}
+                style={{ flex: 1, backgroundColor: '#EF4444', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>ELIMINAR</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
+
     </View>
   );
 }
