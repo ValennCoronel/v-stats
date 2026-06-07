@@ -8,6 +8,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (email: string, password: string, displayName?: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithGoogleToken: (idToken: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -67,6 +68,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { success: false, error: res.error || 'Error al registrarse' };
   };
 
+  const loginWithGoogleToken = async (idToken: string) => {
+    const res = await authService.loginWithGoogleToken(idToken);
+    if (res.data?.user) {
+      setUser(res.data.user);
+      return { success: true };
+    }
+    return { success: false, error: res.error || 'Error al iniciar sesión con Google' };
+  };
+
   const logout = async () => {
     await authService.logout();
     setUser(null);
@@ -75,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider value={{
       user, isAuthenticated, isLoading,
-      login, register, logout, checkAuth,
+      login, register, loginWithGoogleToken, logout, checkAuth,
     }}>
       {children}
     </AuthContext.Provider>
