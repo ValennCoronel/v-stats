@@ -22,12 +22,12 @@ const actions = [
 ];
 
 const results = [
-  { id: "dbl", symbol: "#", label: "DBL+", color: "#10B981" },
+  { id: "dbl", symbol: "#", label: "DBL+", color: "#059669" },
+  { id: "neut", symbol: "!", label: "NEUT", color: "#6B7280" },
+  { id: "neg", symbol: "–", label: "NEG", color: "#f93016" },
   { id: "pos", symbol: "+", label: "POS", color: "#10B981" },
-  { id: "neut", symbol: "!", label: "NEUT", color: "#94A3B8" },
-  { id: "exc", symbol: "/", label: "EXC", color: "#94A3B8" },
-  { id: "neg", symbol: "–", label: "NEG", color: "#EF4444" },
-  { id: "err", symbol: "=", label: "ERR", color: "#EF4444" },
+  { id: "exc", symbol: "/", label: "EXC", color: "#F59E0B" },
+  { id: "err", symbol: "=", label: "ERR", color: "#DC2626" },
 ];
 
 function initStats(players: Player[], libero: Player | null): Record<string, PlayerSetStats> {
@@ -83,6 +83,27 @@ function getDbActions(action: string, result: string): string[] {
   return dbActions;
 }
 
+function computeSetStats(actions: ActionRecord[], setNum: number, allPlayers: Player[]): PlayerSetStats[] {
+  const setActions = actions.filter(a => a.set === setNum && a.playerId !== "rival");
+  const map: Record<string, PlayerSetStats> = {};
+
+  allPlayers.forEach(p => {
+    map[p.id] = { id: p.id, number: p.number, name: p.name, position: p.position, puntos: 0, ataquesPts: 0, saquesPts: 0, bloqueosPts: 0, recepciones: 0, errores: 0 };
+  });
+
+  setActions.forEach(a => {
+    const s = map[a.playerId];
+    if (!s) return;
+    if (a.action === "ataque" && a.result === "dbl") { s.ataquesPts++; s.puntos++; }
+    if (a.action === "saque" && a.result === "dbl") { s.saquesPts++; s.puntos++; }
+    if (a.action === "bloqueo" && a.result === "dbl") { s.bloqueosPts++; s.puntos++; }
+    if (a.action === "recepcion") s.recepciones++;
+    if (a.result === "err") s.errores++;
+  });
+
+  return Object.values(map).sort((a, b) => b.puntos - a.puntos);
+}
+
 export default function LiveMatchScreen() {
   const router = useRouter();
   const { id, teamId, rival, fecha, torneo, players } = useLocalSearchParams<{ id: string, teamId: string, rival: string, fecha: string, torneo: string, players: string }>();
@@ -121,15 +142,17 @@ export default function LiveMatchScreen() {
 
   const [showEndSet, setShowEndSet] = useState(false);
   const [pendingSetEnd, setPendingSetEnd] = useState<{ home: number; away: number; } | null>(null);
-  const [showSetResults, setShowSetResults] = useState(false);
-  const [completedSetStats, setCompletedSetStats] = useState<PlayerSetStats[]>([]);
   const [matchOver, setMatchOver] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedViewSet, setSelectedViewSet] = useState<number | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+
+  const allPlayersList: Player[] = convocados.map(rp => rosterToPlayer(rp as any));
 
 
   useEffect(() => {
-    if (!showEndSet && !showSetResults && (homeScore > 0 || awayScore > 0)) {
+    if (!showEndSet && (homeScore > 0 || awayScore > 0)) {
       if (isSetOver(homeScore, awayScore, currentSet)) {
         setPendingSetEnd({ home: homeScore, away: awayScore });
         setShowEndSet(true);
@@ -252,28 +275,36 @@ export default function LiveMatchScreen() {
 
   const confirmEndSet = () => {
     const scored = pendingSetEnd ?? { home: homeScore, away: awayScore };
-    
-    // Save set score
     setSetScoresHistory(prev => [...prev, { teamPts: scored.home, oppPts: scored.away }]);
-
     const homeWon = scored.home > scored.away;
     const newSetsWon = { home: homeWon ? setsWon.home + 1 : setsWon.home, away: homeWon ? setsWon.away : setsWon.away + 1 };
     setSetsWon(newSetsWon);
-    
-    const allPlayers = liberoPlayer ? [...courtPlayers, liberoPlayer] : courtPlayers;
-    const statsArr = allPlayers.map(p => currentSetStats[p.id] ?? { id: p.id, number: p.number, name: p.name, position: p.position, puntos: 0, ataquesPts: 0, saquesPts: 0, bloqueosPts: 0, recepciones: 0, errores: 0 });
-    setCompletedSetStats(statsArr);
-    setShowEndSet(false); setPendingSetEnd(null); setShowSetResults(true);
+    setShowEndSet(false);
+    setPendingSetEnd(null);
+
+    if (newSetsWon.home >= 3 || newSetsWon.away >= 3) {
+      setMatchOver(true);
+    } else {
+      setCourtPlayers([]);
+      setLiberoPlayer(null);
+      setBench([]);
+      setAssignedSlots(Array(EMPTY_SLOTS).fill(null));
+      setSelectedPlayer(null);
+      setHomeScore(0);
+      setAwayScore(0);
+      setCurrentSet((s) => s + 1);
+      setCurrentSetStats({});
+    }
   };
 
   const startNextSet = () => {
-    if (setsWon.home >= 3 || setsWon.away >= 3) { setMatchOver(true); setShowSetResults(false); return; }
+    if (setsWon.home >= 3 || setsWon.away >= 3) { setMatchOver(true); return; }
     setCourtPlayers([]);
     setLiberoPlayer(null);
     setBench([]);
     setAssignedSlots(Array(EMPTY_SLOTS).fill(null));
     setSelectedPlayer(null);
-    setHomeScore(0); setAwayScore(0); setCurrentSet((s) => s + 1); setCurrentSetStats({}); setShowSetResults(false);
+    setHomeScore(0); setAwayScore(0); setCurrentSet((s) => s + 1); setCurrentSetStats({});
   };
 
   const openSubstitution = () => { if (selectedPlayer === null) return; setPlayerOutId(selectedPlayer); setShowSubstitution(true); };
@@ -335,6 +366,9 @@ export default function LiveMatchScreen() {
     }
   };
 
+  const isGameReady = assignedSlots.slice(0, 6).every(p => p !== null);
+  const viewSetStats = selectedViewSet !== null ? computeSetStats(actionHistory, selectedViewSet, allPlayersList) : [];
+
   return (
     <View style={styles`flex-1 bg-screen`}>
       <StatusBar style="light" />
@@ -346,11 +380,41 @@ export default function LiveMatchScreen() {
             <ArrowLeft size={16} color="#fff" />
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', flex: 1, gap: 6 }}>
-            {[1, 2, 3, 4, 5].map((set) => (
-              <View key={set} style={{ flex: 1, paddingVertical: 6, borderRadius: 16, alignItems: 'center', backgroundColor: currentSet === set ? '#1E6FD9' : set < currentSet ? 'rgba(255,255,255,0.2)' : 'transparent', borderWidth: set > currentSet ? 1 : 0, borderColor: 'rgba(255,255,255,0.15)' }}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 13, letterSpacing: 0.5, color: '#fff' }}>{set < currentSet ? `${set}✓` : `S${set}`}</Text>
-              </View>
-            ))}
+            {[1, 2, 3, 4, 5].map((set) => {
+              const isViewing = selectedViewSet === set;
+              const isFuture = set > currentSet;
+              const isPast = set < currentSet;
+              let bgColor = 'transparent';
+              let borderStyle: any = {};
+              if (currentSet === set) {
+                bgColor = '#1E6FD9';
+              } else if (isViewing) {
+                bgColor = 'rgba(30,111,217,0.25)';
+                borderStyle = { borderWidth: 1, borderColor: '#1E6FD9' };
+              } else if (isPast) {
+                bgColor = 'rgba(255,255,255,0.2)';
+              }
+              return (
+                <TouchableOpacity
+                  key={set}
+                  disabled={isFuture}
+                  onPress={() => {
+                    if (set === currentSet) setSelectedViewSet(null);
+                    else if (isPast) setSelectedViewSet(set);
+                  }}
+                  style={{
+                    flex: 1, paddingVertical: 6, borderRadius: 16, alignItems: 'center',
+                    backgroundColor: bgColor,
+                    borderWidth: isFuture ? 1 : (isViewing ? 1 : 0),
+                    borderColor: isFuture ? 'rgba(255,255,255,0.15)' : (isViewing ? '#1E6FD9' : 'transparent'),
+                    opacity: isFuture ? 0.3 : 1,
+                    ...borderStyle,
+                  }}
+                >
+                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 13, letterSpacing: 0.5, color: '#fff' }}>{isPast ? `${set}✓` : `S${set}`}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
@@ -373,158 +437,317 @@ export default function LiveMatchScreen() {
       {/* BOTTOM LIGHT ZONE */}
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 140 }}>
         
-        {/* ① JUGADORES */}
-        <View>
-          <View style={styles`flex-row justify-between items-center mb-2`}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', letterSpacing: 0.5, color: '#0D1F33' }}>① JUGADOR EN CANCHA</Text>
-              {courtPlayers.length > 0 && (
-              <TouchableOpacity onPress={openSubstitution} disabled={selectedPlayer === null} style={{ backgroundColor: selectedPlayer !== null ? '#1E6FD9' : '#94A3B8', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 6, opacity: selectedPlayer !== null ? 1 : 0.4 }}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, letterSpacing: 1, color: '#fff' }}>CAMBIO →</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {homeScore === 0 && awayScore === 0 && courtPlayers.length === 0 ? (
-            <>
-              <View style={styles`flex-row flex-wrap justify-between gap-2 mb-2`}>
-                {Array.from({ length: 6 }).map((_, index) => {
-                  const player = assignedSlots[index];
-                  return player ? (
-                    <TouchableOpacity
-                      key={`slot-${index}`}
-                      onPress={() => setSelectedPlayer(player.id)}
-                      style={[styles`w-1/3 bg-white rounded-lg p-2`, { borderWidth: 2, borderColor: selectedPlayer === player.id ? '#1E6FD9' : 'transparent', backgroundColor: selectedPlayer === player.id ? 'rgba(30,111,217,0.05)' : '#fff' }]}
-                    >
-                      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: '#1E6FD9', lineHeight: 28 }}>{player.number}</Text>
-                      <Text style={{ fontSize: 10, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{player.name}</Text>
-                      <Text style={{ fontSize: 9, color: '#64748B' }}>{player.position}</Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity
-                      key={`empty-${index}`}
-                      onPress={() => { setPickerSlotIndex(index); setShowRosterPicker(true); }}
-                      style={[styles`w-1/3 rounded-lg`, { borderWidth: 2, borderStyle: 'dashed', borderColor: '#CBD5E1', padding: 12, alignItems: 'center', justifyContent: 'center', minHeight: 80, backgroundColor: 'rgba(0,0,0,0.02)' }]}
-                    >
-                      <Plus size={22} color="#94A3B8" />
-                      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#94A3B8', marginTop: 4, textAlign: 'center' }}>AGREGAR JUGADOR</Text>
-                    </TouchableOpacity>
-                  );
-                })}
+        {selectedViewSet === null ? (
+          <>
+            {/* ① JUGADORES */}
+            <View>
+              <View style={styles`flex-row justify-between items-center mb-2`}>
+                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', letterSpacing: 0.5, color: '#0D1F33' }}>① JUGADOR EN CANCHA</Text>
+                  {courtPlayers.length > 0 && (
+                  <TouchableOpacity onPress={openSubstitution} disabled={selectedPlayer === null} style={{ backgroundColor: selectedPlayer !== null ? '#1E6FD9' : '#94A3B8', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 6, opacity: selectedPlayer !== null ? 1 : 0.4 }}>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, letterSpacing: 1, color: '#fff' }}>CAMBIO →</Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
-              {assignedSlots[6] ? (
-                <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-                  <TouchableOpacity onPress={() => setSelectedPlayer(assignedSlots[6]!.id)} style={{ width: '31%', backgroundColor: '#FEF9C3', borderRadius: 8, padding: 8, borderWidth: 2, borderColor: selectedPlayer === assignedSlots[6]!.id ? '#1E6FD9' : '#FDE047', alignItems: 'center' }}>
-                    <View style={{ backgroundColor: '#FDE047', paddingHorizontal: 8, paddingVertical: 1, borderRadius: 4, marginBottom: 2 }}>
-                      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, fontWeight: '700', color: '#92400E' }}>LÍBERO</Text>
+              {homeScore === 0 && awayScore === 0 && courtPlayers.length === 0 ? (
+                <>
+                  <View style={styles`flex-row flex-wrap justify-between gap-2 mb-2`}>
+                    {Array.from({ length: 6 }).map((_, index) => {
+                      const player = assignedSlots[index];
+                      return player ? (
+                        <TouchableOpacity
+                          key={`slot-${index}`}
+                          onPress={() => setSelectedPlayer(player.id)}
+                          style={[styles`w-1/3 bg-white rounded-lg p-2`, { borderWidth: 2, borderColor: selectedPlayer === player.id ? '#1E6FD9' : 'transparent', backgroundColor: selectedPlayer === player.id ? 'rgba(30,111,217,0.05)' : '#fff' }]}
+                        >
+                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: '#1E6FD9', lineHeight: 28 }}>{player.number}</Text>
+                          <Text style={{ fontSize: 10, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{player.name}</Text>
+                          <Text style={{ fontSize: 9, color: '#64748B' }}>{player.position}</Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <TouchableOpacity
+                          key={`empty-${index}`}
+                          onPress={() => { setPickerSlotIndex(index); setShowRosterPicker(true); }}
+                          style={[styles`w-1/3 rounded-lg`, { borderWidth: 2, borderStyle: 'dashed', borderColor: '#CBD5E1', padding: 12, alignItems: 'center', justifyContent: 'center', minHeight: 80, backgroundColor: 'rgba(0,0,0,0.02)' }]}
+                        >
+                          <Plus size={22} color="#94A3B8" />
+                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#94A3B8', marginTop: 4, textAlign: 'center' }}>AGREGAR JUGADOR</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  {assignedSlots[6] ? (
+                    <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+                      <TouchableOpacity onPress={() => setSelectedPlayer(assignedSlots[6]!.id)} style={{ width: '31%', backgroundColor: '#FEF9C3', borderRadius: 8, padding: 8, borderWidth: 2, borderColor: selectedPlayer === assignedSlots[6]!.id ? '#1E6FD9' : '#FDE047', alignItems: 'center' }}>
+                        <View style={{ backgroundColor: '#FDE047', paddingHorizontal: 8, paddingVertical: 1, borderRadius: 4, marginBottom: 2 }}>
+                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, fontWeight: '700', color: '#92400E' }}>LÍBERO</Text>
+                        </View>
+                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#92400E', lineHeight: 26 }}>{assignedSlots[6]!.number}</Text>
+                        <Text style={{ fontSize: 9, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{assignedSlots[6]!.name}</Text>
+                        <Text style={{ fontSize: 8, color: '#92400E' }}>{assignedSlots[6]!.position}</Text>
+                      </TouchableOpacity>
                     </View>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#92400E', lineHeight: 26 }}>{assignedSlots[6]!.number}</Text>
-                    <Text style={{ fontSize: 9, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{assignedSlots[6]!.name}</Text>
-                    <Text style={{ fontSize: 8, color: '#92400E' }}>{assignedSlots[6]!.position}</Text>
-                  </TouchableOpacity>
-                </View>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={() => { setPickerSlotIndex(6); setShowRosterPicker(true); }}
+                      style={{ width: '100%', borderRadius: 8, padding: 12, borderWidth: 2, borderStyle: 'dashed', borderColor: '#1E6FD9', backgroundColor: 'rgba(30,111,217,0.05)', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                    >
+                      <Plus size={20} color="#1E6FD9" />
+                      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 13, color: '#1E6FD9', fontWeight: '600' }}>AGREGAR LÍBERO</Text>
+                    </TouchableOpacity>
+                  )}
+                </>
               ) : (
-                <TouchableOpacity
-                  onPress={() => { setPickerSlotIndex(6); setShowRosterPicker(true); }}
-                  style={{ width: '100%', borderRadius: 8, padding: 12, borderWidth: 2, borderStyle: 'dashed', borderColor: '#1E6FD9', backgroundColor: 'rgba(30,111,217,0.05)', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                >
-                  <Plus size={20} color="#1E6FD9" />
-                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 13, color: '#1E6FD9', fontWeight: '600' }}>AGREGAR LÍBERO</Text>
-                </TouchableOpacity>
+                <>
+                  <View style={styles`flex-row flex-wrap justify-between gap-2 mb-2`}>
+                    {courtPlayers.map((player) => (
+                      <TouchableOpacity key={player.id} onPress={() => setSelectedPlayer(player.id)} style={[styles`w-1/3 bg-white rounded-lg p-2`, { borderWidth: 2, borderColor: selectedPlayer === player.id ? '#1E6FD9' : 'transparent', backgroundColor: selectedPlayer === player.id ? 'rgba(30,111,217,0.05)' : '#fff' }]}>
+                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: '#1E6FD9', lineHeight: 28 }}>{player.number}</Text>
+                        <Text style={{ fontSize: 10, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{player.name}</Text>
+                        <Text style={{ fontSize: 9, color: '#64748B' }}>{player.position}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {liberoPlayer && (
+                    <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+                      <TouchableOpacity onPress={() => setSelectedPlayer(liberoPlayer.id)} style={{ width: '31%', backgroundColor: '#FEF9C3', borderRadius: 8, padding: 8, borderWidth: 2, borderColor: selectedPlayer === liberoPlayer.id ? '#1E6FD9' : '#FDE047', alignItems: 'center' }}>
+                        <View style={{ backgroundColor: '#FDE047', paddingHorizontal: 8, paddingVertical: 1, borderRadius: 4, marginBottom: 2 }}>
+                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, fontWeight: '700', color: '#92400E' }}>LÍBERO</Text>
+                        </View>
+                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#92400E', lineHeight: 26 }}>{liberoPlayer.number}</Text>
+                        <Text style={{ fontSize: 9, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{liberoPlayer.name}</Text>
+                        <Text style={{ fontSize: 8, color: '#92400E' }}>{liberoPlayer.position}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </>
               )}
-            </>
-          ) : (
-            <>
-              <View style={styles`flex-row flex-wrap justify-between gap-2 mb-2`}>
-                {courtPlayers.map((player) => (
-                  <TouchableOpacity key={player.id} onPress={() => setSelectedPlayer(player.id)} style={[styles`w-1/3 bg-white rounded-lg p-2`, { borderWidth: 2, borderColor: selectedPlayer === player.id ? '#1E6FD9' : 'transparent', backgroundColor: selectedPlayer === player.id ? 'rgba(30,111,217,0.05)' : '#fff' }]}>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 24, fontWeight: '700', color: '#1E6FD9', lineHeight: 28 }}>{player.number}</Text>
-                    <Text style={{ fontSize: 10, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{player.name}</Text>
-                    <Text style={{ fontSize: 9, color: '#64748B' }}>{player.position}</Text>
+            </View>
+
+            {/* ② ACCIÓN */}
+            <View>
+              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', letterSpacing: 0.5, color: '#0D1F33', marginBottom: 8 }}>② ACCIÓN</Text>
+              <View style={styles`flex-row flex-wrap justify-between gap-1.5`}>
+                {actions.map((action) => (
+                  <TouchableOpacity key={action.id} disabled={!isGameReady} onPress={() => setSelectedAction(action.id)} style={[styles`bg-white rounded-lg items-center justify-center py-2`, { flex: 1, height: 60, borderWidth: 2, borderColor: selectedAction === action.id ? '#1E6FD9' : 'transparent', backgroundColor: selectedAction === action.id ? 'rgba(30,111,217,0.05)' : '#fff', opacity: isGameReady ? 1 : 0.4 }]}>
+                    <Text style={{ fontSize: 18 }}>{action.icon}</Text>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 8, letterSpacing: 0.3, color: '#0D1F33', marginTop: 3 }}>{action.name}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
-              {liberoPlayer && (
-                <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-                  <TouchableOpacity onPress={() => setSelectedPlayer(liberoPlayer.id)} style={{ width: '31%', backgroundColor: '#FEF9C3', borderRadius: 8, padding: 8, borderWidth: 2, borderColor: selectedPlayer === liberoPlayer.id ? '#1E6FD9' : '#FDE047', alignItems: 'center' }}>
-                    <View style={{ backgroundColor: '#FDE047', paddingHorizontal: 8, paddingVertical: 1, borderRadius: 4, marginBottom: 2 }}>
-                      <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, fontWeight: '700', color: '#92400E' }}>LÍBERO</Text>
-                    </View>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#92400E', lineHeight: 26 }}>{liberoPlayer.number}</Text>
-                    <Text style={{ fontSize: 9, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{liberoPlayer.name}</Text>
-                    <Text style={{ fontSize: 8, color: '#92400E' }}>{liberoPlayer.position}</Text>
+            </View>
+
+            {/* ③ RESULTADO */}
+            <View>
+              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', letterSpacing: 0.5, color: '#0D1F33', marginBottom: 8 }}>③ RESULTADO</Text>
+              <View style={styles`flex-row flex-wrap justify-between gap-1.5 mb-3`}>
+                {results.map((result) => (
+                  <TouchableOpacity key={result.id} disabled={!isGameReady} onPress={() => setSelectedResult(result.id)} style={[styles`w-1/3 items-center justify-center py-2 rounded-lg`, { height: 64, backgroundColor: result.color, borderWidth: 2, borderColor: selectedResult === result.id ? '#0D1F33' : 'transparent', opacity: isGameReady ? 1 : 0.35 }]}>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', color: '#fff' }}>{result.symbol}</Text>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 8, color: '#fff' }}>{result.label}</Text>
                   </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Hint Line */}
+              {selectedAction && selectedResult && (
+                <View style={{ backgroundColor: ((selectedAction === "ataque" || selectedAction === "saque" || selectedAction === "bloqueo") && selectedResult === "dbl") ? '#DCFCE7' : selectedResult === "err" ? '#FEE2E2' : '#F4F7FB', padding: 8, borderRadius: 8, alignItems: 'center', marginBottom: 8 }}>
+                   <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 0.5, color: ((selectedAction === "ataque" || selectedAction === "saque" || selectedAction === "bloqueo") && selectedResult === "dbl") ? '#15803D' : selectedResult === "err" ? '#DC2626' : '#64748B' }}>
+                    {((selectedAction === "ataque" || selectedAction === "saque" || selectedAction === "bloqueo") && selectedResult === "dbl") ? "✅ PUNTO PROPIO" : selectedResult === "err" ? "❌ PUNTO RIVAL" : "—"}
+                   </Text>
                 </View>
               )}
-            </>
-          )}
-        </View>
-
-        {/* ② ACCIÓN */}
-        <View>
-          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', letterSpacing: 0.5, color: '#0D1F33', marginBottom: 8 }}>② ACCIÓN</Text>
-          <View style={styles`flex-row flex-wrap justify-between gap-1.5`}>
-            {actions.map((action) => (
-              <TouchableOpacity key={action.id} onPress={() => setSelectedAction(action.id)} style={[styles`bg-white rounded-lg items-center justify-center py-2`, { flex: 1, height: 60, borderWidth: 2, borderColor: selectedAction === action.id ? '#1E6FD9' : 'transparent', backgroundColor: selectedAction === action.id ? 'rgba(30,111,217,0.05)' : '#fff' }]}>
-                <Text style={{ fontSize: 18 }}>{action.icon}</Text>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 8, letterSpacing: 0.3, color: '#0D1F33', marginTop: 3 }}>{action.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* ③ RESULTADO */}
-        <View>
-          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', letterSpacing: 0.5, color: '#0D1F33', marginBottom: 8 }}>③ RESULTADO</Text>
-          <View style={styles`flex-row flex-wrap justify-between gap-1.5 mb-3`}>
-            {results.map((result) => (
-              <TouchableOpacity key={result.id} onPress={() => setSelectedResult(result.id)} style={[styles`w-1/6 items-center justify-center py-2 rounded-lg`, { height: 60, backgroundColor: result.color, borderWidth: 2, borderColor: selectedResult === result.id ? '#0D1F33' : 'transparent' }]}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', color: '#fff' }}>{result.symbol}</Text>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 8, color: '#fff' }}>{result.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Hint Line */}
-          {selectedAction && selectedResult && (
-            <View style={{ backgroundColor: ((selectedAction === "ataque" || selectedAction === "saque" || selectedAction === "bloqueo") && selectedResult === "dbl") ? '#DCFCE7' : selectedResult === "err" ? '#FEE2E2' : '#F4F7FB', padding: 8, borderRadius: 8, alignItems: 'center', marginBottom: 8 }}>
-               <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, letterSpacing: 0.5, color: ((selectedAction === "ataque" || selectedAction === "saque" || selectedAction === "bloqueo") && selectedResult === "dbl") ? '#15803D' : selectedResult === "err" ? '#DC2626' : '#64748B' }}>
-                {((selectedAction === "ataque" || selectedAction === "saque" || selectedAction === "bloqueo") && selectedResult === "dbl") ? "✅ PUNTO PROPIO" : selectedResult === "err" ? "❌ PUNTO RIVAL" : "—"}
-               </Text>
             </View>
-          )}
-        </View>
+          </>
+        ) : (
+          <View style={{ backgroundColor: '#F8FAFC' /* o '#fff' */ }}>
+            {isLoadingStats ? (
+              <ActivityIndicator size="large" color="#1E6FD9" style={{ marginTop: 40 }} />
+            ) : (
+              <>
+                {/* RESUMEN DEL SET */}
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+                  <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' }}>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#94A3B8', letterSpacing: 1, marginBottom: 4 }}>PUNTOS</Text>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 28, fontWeight: '700', color: '#F59E0B' }}>
+                      {viewSetStats.reduce((acc, p) => acc + p.puntos, 0) + actionHistory.filter(a => a.set === selectedViewSet && a.playerId === 'rival').length}
+                    </Text>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, color: '#94A3B8' }}>del set</Text>
+                  </View>
+                  <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' }}>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#94A3B8', letterSpacing: 1, marginBottom: 4 }}>GANADOS</Text>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 28, fontWeight: '700', color: '#10B981' }}>
+                      {viewSetStats.reduce((acc, p) => acc + p.puntos, 0) + actionHistory.filter(a => a.set === selectedViewSet && a.playerId === 'rival').length}
+                    </Text>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, color: '#94A3B8' }}>en acción</Text>
+                  </View>
+                  <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' }}>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#94A3B8', letterSpacing: 1, marginBottom: 4 }}>ERRORES</Text>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 28, fontWeight: '700', color: '#EF4444' }}>
+                      {viewSetStats.reduce((acc, p) => acc + p.errores, 0)}
+                    </Text>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, color: '#94A3B8' }}>propios</Text>
+                  </View>
+                </View>
+
+                {/* EFECTIVIDADES */}
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+                  {/* Efectividad Ataque */}
+                  {(() => {
+                    const setActs = actionHistory.filter(a => a.set === selectedViewSet && a.action === 'ataque');
+                    const pos = setActs.filter(a => a.result === 'dbl' || a.result === 'pos' || a.result === 'exc').length;
+                    const total = setActs.length;
+                    const pct = total > 0 ? Math.round((pos / total) * 100) : 0;
+                    return (
+                      <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, color: '#64748B', fontWeight: '500' }}>Ataque</Text>
+                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '700', color: '#10B981' }}>{pct}%</Text>
+                        </View>
+                        <View style={{ backgroundColor: '#F1F5F9', borderRadius: 4, height: 5, overflow: 'hidden' }}>
+                          <View style={{ width: `${pct}%`, height: '100%', backgroundColor: '#10B981', borderRadius: 4 }} />
+                        </View>
+                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, color: '#94A3B8', marginTop: 4 }}>
+                          {pos} pos · {setActs.filter(a => a.result === 'err').length} err · {total} tot
+                        </Text>
+                      </View>
+                    );
+                  })()}
+                  {/* Efectividad Recepción */}
+                  {(() => {
+                    const setActs = actionHistory.filter(a => a.set === selectedViewSet && a.action === 'recepcion');
+                    const pos = setActs.filter(a => a.result === 'dbl' || a.result === 'pos' || a.result === 'exc').length;
+                    const total = setActs.length;
+                    const pct = total > 0 ? Math.round((pos / total) * 100) : 0;
+                    return (
+                      <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 11, color: '#64748B', fontWeight: '500' }}>Recepción</Text>
+                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 20, fontWeight: '700', color: '#F59E0B' }}>{pct}%</Text>
+                        </View>
+                        <View style={{ backgroundColor: '#F1F5F9', borderRadius: 4, height: 5, overflow: 'hidden' }}>
+                          <View style={{ width: `${pct}%`, height: '100%', backgroundColor: '#F59E0B', borderRadius: 4 }} />
+                        </View>
+                        <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, color: '#94A3B8', marginTop: 4 }}>
+                          {pos} pos · {setActs.filter(a => a.result === 'err').length} err · {total} tot
+                        </Text>
+                      </View>
+                    );
+                  })()}
+                </View>
+
+                {/* ERRORES PROPIOS vs RIVAL */}
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+                  <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#EF4444', fontWeight: '600', letterSpacing: 0.5, marginBottom: 4 }}>ERRORES PROPIOS</Text>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 32, fontWeight: '700', color: '#EF4444', lineHeight: 36 }}>
+                      {viewSetStats.reduce((acc, p) => acc + p.errores, 0)}
+                    </Text>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, color: '#94A3B8', marginTop: 4, lineHeight: 14 }}>
+                      Saque: {actionHistory.filter(a => a.set === selectedViewSet && a.action === 'saque' && a.result === 'err').length}{'\n'}
+                      Ataque: {actionHistory.filter(a => a.set === selectedViewSet && a.action === 'ataque' && a.result === 'err').length}{'\n'}
+                      Recep: {actionHistory.filter(a => a.set === selectedViewSet && a.action === 'recepcion' && a.result === 'err').length}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 10, color: '#10B981', fontWeight: '600', letterSpacing: 0.5, marginBottom: 4 }}>ERRORES RIVAL</Text>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 32, fontWeight: '700', color: '#10B981', lineHeight: 36 }}>
+                      {actionHistory.filter(a => a.set === selectedViewSet && a.playerId === 'rival').length}
+                    </Text>
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 9, color: '#94A3B8', marginTop: 4, lineHeight: 14 }}>
+                      Saque: {actionHistory.filter(a => a.set === selectedViewSet && a.action === 'rival_saque').length}{'\n'}
+                      Ataque: {actionHistory.filter(a => a.set === selectedViewSet && a.action === 'rival_ataque').length}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* TITULO TABLA */}
+                <View style={{ alignItems: 'center', marginBottom: 10 }}>
+                  <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', color: '#0D1F33', letterSpacing: 0.5 }}>
+                    Resultados — Set {selectedViewSet}
+                  </Text>
+                </View>
+
+                {/* TABLA JUGADORES */}
+                <View style={{ backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: '#E2E8F0', overflow: 'hidden' }}>
+                  {/* Header */}
+                  <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#F8FAFC', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
+                    <Text style={{ flex: 2, fontFamily: 'Barlow Condensed', fontSize: 11, color: '#94A3B8', letterSpacing: 0.5 }}>JUGADOR</Text>
+                    <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 11, color: '#F59E0B', textAlign: 'center', letterSpacing: 0.5 }}>PTS</Text>
+                    <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 11, color: '#10B981', textAlign: 'center', letterSpacing: 0.5 }}>ATK</Text>
+                    <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 11, color: '#1E6FD9', textAlign: 'center', letterSpacing: 0.5 }}>SAQ</Text>
+                    <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 11, color: '#F59E0B', textAlign: 'center', letterSpacing: 0.5 }}>BLQ</Text>
+                    <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 11, color: '#EF4444', textAlign: 'center', letterSpacing: 0.5 }}>ERR</Text>
+                  </View>
+
+                  {viewSetStats.length === 0 ? (
+                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, color: '#94A3B8', textAlign: 'center', paddingVertical: 40 }}>
+                      No hay acciones registradas
+                    </Text>
+                  ) : (
+                    viewSetStats.map((p, index) => (
+                      <View key={p.id} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: index === 0 ? 0 : 1, borderTopColor: '#F1F5F9' }}>
+                        <View style={{ flex: 2 }}>
+                          <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>#{p.number}</Text>
+                          <Text style={{ fontSize: 10, color: '#64748B' }} numberOfLines={1}>{p.name.split(' ')[0]}</Text>
+                        </View>
+                        <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', textAlign: 'center', color: p.puntos > 0 ? '#F59E0B' : '#CBD5E1' }}>{p.puntos}</Text>
+                        <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 16, textAlign: 'center', color: p.ataquesPts > 0 ? '#10B981' : '#CBD5E1' }}>{p.ataquesPts}</Text>
+                        <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 16, textAlign: 'center', color: p.saquesPts > 0 ? '#1E6FD9' : '#CBD5E1' }}>{p.saquesPts}</Text>
+                        <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 16, textAlign: 'center', color: p.bloqueosPts > 0 ? '#F59E0B' : '#CBD5E1' }}>{p.bloqueosPts}</Text>
+                        <Text style={{ width: 40, fontFamily: 'Barlow Condensed', fontSize: 16, textAlign: 'center', color: p.errores > 0 ? '#EF4444' : '#CBD5E1' }}>{p.errores}</Text>
+                      </View>
+                    ))
+                  )}
+                </View>
+              </>
+            )}
+          </View>
+        )}
 
       </ScrollView>
 
       {/* Bottom Bar */}
-      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 8, paddingBottom: 16, gap: 6 }}>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 12, justifyContent: 'center', paddingHorizontal: 16, borderWidth: 1, borderColor: '#E2E8F0' }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 14, color: '#64748B' }}>
-              {selectedPlayer !== null && selectedAction !== null && selectedResult !== null
-                ? "✅ Acción registrada"
-                : selectedPlayer !== null && selectedAction !== null
-                  ? "3. Seleccione resultado..."
-                  : selectedPlayer !== null
-                    ? "2. Seleccione acción..."
-                    : getLastActionText()
-              }
+      {selectedViewSet !== null ? (
+        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 32 }}>
+          <TouchableOpacity onPress={() => setSelectedViewSet(null)} style={{ backgroundColor: '#1E6FD9', paddingVertical: 16, borderRadius: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 10 }}>
+            <Text style={{ fontSize: 20 }}>▶</Text>
+            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>
+              VOLVER AL JUEGO EN VIVO (SET {currentSet})
             </Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 8, paddingBottom: 16, gap: 6 }}>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 12, justifyContent: 'center', paddingHorizontal: 16, borderWidth: 1, borderColor: '#E2E8F0' }}>
+              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 14, color: '#64748B' }}>
+                {selectedPlayer !== null && selectedAction !== null && selectedResult !== null
+                  ? "✅ Acción registrada"
+                  : selectedPlayer !== null && selectedAction !== null
+                    ? "3. Seleccione resultado..."
+                    : selectedPlayer !== null
+                      ? "2. Seleccione acción..."
+                      : getLastActionText()
+                }
+              </Text>
+            </View>
+            <TouchableOpacity onPress={handleUndo} style={{ width: 60, height: 60, borderRadius: 12, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0', opacity: actionHistory.length > 0 ? 1 : 0.4 }}>
+              <RotateCcw size={24} color="#64748B" />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={handleUndo} style={{ width: 60, height: 60, borderRadius: 12, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0', opacity: actionHistory.length > 0 ? 1 : 0.4 }}>
-            <RotateCcw size={24} color="#64748B" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity disabled={!isGameReady} onPress={() => handleRivalError("saque")} style={{ flex: 1, backgroundColor: '#0D1F33', paddingVertical: 10, borderRadius: 8, alignItems: 'center', opacity: isGameReady ? 1 : 0.35 }}>
+              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#fff' }}>🚀 ERR. SAQUE RIVAL</Text>
+            </TouchableOpacity>
+            <TouchableOpacity disabled={!isGameReady} onPress={() => handleRivalError("ataque")} style={{ flex: 1, backgroundColor: '#0D1F33', paddingVertical: 10, borderRadius: 8, alignItems: 'center', opacity: isGameReady ? 1 : 0.35 }}>
+              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#fff' }}>💥 ERR. ATAQUE RIVAL</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <TouchableOpacity onPress={() => handleRivalError("saque")} style={{ flex: 1, backgroundColor: '#0D1F33', paddingVertical: 10, borderRadius: 8, alignItems: 'center' }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#fff' }}>🚀 ERR. SAQUE RIVAL</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleRivalError("ataque")} style={{ flex: 1, backgroundColor: '#0D1F33', paddingVertical: 10, borderRadius: 8, alignItems: 'center' }}>
-            <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 12, color: '#fff' }}>💥 ERR. ATAQUE RIVAL</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      )}
 
       {/* ── Substitution Modal ── */}
       <Modal visible={showSubstitution} transparent animationType="slide">
@@ -629,56 +852,15 @@ export default function LiveMatchScreen() {
                 <Text>{pendingSetEnd.away}</Text>
               </Text>
             )}
-            <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 24 }}>Set {currentSet} · Ver estadísticas y continuar</Text>
+            <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 24 }}>Set {currentSet} finalizado</Text>
             <View style={styles`flex-row gap-3`}>
               <TouchableOpacity onPress={() => { setShowEndSet(false); setPendingSetEnd(null); }} style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
                 <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={confirmEndSet} style={{ flex: 1, backgroundColor: '#1E6FD9', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#fff' }}>VER STATS</Text>
+                <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#fff' }}>{setsWon.home >= 3 || setsWon.away >= 3 ? "FINALIZAR PARTIDO" : "INICIAR SIGUIENTE"}</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ── Set Results Modal ── */}
-      <Modal visible={showSetResults} transparent animationType="slide">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 16 }}>
-          <View style={{ backgroundColor: '#F4F7FB', borderRadius: 24, padding: 16, maxHeight: Dimensions.get('window').height * 0.9 }}>
-            <View style={{ alignItems: 'center', marginBottom: 16 }}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 22, fontWeight: '700', color: '#0D1F33' }}>Resultados — Set {currentSet}</Text>
-              <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>Sets: <Text style={{ color: '#1E6FD9', fontWeight: 'bold' }}>{setsWon.home}</Text> - <Text style={{ fontWeight: 'bold' }}>{setsWon.away}</Text></Text>
-            </View>
-
-            <View style={[styles`flex-row pb-2`, { borderBottomWidth: 1, borderBottomColor: '#E2E8F0', marginBottom: 8 }]}>
-              <Text style={[styles`col-span-2`, { fontFamily: 'Barlow Condensed', fontSize: 12, color: '#94A3B8' }]}>JUGADOR</Text>
-              <Text style={[styles`w-1/6`, { fontFamily: 'Barlow Condensed', fontSize: 12, color: '#94A3B8', textAlign: 'center' }]}>PTS</Text>
-              <Text style={[styles`w-1/6`, { fontFamily: 'Barlow Condensed', fontSize: 12, color: '#94A3B8', textAlign: 'center' }]}>ATK</Text>
-              <Text style={[styles`w-1/6`, { fontFamily: 'Barlow Condensed', fontSize: 12, color: '#94A3B8', textAlign: 'center' }]}>SAQ</Text>
-              <Text style={[styles`w-1/6`, { fontFamily: 'Barlow Condensed', fontSize: 12, color: '#94A3B8', textAlign: 'center' }]}>ERR</Text>
-            </View>
-
-            <ScrollView style={{ maxHeight: 400 }}>
-              {completedSetStats.sort((a, b) => b.puntos - a.puntos).map((p) => (
-                <View key={p.id} style={[styles`flex-row items-center py-2`, { borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.05)' }]}>
-                  <View style={styles`col-span-2`}>
-                    <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>#{p.number}</Text>
-                    <Text style={{ fontSize: 10, color: '#64748B' }} numberOfLines={1}>{p.name.split(" ")[0]}</Text>
-                  </View>
-                  <Text style={[styles`w-1/6`, { fontFamily: 'Barlow Condensed', fontSize: 18, fontWeight: '700', textAlign: 'center', color: p.puntos > 0 ? '#1E6FD9' : '#CBD5E1' }]}>{p.puntos}</Text>
-                  <Text style={[styles`w-1/6`, { fontFamily: 'Barlow Condensed', fontSize: 16, textAlign: 'center', color: '#0D1F33' }]}>{p.ataquesPts}</Text>
-                  <Text style={[styles`w-1/6`, { fontFamily: 'Barlow Condensed', fontSize: 16, textAlign: 'center', color: '#0D1F33' }]}>{p.saquesPts}</Text>
-                  <Text style={[styles`w-1/6`, { fontFamily: 'Barlow Condensed', fontSize: 16, textAlign: 'center', color: p.errores > 0 ? '#EF4444' : '#CBD5E1' }]}>{p.errores}</Text>
-                </View>
-              ))}
-            </ScrollView>
-
-            <TouchableOpacity onPress={startNextSet} style={{ width: '100%', backgroundColor: '#1E6FD9', paddingVertical: 14, borderRadius: 8, alignItems: 'center', marginTop: 16 }}>
-              <Text style={{ fontFamily: 'Barlow Condensed', fontSize: 16, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>
-                {setsWon.home >= 3 || setsWon.away >= 3 ? "VER RESUMEN FINAL" : `INICIAR SET ${currentSet + 1}`}
-              </Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>
