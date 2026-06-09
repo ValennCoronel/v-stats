@@ -1,7 +1,7 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import TeamMatchesScreen from './[id]';
+import TeamMatchesScreen from '../app/team/[id]';
 
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
@@ -19,13 +19,13 @@ jest.mock('expo-status-bar', () => ({
   StatusBar: () => null,
 }));
 
-jest.mock('../../src/hooks/useStyles', () => ({
+jest.mock('../src/hooks/useStyles', () => ({
   useStyles: () => ({
     styles: () => [],
   }),
 }));
 
-jest.mock('../../src/context/ProfileContext', () => ({
+jest.mock('../src/context/ProfileContext', () => ({
   useProfile: () => ({
     activeProfile: {
       clubName: 'Club Aurora',
@@ -44,7 +44,7 @@ jest.mock('../../src/context/ProfileContext', () => ({
   }),
 }));
 
-jest.mock('../../src/services/matches.service', () => ({
+jest.mock('../src/services/matches.service', () => ({
   matchesService: {
     getMatches: (...args: unknown[]) => mockGetMatches(...args),
   },
