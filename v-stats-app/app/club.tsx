@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Home, BarChart3, Settings, Plus, ChevronDown, Check, Building2, Users, ChevronRight, X } from 'lucide-react-native';
+import { ArrowLeft, Home, BarChart3, Settings, Plus, ChevronDown, Check, Building2, Users, ChevronRight, X, Pencil, Trash2 } from 'lucide-react-native';
 import { useStyles } from '../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../src/context/ProfileContext';
@@ -14,12 +14,19 @@ export default function ClubScreen() {
   const { styles } = useStyles();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   
-  const { coach, profiles, activeProfile, activeProfileId, switchProfile, addTeam, refreshProfiles, isLoading } = useProfile();
+  type AccessRole = 'admin' | 'coach' | 'assistant';
+  type ClubProfile = { id: string; clubName: string; city: string; role: AccessRole; color: string; };
+  const PROFILE_COLORS = ['#1E6FD9', '#D97706', '#16A34A', '#7C3AED', '#DC2626', '#0891B2'];
+  
+  const { coach, profiles, activeProfile, activeProfileId, switchProfile, addProfile, updateProfile, deleteProfile, addTeam, refreshProfiles, isLoading } = useProfile();
   
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [showAddTeam, setShowAddTeam] = useState(false);
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [teamName, setTeamName] = useState('');
+
+  const [clubModal, setClubModal] = useState<{ mode: 'add' | 'edit'; profile?: any } | null>(null);
+  const [clubForm, setClubForm] = useState({ clubName: '', city: '', role: 'admin' as AccessRole, color: PROFILE_COLORS[0] });
 
   const [confirmDialog, setConfirmDialog] = useState<{
     visible: boolean;
@@ -57,6 +64,50 @@ export default function ClubScreen() {
   const handleSwitchClub = (id: string) => {
     switchProfile(id);
     setShowSwitcher(false);
+  };
+
+  const openAddClub = () => {
+    setClubForm({ clubName: '', city: '', role: 'admin', color: PROFILE_COLORS[0] });
+    setClubModal({ mode: 'add' });
+    setShowSwitcher(false);
+  };
+
+  const openEditClub = (profile: any) => {
+    setClubForm({ clubName: profile.clubName, city: profile.city, role: profile.role, color: profile.color });
+    setClubModal({ mode: 'edit', profile });
+    setShowSwitcher(false);
+  };
+
+  const saveClub = async () => {
+    if (!clubForm.clubName.trim()) return;
+    try {
+      if (clubModal?.mode === 'add') {
+        await addProfile(clubForm);
+      } else if (clubModal?.mode === 'edit' && clubModal.profile) {
+        await updateProfile(clubModal.profile.id, clubForm);
+      }
+      setClubModal(null);
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", "Ocurrió un error al guardar el club.");
+    }
+  };
+
+  const handleDeleteClub = (profile: any) => {
+    setConfirmDialog({
+      visible: true,
+      title: "Eliminar Club",
+      message: `¿Estás seguro de eliminar el club ${profile.clubName}? Se perderán todos sus equipos, jugadores y partidos.`,
+      onConfirm: async () => {
+        try {
+          await deleteProfile(profile.id);
+          setShowSwitcher(false);
+        } catch (e) {
+          console.error(e);
+          Alert.alert("Error", "No se pudo eliminar el club.");
+        }
+      }
+    });
   };
 
   const handleEditTeam = (team: any) => {
@@ -233,7 +284,15 @@ export default function ClubScreen() {
           <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
             <Building2 size={48} color="#94a3b8" />
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '600', color: '#0D1F33', marginTop: 16 }}>Sin clubes aún</Text>
-            <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4, textAlign: 'center' }}>Por favor crea un club en la configuración.</Text>
+            <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4, textAlign: 'center', marginBottom: 24 }}>Por favor crea un club para empezar.</Text>
+            
+            <TouchableOpacity 
+              onPress={openAddClub}
+              style={{ backgroundColor: '#1E6FD9', paddingVertical: 14, paddingHorizontal: 24, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}
+            >
+              <Plus size={20} color="#fff" />
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>Crea tu primer club</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <>
@@ -479,26 +538,48 @@ export default function ClubScreen() {
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#0D1F33' }}>Cambiar de Club</Text>
             <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 20 }}>{coach.email}</Text>
 
-            {profiles.map(profile => (
-              <TouchableOpacity 
-                key={profile.id}
-                onPress={() => handleSwitchClub(profile.id)}
-                style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderWidth: 2, borderColor: profile.id === activeProfileId ? activeProfile.color : '#E2E8F0', backgroundColor: profile.id === activeProfileId ? `${profile.color}10` : '#fff', borderRadius: 16, marginBottom: 12 }}
-              >
-                 <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: `${profile.color}20`, justifyContent: 'center', alignItems: 'center', marginRight: 16 }}>
-                  <Building2 size={20} color={profile.color} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: '#0D1F33' }}>{profile.clubName}</Text>
-                  <Text style={{ fontSize: 12, color: '#64748B' }}>{profile.city} · {roleLabel[profile.role] || profile.role}</Text>
-                </View>
-                {profile.id === activeProfileId && (
-                  <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: activeProfile.color, justifyContent: 'center', alignItems: 'center' }}>
-                    <Check size={14} color="#fff" />
+            <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+              {profiles.map(profile => (
+                <View key={profile.id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, borderWidth: 2, borderColor: profile.id === activeProfileId ? activeProfile.color : '#E2E8F0', backgroundColor: profile.id === activeProfileId ? `${profile.color}10` : '#fff', borderRadius: 16 }}>
+                  <TouchableOpacity 
+                    onPress={() => handleSwitchClub(profile.id)}
+                    style={{ flex: 1, flexDirection: 'row', alignItems: 'center', padding: 16 }}
+                  >
+                    <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: `${profile.color}20`, justifyContent: 'center', alignItems: 'center', marginRight: 16 }}>
+                      <Building2 size={20} color={profile.color} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: '#0D1F33' }}>{profile.clubName}</Text>
+                      <Text style={{ fontSize: 12, color: '#64748B' }}>{profile.city} · {roleLabel[profile.role] || profile.role}</Text>
+                    </View>
+                    {profile.id === activeProfileId && (
+                      <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: activeProfile.color, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                        <Check size={14} color="#fff" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                  
+                  <View style={{ flexDirection: 'row', paddingRight: 16, gap: 12 }}>
+                    <TouchableOpacity onPress={() => openEditClub(profile)}>
+                      <Pencil size={20} color="#64748B" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleDeleteClub(profile)}>
+                      <Trash2 size={20} color="#EF4444" />
+                    </TouchableOpacity>
                   </View>
-                )}
+                </View>
+              ))}
+
+              <TouchableOpacity 
+                onPress={openAddClub}
+                style={{ flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'rgba(30,111,217,0.05)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(30,111,217,0.2)', marginTop: 8 }}
+              >
+                <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(30,111,217,0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 16 }}>
+                  <Plus size={20} color="#1E6FD9" />
+                </View>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: '#1E6FD9' }}>Crear nuevo club</Text>
               </TouchableOpacity>
-            ))}
+            </ScrollView>
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
@@ -536,6 +617,63 @@ export default function ClubScreen() {
                 <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>ELIMINAR</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Add / Edit Club Modal ── */}
+      <Modal visible={clubModal !== null} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#0D1F33', marginBottom: 16 }}>
+                  {clubModal?.mode === 'add' ? 'Agregar Club' : 'Editar Club'}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setClubModal(null)} style={{ padding: 4, backgroundColor: '#F1F5F9', borderRadius: 16 }}>
+                <X size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+            
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1, color: '#64748B', marginBottom: 4 }}>NOMBRE DEL CLUB</Text>
+            <TextInput 
+              value={clubForm.clubName} 
+              onChangeText={t => setClubForm(f => ({ ...f, clubName: t }))} 
+              style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 16, fontSize: 16, marginBottom: 16 }} 
+              placeholder="Ej: Club Atlético..."
+            />
+            
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1, color: '#64748B', marginBottom: 4 }}>CIUDAD / SEDE</Text>
+            <TextInput 
+              value={clubForm.city} 
+              onChangeText={t => setClubForm(f => ({ ...f, city: t }))} 
+              style={{ borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 16, fontSize: 16, marginBottom: 20 }} 
+              placeholder="Ej: Buenos Aires"
+            />
+
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1, color: '#64748B', marginBottom: 8 }}>COLOR PRINCIPAL</Text>
+            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+              {PROFILE_COLORS.map(color => (
+                <TouchableOpacity 
+                  key={color} 
+                  onPress={() => setClubForm(f => ({ ...f, color }))} 
+                  style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: color, justifyContent: 'center', alignItems: 'center' }}
+                >
+                  {clubForm.color === color && <Check size={16} color="#fff" />}
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity 
+              disabled={!clubForm.clubName.trim()} 
+              onPress={saveClub} 
+              style={{ backgroundColor: clubForm.clubName.trim() ? '#16A34A' : '#cbd5e1', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+            >
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>
+                {clubModal?.mode === 'add' ? 'AGREGAR CLUB' : 'GUARDAR CAMBIOS'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>

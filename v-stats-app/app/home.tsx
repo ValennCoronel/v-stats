@@ -105,9 +105,10 @@ export default function HomeScreen() {
           <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
             <Building2 size={48} color="#94a3b8" />
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '600', color: '#0D1F33', marginTop: 16 }}>Sin clubes aún</Text>
-            <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4, textAlign: 'center' }}>Agregá tu primer club desde Configuración</Text>
-            <TouchableOpacity onPress={() => router.push('/settings')} style={{ marginTop: 16, backgroundColor: '#1E6FD9', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}>
-              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 14, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>IR A CONFIGURACIÓN</Text>
+            <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4, textAlign: 'center', marginBottom: 8 }}>Crea tu primer club para empezar a gestionar tus equipos.</Text>
+            <TouchableOpacity onPress={() => router.push('/club')} style={{ marginTop: 16, backgroundColor: '#1E6FD9', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Plus size={20} color="#fff" />
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 14, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>CREAR MI PRIMER CLUB</Text>
             </TouchableOpacity>
           </View>
         ) : (

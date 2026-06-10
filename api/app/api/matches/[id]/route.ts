@@ -3,14 +3,17 @@ import { getAuthUserFromRequest } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 // GET /api/matches/[id] — Get match detail with player stats
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const authUser = await getAuthUserFromRequest(request)
     if (!authUser) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     const match = await prisma.match.findUnique({
       where: { id },
