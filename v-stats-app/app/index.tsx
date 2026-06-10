@@ -52,7 +52,7 @@ export default function LoginScreen() {
     const result = await login(email.trim().toLowerCase(), password);
 
     if (result.success) {
-      router.replace('/home');
+      router.replace('/(tabs)');
     } else {
       setError(result.error || 'Credenciales inválidas');
     }
@@ -91,7 +91,7 @@ export default function LoginScreen() {
           if (idToken) {
             const res = await loginWithGoogleToken(idToken);
             if (res.success) {
-              router.replace('/home');
+              router.replace('/(tabs)');
               return;
             } else {
               setError(res.error || 'Error en la autenticación de Google');

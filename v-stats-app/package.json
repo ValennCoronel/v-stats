@@ -9,6 +9,8 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo-google-fonts/bebas-neue": "^0.4.1",
+    "@expo-google-fonts/inter": "^0.4.2",
     "@expo/html-elements": "^0.10.1",
     "@gluestack-ui/core": "^3.0.10",
     "@gluestack-ui/utils": "^3.0.11",

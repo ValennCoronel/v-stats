@@ -86,7 +86,7 @@ export default function RegisterScreen() {
     );
 
     if (result.success) {
-      router.replace('/home');
+      router.replace('/(tabs)');
     } else {
       setError(result.error || 'Error al registrarse');
     }
@@ -125,7 +125,7 @@ export default function RegisterScreen() {
           if (idToken) {
             const res = await loginWithGoogleToken(idToken);
             if (res.success) {
-              router.replace('/home');
+              router.replace('/(tabs)');
               return;
             } else {
               setError(res.error || 'Error en la autenticación de Google');
