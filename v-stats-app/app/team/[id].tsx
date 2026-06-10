@@ -394,9 +394,9 @@ export default function TeamMatchesScreen() {
               <View style={styles`flex-row gap-4`}>
                 <TouchableOpacity
                   onPress={() => setShowCreateModal(false)}
-                  style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+                  style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}
                 >
-                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', textAlign: 'center' }}>CANCELAR</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   testID="start-match-button"
@@ -404,10 +404,10 @@ export default function TeamMatchesScreen() {
                   disabled={!canStartMatch}
                   style={{
                     flex: 1, backgroundColor: canStartMatch ? '#1E6FD9' : '#CBD5E1',
-                    paddingVertical: 14, borderRadius: 12, alignItems: 'center',
+                    paddingVertical: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
                   }}
                 >
-                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>COMENZAR PARTIDO</Text>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff', textAlign: 'center' }}>COMENZAR PARTIDO</Text>
                 </TouchableOpacity>
               </View>
             </View>

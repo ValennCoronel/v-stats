@@ -1,11 +1,13 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-const BASE_URL = __DEV__
-  ? Platform.OS === 'web'
-    ? 'http://localhost:3000'
-    : 'http://192.168.0.100:3000' // ← Change this to your local network IP for testing on phone
-  : 'https://your-app.vercel.app';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || (
+  __DEV__
+    ? Platform.OS === 'web'
+      ? 'http://localhost:3000'
+      : 'http://192.168.0.100:3000' // ← Change this to your local network IP for testing on phone
+    : 'https://your-app.vercel.app'
+);
 
 const TOKEN_KEY = 'vstats-auth-token';
 
