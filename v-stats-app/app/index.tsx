@@ -70,13 +70,14 @@ export default function LoginScreen() {
       });
       
       // Google Client ID (Web Client ID format for Expo / web testing)
-      const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '1081541819582-7p6n0s5vdfu00mcrhml4j70gfe9q6k6j.apps.googleusercontent.com';
+      const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '464864081976-eg3nt8ll3r510hd2o477mdk9str884j7.apps.googleusercontent.com';
 
       const queryParams = new URLSearchParams({
         client_id: clientId,
         redirect_uri: redirectUri,
         response_type: 'id_token',
         scope: 'openid email profile',
+        prompt: 'select_account',
         nonce: Math.random().toString(36).substring(2),
       });
 
