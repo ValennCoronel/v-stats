@@ -27,7 +27,7 @@ const results = [
   { id: "neg", symbol: "–", label: "NEG", color: "#f93016" },
   { id: "pos", symbol: "+", label: "POS", color: "#10B981" },
   { id: "exc", symbol: "/", label: "EXC", color: "#F59E0B" },
-  { id: "err", symbol: "=", label: "ERR", color: "#DC2626" },
+  { id: "err", symbol: "=", label: "DBL-", color: "#DC2626" },
 ];
 
 function initStats(players: Player[], libero: Player | null): Record<string, PlayerSetStats> {
@@ -544,7 +544,7 @@ export default function LiveMatchScreen() {
               <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', letterSpacing: 0.5, color: '#0D1F33', marginBottom: 8 }}>③ RESULTADO</Text>
               <View style={styles`flex-row flex-wrap justify-between gap-1.5 mb-3`}>
                 {results.map((result) => (
-                  <TouchableOpacity key={result.id} disabled={!isGameReady} onPress={() => setSelectedResult(result.id)} style={[styles`w-1/6 items-center justify-center py-2 rounded-lg`, { height: 60, backgroundColor: result.color, borderWidth: 2, borderColor: selectedResult === result.id ? '#0D1F33' : 'transparent', opacity: isGameReady ? 1 : 0.35 }]}>
+                  <TouchableOpacity key={result.id} disabled={!isGameReady} onPress={() => setSelectedResult(result.id)} style={[styles`items-center justify-center py-2 rounded-lg`, { width: '31%', height: 60, backgroundColor: result.color, borderWidth: 2, borderColor: selectedResult === result.id ? '#0D1F33' : 'transparent', opacity: isGameReady ? 1 : 0.35 }]}>
                     <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: '#fff' }}>{result.symbol}</Text>
                     <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 8, color: '#fff' }}>{result.label}</Text>
                   </TouchableOpacity>

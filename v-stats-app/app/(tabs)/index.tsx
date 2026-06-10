@@ -12,9 +12,9 @@ export default function HomeScreen() {
   const router = useRouter();
   const { styles, colors, fonts, themeMode } = useStyles();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  
+
   const { coach, profiles, activeProfile, switchProfile, addTeam, isLoading } = useProfile();
-  
+
   const [activeTeamId, setActiveTeamId] = useState<string | null>(null);
   const [recentMatches, setRecentMatches] = useState<Match[]>([]);
   const [showSharePlaceholder, setShowSharePlaceholder] = useState(false);
@@ -89,7 +89,7 @@ export default function HomeScreen() {
         {/* ── Equipo Activo Card ── */}
         <View style={{ borderRadius: 24, overflow: 'hidden', backgroundColor: colors.primary, position: 'relative' }}>
           {/* Watermark */}
-          <Image 
+          <Image
             source={require('../../assets/volleyball-watermark.png')}
             style={{ position: 'absolute', right: -40, top: -20, width: 250, height: 250, opacity: 0.2, resizeMode: 'contain' }}
           />
@@ -128,7 +128,7 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => router.push(`/stats/${activeTeam?.id}`)}
               style={{ width: '100%', paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}
             >
@@ -167,14 +167,14 @@ export default function HomeScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={[styles`rounded-2xl border bg-surface overflow-hidden`, { borderColor: colors.borderLight }]}>
             {recentMatches.length > 0 ? (
               recentMatches.map((match, idx) => {
                 const isWin = match.result === 'WIN';
                 const setsWon = match.setScores?.filter((s: any) => s.teamPts > s.oppPts).length || 0;
                 const setsLost = match.setScores?.filter((s: any) => s.oppPts > s.teamPts).length || 0;
-                
+
                 return (
                   <View key={match.id} style={[{ padding: 16, flexDirection: 'row', alignItems: 'center' }, idx !== recentMatches.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.borderLight }]}>
                     <View style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: isWin ? colors.success : colors.danger, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
