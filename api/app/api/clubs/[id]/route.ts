@@ -3,14 +3,17 @@ import { getAuthUserFromRequest } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 // PUT /api/clubs/[id] — Update a club
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const authUser = await getAuthUserFromRequest(request)
     if (!authUser) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     const { name, city, color, role } = body
 
@@ -39,14 +42,17 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // DELETE /api/clubs/[id] — Delete a club
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const authUser = await getAuthUserFromRequest(request)
     if (!authUser) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     const club = await prisma.club.findUnique({ where: { id } })
     if (!club || club.ownerId !== authUser.userId) {
