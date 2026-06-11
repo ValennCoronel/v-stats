@@ -20,6 +20,7 @@ export type TeamProfile = {
   name: string;
   roster: Player[];
   matchCount: number;
+  matches?: any[];
 };
 
 export type ClubProfile = {

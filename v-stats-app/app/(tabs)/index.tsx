@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronDown, Play, Share, Settings, Bell, BarChart3 } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../../src/context/ProfileContext';
@@ -85,68 +86,73 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles`px-4 pb-24 gap-6`}>
-
         {/* ── Equipo Activo Card ── */}
-        <View style={{ borderRadius: 24, overflow: 'hidden', backgroundColor: colors.primary, position: 'relative' }}>
-          {/* Watermark */}
-          <Image
-            source={require('../../assets/volleyball-watermark.png')}
-            style={{ position: 'absolute', right: -40, top: -20, width: 250, height: 250, opacity: 0.2, resizeMode: 'contain' }}
-          />
-          <View style={{ padding: 20 }}>
-            <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 11, color: 'rgba(255,255,255,0.7)', letterSpacing: 1, marginBottom: 4 }}>
+        <LinearGradient 
+          colors={['#E0F2FE', '#BAE6FD']} 
+          start={{ x: 0, y: 0 }} 
+          end={{ x: 1, y: 1 }} 
+          style={{ borderRadius: 20, overflow: 'hidden', position: 'relative', marginBottom: 8 }}
+        >
+          <View style={{ padding: 16 }}>
+            <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 10, color: '#64748B', letterSpacing: 1, marginBottom: 4 }}>
               EQUIPO ACTIVO
             </Text>
             <TouchableOpacity style={styles`flex-row items-center gap-2 mb-1`}>
-              <Text style={{ fontFamily: fonts.heading, fontSize: 32, color: '#FFFFFF', letterSpacing: 1 }}>
+              <Text style={{ fontFamily: fonts.heading, fontSize: 28, color: '#0D1F33', letterSpacing: 0.5 }}>
                 {activeTeam?.name || 'Sin equipo'}
               </Text>
-              <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 6, padding: 4 }}>
-                <ChevronDown size={16} color="#FFFFFF" />
+              <View style={{ backgroundColor: '#1E6FD9', borderRadius: 6, padding: 4, marginLeft: 4 }}>
+                <ChevronDown size={14} color="#FFFFFF" />
               </View>
             </TouchableOpacity>
-            <Text style={{ fontFamily: fonts.body, fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 24 }}>
+            <Text style={{ fontFamily: fonts.body, fontSize: 12, color: '#475569', marginBottom: 20 }}>
               Vóley Femenino · Primera
             </Text>
 
-            <View style={styles`flex-row justify-between mb-6`}>
-              <View style={styles`items-center`}>
-                <Text style={{ fontFamily: fonts.heading, fontSize: 24, color: '#FFFFFF' }}>12</Text>
-                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 10, color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>PARTIDOS</Text>
+            <View style={styles`flex-row justify-between mb-2`}>
+              {/* Record */}
+              <View style={[styles`items-center`, { flex: 1 }]}>
+                <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: '#0D1F33' }}>
+                  {activeProfile?.teams?.find(t => t.id === activeTeamId)?.matches?.filter(m => m.result === 'WIN').length || 0}-{activeProfile?.teams?.find(t => t.id === activeTeamId)?.matches?.filter(m => m.result === 'LOSS').length || 0}
+                </Text>
+                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 9, color: '#64748B', letterSpacing: 1, marginTop: 2 }}>RÉCORD</Text>
               </View>
-              <View style={styles`items-center`}>
-                <Text style={{ fontFamily: fonts.heading, fontSize: 24, color: '#FFFFFF' }}>8</Text>
-                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 10, color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>VICTORIAS</Text>
+              
+              {/* Divider */}
+              <View style={{ width: 1, backgroundColor: 'rgba(0,0,0,0.1)', height: '80%', alignSelf: 'center' }} />
+
+              {/* Victorias */}
+              <View style={[styles`items-center`, { flex: 1 }]}>
+                <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: '#0D1F33' }}>
+                  {activeProfile?.teams?.find(t => t.id === activeTeamId)?.matches?.filter(m => m.result === 'WIN').length || 0}
+                </Text>
+                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 9, color: '#64748B', letterSpacing: 1, marginTop: 2 }}>VICTORIAS</Text>
               </View>
-              <View style={styles`items-center`}>
-                <Text style={{ fontFamily: fonts.heading, fontSize: 24, color: '#FFFFFF' }}>4</Text>
-                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 10, color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>DERROTAS</Text>
-              </View>
-              <View style={styles`items-center`}>
-                <Text style={{ fontFamily: fonts.heading, fontSize: 24, color: '#FFFFFF' }}>67%</Text>
-                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 10, color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>EFECTIVIDAD</Text>
+
+              {/* Divider */}
+              <View style={{ width: 1, backgroundColor: 'rgba(0,0,0,0.1)', height: '80%', alignSelf: 'center' }} />
+
+              {/* Efectividad */}
+              <View style={[styles`items-center`, { flex: 1 }]}>
+                <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: '#0D1F33' }}>
+                  {(() => {
+                    const wins = activeProfile?.teams?.find(t => t.id === activeTeamId)?.matches?.filter(m => m.result === 'WIN').length || 0;
+                    const total = activeProfile?.teams?.find(t => t.id === activeTeamId)?.matches?.length || 0;
+                    return total > 0 ? Math.round((wins / total) * 100) : 0;
+                  })()}%
+                </Text>
+                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 9, color: '#64748B', letterSpacing: 1, marginTop: 2 }}>EFECTIVIDAD</Text>
               </View>
             </View>
-
-            <TouchableOpacity
-              onPress={() => router.push(`/stats/${activeTeam?.id}`)}
-              style={{ width: '100%', paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}
-            >
-              <BarChart3 size={16} color="#FFFFFF" />
-              <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 13, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                Ver análisis completo
-              </Text>
-            </TouchableOpacity>
           </View>
-        </View>
-
+        </LinearGradient>
         {/* ── Main CTA ── */}
         <TouchableOpacity
           onPress={() => router.push('/(tabs)/partido')}
           activeOpacity={0.8}
           style={[
             styles`w-full rounded-2xl flex-row items-center justify-center gap-3`,
-            { backgroundColor: colors.primary, paddingVertical: 18, elevation: 4, shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 }
+            { marginVertical: 24, backgroundColor: colors.primary, paddingVertical: 18, elevation: 4, shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 }
           ]}
         >
           <Play size={20} color="#FFFFFF" fill="#FFFFFF" />
