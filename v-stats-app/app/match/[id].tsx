@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Modal, Dimensions, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Modal, Dimensions, ActivityIndicator, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, RotateCcw, Plus } from "lucide-react-native";
 import { useStyles } from "../../src/hooks/useStyles";
 import { StatusBar } from "expo-status-bar";
 import { useProfile } from "../../src/context/ProfileContext";
 import { matchesService } from "../../src/services/matches.service";
+import { storage } from "../../src/services/storage.service";
 
 type Player = { id: string; number: string; name: string; position: string; isLibero?: boolean; };
 type ActionRecord = { id: string; playerId: string; action: string; result: string; homeScoreBefore: number; awayScoreBefore: number; timestamp: number; set: number; };
@@ -106,14 +107,25 @@ function computeSetStats(actions: ActionRecord[], setNum: number, allPlayers: Pl
 
 export default function LiveMatchScreen() {
   const router = useRouter();
-  const { id, teamId, rival, fecha, torneo, players } = useLocalSearchParams<{ id: string, teamId: string, rival: string, fecha: string, torneo: string, players: string }>();
+  const { id, resume, teamId: paramTeamId, rival: paramRival, fecha: paramFecha, torneo: paramTorneo, players: paramPlayers } = useLocalSearchParams<{ id: string, resume?: string, teamId: string, rival: string, fecha: string, torneo: string, players: string }>();
   const { styles } = useStyles();
 
   const { activeProfile } = useProfile();
 
-  const team = activeProfile.teams.find(t => t.id === teamId);
+  const [matchMetadata, setMatchMetadata] = useState({
+    teamId: paramTeamId || "",
+    rival: paramRival || "",
+    fecha: paramFecha || "",
+    torneo: paramTorneo || "",
+    players: paramPlayers || "[]",
+  });
+
+  const [isStateLoaded, setIsStateLoaded] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+
+  const team = activeProfile.teams.find(t => t.id === matchMetadata.teamId);
   const fullRoster = activeProfile.players || [];
-  const playerIds: string[] = players ? JSON.parse(players) : [];
+  const playerIds: string[] = matchMetadata.players ? JSON.parse(matchMetadata.players) : [];
   const convocados = fullRoster.filter(p => playerIds.includes(p.id));
 
   const [courtPlayers, setCourtPlayers] = useState<Player[]>([]);
@@ -159,6 +171,74 @@ export default function LiveMatchScreen() {
       }
     }
   }, [homeScore, awayScore]);
+
+  // ── Load Resumed Match State ──
+  useEffect(() => {
+    async function loadResumedMatch() {
+      if (resume === "true") {
+        const saved = await storage.getItem('vstats-active-match');
+        if (saved) {
+          try {
+            const data = JSON.parse(saved);
+            if (data.metadata) setMatchMetadata(data.metadata);
+            if (data.courtPlayers) setCourtPlayers(data.courtPlayers);
+            if (data.liberoPlayer) setLiberoPlayer(data.liberoPlayer);
+            if (data.bench) setBench(data.bench);
+            if (data.assignedSlots) setAssignedSlots(data.assignedSlots);
+            if (data.homeScore !== undefined) setHomeScore(data.homeScore);
+            if (data.awayScore !== undefined) setAwayScore(data.awayScore);
+            if (data.currentSet !== undefined) setCurrentSet(data.currentSet);
+            if (data.setsWon) setSetsWon(data.setsWon);
+            if (data.setScoresHistory) setSetScoresHistory(data.setScoresHistory);
+            if (data.actionHistory) setActionHistory(data.actionHistory);
+            if (data.currentSetStats) setCurrentSetStats(data.currentSetStats);
+          } catch (e) {
+            console.error("Error parsing saved match", e);
+          }
+        }
+      } else {
+        // If starting a brand new match, clear any old saved state
+        await storage.removeItem('vstats-active-match');
+      }
+      setIsStateLoaded(true);
+    }
+    loadResumedMatch();
+  }, [resume]);
+
+  // ── Save Match State Automatically ──
+  useEffect(() => {
+    if (!isStateLoaded) return;
+    
+    const state = {
+      metadata: matchMetadata,
+      courtPlayers,
+      liberoPlayer,
+      bench,
+      assignedSlots,
+      homeScore,
+      awayScore,
+      currentSet,
+      setsWon,
+      setScoresHistory,
+      actionHistory,
+      currentSetStats,
+    };
+    storage.setItem('vstats-active-match', JSON.stringify(state));
+  }, [
+    isStateLoaded,
+    matchMetadata,
+    courtPlayers,
+    liberoPlayer,
+    bench,
+    assignedSlots,
+    homeScore,
+    awayScore,
+    currentSet,
+    setsWon,
+    setScoresHistory,
+    actionHistory,
+    currentSetStats,
+  ]);
 
   const applyScore = (newHome: number, newAway: number, record: ActionRecord) => {
     setActionHistory((h) => [...h, record]);
@@ -343,10 +423,10 @@ export default function LiveMatchScreen() {
       }
 
       const res = await matchesService.createFinishedMatch({
-        teamId: teamId!,
-        opponent: rival || 'Rival',
-        tournament: torneo || undefined,
-        date: fecha || new Date().toISOString(),
+        teamId: matchMetadata.teamId,
+        opponent: matchMetadata.rival || 'Rival',
+        tournament: matchMetadata.torneo || undefined,
+        date: matchMetadata.fecha || new Date().toISOString(),
         result: isWin ? 'WIN' : 'LOSS',
         finalScore: `${setsWon.home}-${setsWon.away}`,
         setScores: setScoresHistory,
@@ -355,6 +435,7 @@ export default function LiveMatchScreen() {
       });
 
       if (res.data?.match) {
+        await storage.removeItem('vstats-active-match');
         router.replace(`/match-summary/${res.data.match.id}`);
       } else {
         alert("Error guardando el partido: " + res.error);
@@ -366,8 +447,25 @@ export default function LiveMatchScreen() {
     }
   };
 
+  const handleBackPress = () => {
+    if (homeScore === 0 && awayScore === 0 && courtPlayers.length === 0 && !assignedSlots.some(p => p !== null)) {
+      router.back();
+    } else {
+      setShowCancelModal(true);
+    }
+  };
+
   const isGameReady = assignedSlots.slice(0, 6).every(p => p !== null);
   const viewSetStats = selectedViewSet !== null ? computeSetStats(actionHistory, selectedViewSet, allPlayersList) : [];
+
+  if (!isStateLoaded) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0D1F33', justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#1E6FD9" />
+        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, color: '#fff', marginTop: 16 }}>Cargando partido...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles`flex-1 bg-screen`}>
@@ -376,7 +474,7 @@ export default function LiveMatchScreen() {
       {/* TOP DARK ZONE */}
       <View style={[styles`bg-header flex-shrink-0`, { paddingTop: 24 }]}>
         <View style={styles`flex-row items-center gap-2 px-4 pt-3 pb-2`}>
-          <TouchableOpacity onPress={() => router.back()} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' }}>
+          <TouchableOpacity onPress={handleBackPress} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' }}>
             <ArrowLeft size={16} color="#fff" />
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', flex: 1, gap: 6 }}>
@@ -890,6 +988,57 @@ export default function LiveMatchScreen() {
                 {isSubmitting ? 'GUARDANDO...' : 'FINALIZAR Y GUARDAR'}
               </Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Cancel Match Modal ── */}
+      <Modal visible={showCancelModal} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24, alignItems: 'center' }}>
+            <Text style={{ fontSize: 48, marginBottom: 12 }}>⚠️</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#0D1F33', marginBottom: 8, textAlign: 'center' }}>
+              Partido en Curso
+            </Text>
+            <Text style={{ fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 24 }}>
+              ¿Querés guardar el progreso para seguir más tarde o preferís cancelar y borrar este partido?
+            </Text>
+            
+            <View style={{ width: '100%', gap: 10 }}>
+              <TouchableOpacity 
+                onPress={() => {
+                  setShowCancelModal(false);
+                  router.back();
+                }} 
+                style={{ backgroundColor: '#1E6FD9', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>
+                  SALIR Y SEGUIR MÁS TARDE
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                onPress={async () => {
+                  setShowCancelModal(false);
+                  await storage.removeItem('vstats-active-match');
+                  router.back();
+                }} 
+                style={{ borderWidth: 1, borderColor: '#EF4444', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#EF4444' }}>
+                  ELIMINAR / CANCELAR PARTIDO
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                onPress={() => setShowCancelModal(false)} 
+                style={{ borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>
+                  VOLVER AL JUEGO
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>

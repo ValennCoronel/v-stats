@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Home, BarChart3, Settings, Plus, ChevronDown, Check, Building2, Users, ChevronRight, X, Pencil, Trash2 } from 'lucide-react-native';
@@ -52,8 +52,13 @@ export default function ClubScreen() {
   const getPositionLabel = (pos: string) => POSITIONS.find(p => p.id === pos)?.label || pos;
 
   // Redirect to login if not authenticated
-  if (!authLoading && !isAuthenticated) {
-    router.replace('/');
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace('/');
+    }
+  }, [authLoading, isAuthenticated]);
+
+  if (!isAuthenticated) {
     return null;
   }
 
