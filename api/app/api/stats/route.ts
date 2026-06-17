@@ -61,6 +61,9 @@ export async function GET(request: Request) {
         blocks: 0,
         aces: 0,
         errors: 0,
+        attackErrors: 0,
+        receptionErrors: 0,
+        serveErrors: 0,
         positiveActions: 0,
         negativeActions: 0,
         totalActions: 0,
@@ -173,6 +176,11 @@ export async function GET(request: Request) {
     const blocks = playerStats.reduce((sum, stat) => sum + (stat._sum.bloqueosPositivos || 0), 0)
     const aces = playerStats.reduce((sum, stat) => sum + (stat._sum.aces || 0), 0)
     const tacticalAdvantages = playerStats.reduce((sum, stat) => sum + (stat._sum.ventajasTacticas || 0), 0)
+
+    const attackErrors = playerStats.reduce((sum, stat) => sum + (stat._sum.erroresAtaque || 0), 0)
+    const receptionErrors = playerStats.reduce((sum, stat) => sum + (stat._sum.erroresRecepcion || 0), 0)
+    const serveErrors = playerStats.reduce((sum, stat) => sum + (stat._sum.erroresSaque || 0), 0)
+
     const errors = playerStats.reduce((sum, stat) =>
       sum
       + (stat._sum.erroresAtaque || 0)
@@ -217,6 +225,9 @@ export async function GET(request: Request) {
       blocks,
       aces,
       errors,
+      attackErrors,
+      receptionErrors,
+      serveErrors,
       positiveActions,
       negativeActions,
       totalActions,

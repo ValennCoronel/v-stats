@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, Dimensions, TextInput, FlatList, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { ArrowLeft, Plus, Check, Users, ChevronRight, CheckCircle2, Calendar, Clock } from 'lucide-react-native';
+import { ArrowLeft, Plus, Play, Check, Users, ChevronRight, CheckCircle2, Calendar, Clock } from 'lucide-react-native';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../../src/context/ProfileContext';
@@ -194,7 +194,7 @@ export default function TeamMatchesScreen() {
         <View style={styles`flex-row items-center gap-4 px-4 pb-5`}>
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => router.replace('/home')}
+            onPress={() => router.replace('/(tabs)')}
             style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' }}
           >
             <ArrowLeft size={20} color="#fff" />
@@ -285,10 +285,17 @@ export default function TeamMatchesScreen() {
             setSelectedPlayerIds(roster.map(p => p.id)); // select all by default
             setShowCreateModal(true);
           }}
-          style={{ backgroundColor: '#1E6FD9', borderRadius: 12, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 24 }}
+          style={[
+            styles`w-full flex-row items-center justify-center gap-2`,
+            { marginBottom: 24, borderRadius: 12, backgroundColor: '#1C64F2', paddingVertical: 14, elevation: 4, shadowColor: '#1C64F2', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 }
+          ]}
         >
-          <Plus size={20} color="#fff" />
-          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>NUEVO PARTIDO</Text>
+          <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center' }}>
+            <Play size={12} color="#1C64F2" fill="#1C64F2" style={{ marginLeft: 2 }} />
+          </View>
+          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: '#FFFFFF', letterSpacing: 0.5, marginTop: 1 }}>
+            NUEVO PARTIDO
+          </Text>
         </TouchableOpacity>
 
         {isLoading ? (

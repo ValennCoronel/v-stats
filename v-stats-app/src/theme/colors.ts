@@ -1,46 +1,113 @@
 export type Theme = 'light' | 'dark';
+export type ThemeMode = 'light' | 'dark' | 'auto';
 
 export const themeColors = {
   light: {
-    bgMain: '#f8fafc',      // slate-50
-    bgSurface: '#ffffff',   // white
-    textMain: '#0f172a',    // slate-900
-    textMuted: '#64748b',   // slate-500
-    primary: '#10b981',     // emerald-500
-    border: '#e2e8f0',      // slate-200
-    brand: '#1E6FD9',      // El azul de V-Stats
-    borderGray: '#E2E8F0', // El borde de los inputs
-    headerBg: '#0D1F33',
-    screenBg: '#F4F7FB',
-    slate500: '#64748B',
-    success: '#16A34A', // Verde de victoria
-    danger: '#EF4444',  // Rojo de derrota/en vivo
-    liveBg: '#0D1F33',  // El fondo oscuro de la tarjeta en vivo
-    successLight: '#DCFCE7', // bg-green-100
-    successDark: '#15803D',  // text-green-700
-    dangerLight: '#FEE2E2',  // bg-red-100
-    dangerDark: '#DC2626',   // text-red-600
-    warning: '#F97316',      // bg-orange-500
+    // Backgrounds
+    bgMain: '#F7F9FC',
+    bgSurface: '#FFFFFF',
+    bgCard: '#FFFFFF',
+
+    // Primary brand
+    primary: '#2563EB',
+    primaryDark: '#1D4ED8',
+    primaryLight: 'rgba(37, 99, 235, 0.1)',
+
+    // Text
+    textMain: '#111827',
+    textSecondary: '#6B7280',
+    textMuted: '#9CA3AF',
+
+    // Borders
+    border: '#E5E7EB',
+    borderLight: '#F3F4F6',
+
+    // Header (kept for gradients / hero areas)
+    headerBg: '#2563EB',
+
+    // Screen background
+    screenBg: '#F7F9FC',
+
+    // Semantic
+    success: '#16A34A',
+    successLight: '#DCFCE7',
+    successDark: '#15803D',
+    danger: '#EF4444',
+    dangerLight: '#FEE2E2',
+    dangerDark: '#DC2626',
+    warning: '#F59E0B',
+    warningLight: '#FEF3C7',
+
+    // Tab bar
+    tabBar: '#FFFFFF',
+    tabBarBorder: '#E5E7EB',
+    tabInactive: '#9CA3AF',
+
+    // Legacy aliases
+    brand: '#2563EB',
+    borderGray: '#E5E7EB',
+    slate500: '#6B7280',
+    liveBg: '#071A35',
   },
   dark: {
-    bgMain: '#020617',      // slate-950
-    bgSurface: '#0f172a',   // slate-900
-    textMain: '#f8fafc',    // slate-50
-    textMuted: '#94a3b8',   // slate-400
-    primary: '#10b981',     // emerald-500
-    border: '#1e293b',      // slate-800
-    brand: '#1E6FD9', 
-    borderGray: '#334155', // Un gris más oscuro para la noche
-    headerBg: '#0D1F33',
-    screenBg: '#F4F7FB',
-    slate500: '#64748B',
-    success: '#16A34A', // Verde de victoria
-    danger: '#EF4444',  // Rojo de derrota/en vivo
-    liveBg: '#0D1F33',  // El fondo oscuro de la tarjeta en vivo
-    successLight: '#DCFCE7', // bg-green-100
-    successDark: '#15803D',  // text-green-700
-    dangerLight: '#FEE2E2',  // bg-red-100
-    dangerDark: '#DC2626',   // text-red-600
-    warning: '#F97316',      // bg-orange-500
-  }
+    // Backgrounds
+    bgMain: '#071A35',
+    bgSurface: '#0F2747',
+    bgCard: '#0F2747',
+
+    // Primary brand
+    primary: '#3B82F6',
+    primaryDark: '#2563EB',
+    primaryLight: 'rgba(59, 130, 246, 0.15)',
+
+    // Text
+    textMain: '#FFFFFF',
+    textSecondary: '#B8C4D9',
+    textMuted: '#7B8BA3',
+
+    // Borders
+    border: '#1E3A5F',
+    borderLight: '#15304D',
+
+    // Header
+    headerBg: '#0F2747',
+
+    // Screen background
+    screenBg: '#071A35',
+
+    // Semantic
+    success: '#22C55E',
+    successLight: 'rgba(34, 197, 94, 0.15)',
+    successDark: '#16A34A',
+    danger: '#F87171',
+    dangerLight: 'rgba(248, 113, 113, 0.15)',
+    dangerDark: '#EF4444',
+    warning: '#FBBF24',
+    warningLight: 'rgba(251, 191, 36, 0.15)',
+
+    // Tab bar
+    tabBar: '#0A1E38',
+    tabBarBorder: '#1E3A5F',
+    tabInactive: '#7B8BA3',
+
+    // Legacy aliases
+    brand: '#3B82F6',
+    borderGray: '#1E3A5F',
+    slate500: '#B8C4D9',
+    liveBg: '#071A35',
+  },
+};
+
+// Typography constants
+export const fonts = {
+  // Titles, scores, big numbers
+  heading: 'BebasNeue',
+  // Body text, forms, labels
+  body: 'Inter',
+  bodyMedium: 'Inter-Medium',
+  bodySemiBold: 'Inter-SemiBold',
+  bodyBold: 'Inter-Bold',
+  // Legacy (for gradual migration)
+  legacy: 'Gotham Rounded',
+  legacyBold: 'Gotham Rounded Bold',
 };

@@ -13,6 +13,9 @@ export type ClubStats = {
   blocks: number;
   aces: number;
   errors: number;
+  attackErrors: number;
+  receptionErrors: number;
+  serveErrors: number;
   positiveActions: number;
   negativeActions: number;
   totalActions: number;
