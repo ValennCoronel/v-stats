@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { authService, AuthUser } from '../services/auth.service';
 import { getToken } from '../api/api';
+import { storage } from '../services/storage.service';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -78,6 +79,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
+    try {
+      await storage.removeItem('vstats-active-match');
+    } catch (e) {
+      console.warn('Error clearing active match on logout', e);
+    }
     await authService.logout();
     setUser(null);
   };

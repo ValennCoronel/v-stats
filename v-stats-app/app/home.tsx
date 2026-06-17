@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Home, BarChart3, Settings, Plus, ChevronDown, Check, Building2, X } from 'lucide-react-native';
 import { useStyles } from '../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../src/context/ProfileContext';
 import { useAuth } from '../src/context/AuthContext';
+import { storage } from '../src/services/storage.service';
+
+let hasCheckedActiveMatchOnAppStart = false;
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -18,9 +21,51 @@ export default function HomeScreen() {
   const [showAddTeam, setShowAddTeam] = useState(false);
   const [teamName, setTeamName] = useState('');
 
+  const [activeMatch, setActiveMatch] = useState<any>(null);
+  const [showActiveMatchModal, setShowActiveMatchModal] = useState(false);
+
+  const checkActiveMatch = useCallback(async () => {
+    const saved = await storage.getItem('vstats-active-match');
+    const isFirstCheck = !hasCheckedActiveMatchOnAppStart;
+    hasCheckedActiveMatchOnAppStart = true;
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setActiveMatch(parsed);
+        if (isFirstCheck) {
+          setShowActiveMatchModal(true);
+        }
+      } catch (e) {
+        console.error("Error parsing saved match", e);
+      }
+    } else {
+      setActiveMatch(null);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        checkActiveMatch();
+      }
+    }, [isAuthenticated, checkActiveMatch])
+  );
+
+  useEffect(() => {
+    return () => {
+      hasCheckedActiveMatchOnAppStart = false;
+    };
+  }, []);
+
   // Redirect to login if not authenticated
-  if (!authLoading && !isAuthenticated) {
-    router.replace('/');
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace('/');
+    }
+  }, [authLoading, isAuthenticated]);
+
+  if (!isAuthenticated) {
     return null;
   }
 
@@ -101,6 +146,51 @@ export default function HomeScreen() {
 
       {/* ── Teams List ── */}
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 120 }}>
+        {activeMatch && (
+          <TouchableOpacity 
+            activeOpacity={0.9}
+            onPress={() => {
+              router.push({
+                pathname: '/match/new',
+                params: { resume: 'true' }
+              });
+            }}
+            style={{ 
+              backgroundColor: 'rgba(30,111,217,0.08)', 
+              borderColor: '#1E6FD9', 
+              borderWidth: 1.5, 
+              borderRadius: 16, 
+              padding: 16, 
+              marginBottom: 20, 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              justifyContent: 'space-between'
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+              <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(30,111,217,0.15)', justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ fontSize: 20 }}>🏐</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, fontWeight: '700', color: '#1E6FD9', letterSpacing: 0.5 }}>
+                  PARTIDO EN CURSO
+                </Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', color: '#0D1F33', marginTop: 2 }} numberOfLines={1}>
+                  vs {activeMatch.metadata?.rival || "Rival"}
+                </Text>
+                <Text style={{ fontSize: 12, color: '#64748B', marginTop: 1 }}>
+                  Set {activeMatch.currentSet} · {activeMatch.homeScore} - {activeMatch.awayScore}
+                </Text>
+              </View>
+            </View>
+            <View style={{ backgroundColor: '#1E6FD9', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 }}>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, fontWeight: '700', color: '#fff', letterSpacing: 0.5 }}>
+                REANUDAR
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
         {profiles.length === 0 ? (
           <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
             <Building2 size={48} color="#94a3b8" />
@@ -257,6 +347,94 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </Modal>
 
+      {/* ── Active Match Resuming Modal ── */}
+      <Modal visible={showActiveMatchModal} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24, alignItems: 'center' }}>
+            <Text style={{ fontSize: 48, marginBottom: 12 }}>🏐</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#0D1F33', marginBottom: 8, textAlign: 'center' }}>
+              Partido en Curso
+            </Text>
+            <Text style={{ fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 16 }}>
+              Tenés un partido sin finalizar contra:
+            </Text>
+            
+            {activeMatch && (
+              <View style={{ backgroundColor: '#F8FAFC', borderRadius: 16, padding: 16, width: '100%', alignItems: 'center', marginBottom: 24, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 20, fontWeight: '700', color: '#1E6FD9' }}>
+                  {activeMatch.metadata?.rival || "Rival"}
+                </Text>
+                {activeMatch.metadata?.torneo ? (
+                  <Text style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
+                    {activeMatch.metadata.torneo}
+                  </Text>
+                ) : null}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 }}>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>
+                    Set {activeMatch.currentSet}
+                  </Text>
+                  <Text style={{ color: '#CBD5E1' }}>|</Text>
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>
+                    Marcador: {activeMatch.homeScore} - {activeMatch.awayScore}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            <View style={{ width: '100%', gap: 10 }}>
+              <TouchableOpacity 
+                onPress={() => {
+                  setShowActiveMatchModal(false);
+                  router.push({
+                    pathname: '/match/new',
+                    params: { resume: 'true' }
+                  });
+                }} 
+                style={{ backgroundColor: '#1E6FD9', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>
+                  VOLVER AL PARTIDO
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                onPress={() => setShowActiveMatchModal(false)} 
+                style={{ borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>
+                  CONTINUAR NAVEGANDO
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                onPress={() => {
+                  Alert.alert(
+                    "Eliminar partido",
+                    "¿Estás seguro de que querés eliminar el partido en curso? Se perderá todo el progreso.",
+                    [
+                      { text: "Cancelar", style: "cancel" },
+                      { 
+                        text: "Eliminar", 
+                        style: "destructive",
+                        onPress: async () => {
+                          await storage.removeItem('vstats-active-match');
+                          setShowActiveMatchModal(false);
+                          setActiveMatch(null);
+                        }
+                      }
+                    ]
+                  );
+                }} 
+                style={{ paddingVertical: 8, alignItems: 'center', marginTop: 4 }}
+              >
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 14, fontWeight: '500', color: '#EF4444' }}>
+                  Eliminar partido en curso
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
