@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Users, Plus, X, ArrowLeft } from 'lucide-react-native';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
@@ -9,6 +9,7 @@ import { playersService } from '../../src/services/players.service';
 
 export default function ManagePlayersScreen() {
   const router = useRouter();
+  const { from } = useLocalSearchParams<{ from?: string }>();
   const { styles, colors, fonts, themeMode } = useStyles();
   const { activeProfile, refreshProfiles, isLoading } = useProfile();
 
@@ -124,7 +125,17 @@ export default function ManagePlayersScreen() {
         {/* ── Header que scrollea ── */}
         <View style={{ backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 60, paddingBottom: 32 }}>
           <View style={styles`flex-row items-center gap-4 mb-4`}>
-            <TouchableOpacity onPress={() => router.push('/club')} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => {
+              if (from === 'partido') {
+                router.push('/partido');
+              } else if (from === 'club') {
+                router.push('/club');
+              } else if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.push('/club');
+              }
+            }} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' }}>
               <ArrowLeft size={20} color="#fff" />
             </TouchableOpacity>
             <Text style={{ fontFamily: fonts.heading, fontSize: 24, fontWeight: '700', color: '#fff' }}>Jugadores</Text>
