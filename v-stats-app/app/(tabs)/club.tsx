@@ -78,7 +78,7 @@ export default function ClubScreen() {
               title="Jugadores" 
               subtitle="Administrá los jugadores del club" 
               badge={activeProfile?.players?.length || 0}
-              onPress={() => router.push('/manage-players')}
+              onPress={() => router.push('/manage-players?from=club')}
             />
             <MenuRow 
               icon={<Building2 size={20} color={colors.danger} />} 

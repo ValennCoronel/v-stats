@@ -101,12 +101,12 @@ export const themeColors = {
 // Typography constants
 export const fonts = {
   // Titles, scores, big numbers
-  heading: 'BebasNeue',
+  heading: 'Gotham Rounded Bold',
   // Body text, forms, labels
-  body: 'Inter',
-  bodyMedium: 'Inter-Medium',
-  bodySemiBold: 'Inter-SemiBold',
-  bodyBold: 'Inter-Bold',
+  body: 'Gotham Rounded',
+  bodyMedium: 'Gotham Rounded Medium',
+  bodySemiBold: 'Gotham Rounded Medium',
+  bodyBold: 'Gotham Rounded Bold',
   // Legacy (for gradual migration)
   legacy: 'Gotham Rounded',
   legacyBold: 'Gotham Rounded Bold',
