@@ -12,6 +12,17 @@ type Player = { id: string; number: string; name: string; position: string; isLi
 type ActionRecord = { id: string; playerId: string; action: string; result: string; homeScoreBefore: number; awayScoreBefore: number; timestamp: number; set: number; };
 type PlayerSetStats = { id: string; number: string; name: string; position: string; puntos: number; ataquesPts: number; saquesPts: number; bloqueosPts: number; recepciones: number; errores: number; };
 
+const POSITION_MAP: Record<string, string> = {
+  'SETTER': 'Armador',
+  'OUTSIDE_HITTER': 'Punta',
+  'OPPOSITE_HITTER': 'Opuesto',
+  'MIDDLE_BLOCKER': 'Central',
+  'LIBERO': 'Líbero',
+  'DEFENSIVE_SPECIALIST': 'Especialista',
+};
+
+const getPositionLabel = (pos: string) => POSITION_MAP[pos] || pos;
+
 const EMPTY_SLOTS = 7; // 6 starters + 1 libero
 
 const actions = [
@@ -456,6 +467,7 @@ export default function LiveMatchScreen() {
   };
 
   const isGameReady = assignedSlots.slice(0, 6).every(p => p !== null);
+  const isMatchOver = setsWon.home >= 3 || setsWon.away >= 3;
   const viewSetStats = selectedViewSet !== null ? computeSetStats(actionHistory, selectedViewSet, allPlayersList) : [];
 
   if (!isStateLoaded) {
@@ -518,15 +530,15 @@ export default function LiveMatchScreen() {
 
         <View style={styles`flex-row items-center justify-between px-5 pb-1`}>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1, color: 'rgba(255,255,255,0.6)' }}>EQUIPO LOCAL</Text>
-            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 54, fontWeight: '700', lineHeight: 60, color: '#3D8EF5' }}>{homeScore}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1, color: 'rgba(255,255,255,0.6)' }}>{"EQUIPO LOCAL"}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 54, fontWeight: '700', lineHeight: 60, color: '#fff' }}>{homeScore}</Text>
           </View>
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 4 }}>
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 13, letterSpacing: 2, color: 'rgba(255,255,255,0.4)' }}>VS</Text>
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>{setsWon.home} – {setsWon.away}</Text>
           </View>
           <View style={{ flex: 1, alignItems: 'flex-end' }}>
-            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1, color: 'rgba(255,255,255,0.6)' }}>VISITANTE</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1, color: 'rgba(255,255,255,0.6)' }}>{"VISITANTE"}</Text>
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 54, fontWeight: '700', lineHeight: 60, color: '#fff' }}>{awayScore}</Text>
           </View>
         </View>
@@ -561,7 +573,7 @@ export default function LiveMatchScreen() {
                         >
                           <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#1E6FD9', lineHeight: 28 }}>{player.number}</Text>
                           <Text style={{ fontSize: 10, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{player.name}</Text>
-                          <Text style={{ fontSize: 9, color: '#64748B' }}>{player.position}</Text>
+                          <Text style={{ fontSize: 9, color: '#64748B' }}>{getPositionLabel(player.position)}</Text>
                         </TouchableOpacity>
                       ) : (
                         <TouchableOpacity
@@ -584,7 +596,7 @@ export default function LiveMatchScreen() {
                         </View>
                         <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#92400E', lineHeight: 26 }}>{assignedSlots[6]!.number}</Text>
                         <Text style={{ fontSize: 9, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{assignedSlots[6]!.name}</Text>
-                        <Text style={{ fontSize: 8, color: '#92400E' }}>{assignedSlots[6]!.position}</Text>
+                        <Text style={{ fontSize: 8, color: '#92400E' }}>{getPositionLabel(assignedSlots[6]!.position)}</Text>
                       </TouchableOpacity>
                     </View>
                   ) : (
@@ -604,7 +616,7 @@ export default function LiveMatchScreen() {
                       <TouchableOpacity key={player.id} onPress={() => setSelectedPlayer(player.id)} style={[styles`w-1/3 bg-white rounded-lg p-2`, { borderWidth: 2, borderColor: selectedPlayer === player.id ? '#1E6FD9' : 'transparent', backgroundColor: selectedPlayer === player.id ? 'rgba(30,111,217,0.05)' : '#fff' }]}>
                         <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#1E6FD9', lineHeight: 28 }}>{player.number}</Text>
                         <Text style={{ fontSize: 10, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{player.name}</Text>
-                        <Text style={{ fontSize: 9, color: '#64748B' }}>{player.position}</Text>
+                        <Text style={{ fontSize: 9, color: '#64748B' }}>{getPositionLabel(player.position)}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -616,7 +628,7 @@ export default function LiveMatchScreen() {
                         </View>
                         <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#92400E', lineHeight: 26 }}>{liberoPlayer.number}</Text>
                         <Text style={{ fontSize: 9, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{liberoPlayer.name}</Text>
-                        <Text style={{ fontSize: 8, color: '#92400E' }}>{liberoPlayer.position}</Text>
+                        <Text style={{ fontSize: 8, color: '#92400E' }}>{getPositionLabel(liberoPlayer.position)}</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -810,10 +822,18 @@ export default function LiveMatchScreen() {
       {/* Bottom Bar */}
       {selectedViewSet !== null ? (
         <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 32 }}>
-          <TouchableOpacity onPress={() => setSelectedViewSet(null)} style={{ backgroundColor: '#1E6FD9', paddingVertical: 16, borderRadius: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 10 }}>
-            <Text style={{ fontSize: 20 }}>▶</Text>
+          <TouchableOpacity 
+            onPress={() => {
+              if (isMatchOver) {
+                setMatchOver(true);
+              } else {
+                setSelectedViewSet(null);
+              }
+            }} 
+            style={{ backgroundColor: '#1E6FD9', paddingVertical: 16, borderRadius: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 10 }}
+          >
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>
-              VOLVER AL JUEGO EN VIVO (SET {currentSet})
+              {isMatchOver ? "FINALIZAR PARTIDO" : `IR AL JUEGO EN VIVO (SET ${currentSet})`}
             </Text>
           </TouchableOpacity>
         </View>
@@ -866,7 +886,7 @@ export default function LiveMatchScreen() {
                     </View>
                     <View>
                       <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>{player.name}</Text>
-                      <Text style={{ fontSize: 12, color: '#64748B' }}>{player.position}</Text>
+                      <Text style={{ fontSize: 12, color: '#64748B' }}>{getPositionLabel(player.position)}</Text>
                     </View>
                   </TouchableOpacity>
                 ))
@@ -952,11 +972,18 @@ export default function LiveMatchScreen() {
             )}
             <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 24 }}>Set {currentSet} finalizado</Text>
             <View style={styles`flex-row gap-3`}>
-              <TouchableOpacity onPress={() => { setShowEndSet(false); setPendingSetEnd(null); }} style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
+              <TouchableOpacity 
+                onPress={() => {
+                  const finishedSet = currentSet;
+                  confirmEndSet();
+                  setSelectedViewSet(finishedSet);
+                }} 
+                style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>VER STATS</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={confirmEndSet} style={{ flex: 1, backgroundColor: '#1E6FD9', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>{setsWon.home >= 3 || setsWon.away >= 3 ? "FINALIZAR PARTIDO" : "INICIAR SIGUIENTE"}</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff', justifyContent: 'center', alignItems: 'center' }}>{setsWon.home >= 3 || setsWon.away >= 3 ? "FINALIZAR PARTIDO" : "INICIAR SIGUIENTE"}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -987,6 +1014,13 @@ export default function LiveMatchScreen() {
               <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>
                 {isSubmitting ? 'GUARDANDO...' : 'FINALIZAR Y GUARDAR'}
               </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              onPress={() => setMatchOver(false)} 
+              style={{ marginTop: 16, paddingVertical: 10, width: '100%', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8 }}
+            >
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 14, color: '#64748B', fontWeight: '600' }}>VER ESTADÍSTICAS</Text>
             </TouchableOpacity>
           </View>
         </View>
