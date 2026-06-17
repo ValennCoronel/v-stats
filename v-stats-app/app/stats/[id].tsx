@@ -107,7 +107,7 @@ export default function StatsScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles`px-4 pt-5 pb-24 gap-5`}>
+      <ScrollView contentContainerStyle={styles`px-4 pt-5 pb-8 gap-5`}>
         {teamBreakdown.length > 0 && (
           <View>
             <SectionTitle icon={<Building2 size={16} color="#64748B" />} label="DRILL DOWN POR EQUIPO" />
@@ -247,20 +247,7 @@ export default function StatsScreen() {
         )}
       </ScrollView>
 
-      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#E2E8F0', flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, paddingBottom: 24 }}>
-        <TouchableOpacity style={styles`items-center`} onPress={() => router.replace('/home')}>
-          <Home size={24} color="#64748B" />
-          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#64748B', marginTop: 4 }}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles`items-center`}>
-          <BarChart3 size={24} color={activeProfile.color} />
-          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: activeProfile.color, marginTop: 4 }}>Stats</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles`items-center`} onPress={() => router.push('/club')}>
-          <Building2 size={24} color="#64748B" />
-          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#64748B', marginTop: 4 }}>Club</Text>
-        </TouchableOpacity>
-      </View>
+
     </View>
   );
 }

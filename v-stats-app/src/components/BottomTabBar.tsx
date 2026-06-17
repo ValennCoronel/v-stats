@@ -10,6 +10,9 @@ export function BottomTabBar({ state, descriptors, navigation }: BottomTabBarPro
   return (
     <View style={[styles.container, { backgroundColor: colors.tabBar, borderTopColor: colors.tabBarBorder }]}>
       {state.routes.map((route, index) => {
+        // Only render the main tabs
+        if (!['index', 'partido', 'club'].includes(route.name)) return null;
+
         const { options } = descriptors[route.key];
         const label =
           options.tabBarLabel !== undefined
@@ -18,7 +21,10 @@ export function BottomTabBar({ state, descriptors, navigation }: BottomTabBarPro
             ? options.title
             : route.name;
 
-        const isFocused = state.index === index;
+        const activeRouteName = state.routes[state.index].name;
+        const isClubFocused = activeRouteName === 'club' || activeRouteName.startsWith('manage-');
+        
+        const isFocused = state.index === index || (route.name === 'club' && isClubFocused);
 
         const onPress = () => {
           const event = navigation.emit({

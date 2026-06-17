@@ -38,7 +38,10 @@ export default function RootLayout() {
     <ThemeProvider>
       <AuthProvider>
         <ProfileProvider>
-          <Stack screenOptions={{ headerShown: false }} />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="manage-settings" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+          </Stack>
         </ProfileProvider>
       </AuthProvider>
     </ThemeProvider>

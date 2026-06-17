@@ -174,7 +174,7 @@ export default function TeamMatchesScreen() {
         <View style={styles`flex-row items-center gap-4 px-4 pb-5`}>
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => router.replace('/home')}
+            onPress={() => router.replace('/(tabs)')}
             style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' }}
           >
             <ArrowLeft size={20} color="#fff" />

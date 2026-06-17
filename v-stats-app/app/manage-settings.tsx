@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, Switch, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import { ArrowLeft, ChevronRight, Camera, User, Shield, Bell, MapPin, Building2, Lock, Fingerprint, LogOut, Trash2, Check, ShieldCheck, ShieldAlert, ShieldOff, Plus, Pencil, MoreHorizontal } from 'lucide-react-native';
 import { useStyles } from '../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';

@@ -59,7 +59,7 @@ export default function ClubScreen() {
               title="Equipos" 
               subtitle="Administrá los equipos del club" 
               badge={activeProfile?.teams?.length || 0}
-              onPress={() => router.push('/manage-club')}
+              onPress={() => router.push('/manage-teams')}
               isFirst
             />
             <MenuRow 
@@ -67,13 +67,13 @@ export default function ClubScreen() {
               title="Jugadores" 
               subtitle="Administrá los jugadores del club" 
               badge={activeProfile?.players?.length || 0}
-              onPress={() => router.push('/manage-club')}
+              onPress={() => router.push('/manage-players')}
             />
             <MenuRow 
               icon={<Building2 size={20} color={colors.danger} />} 
               title="Clubes" 
               subtitle="Creá o administrá tus clubes" 
-              onPress={() => router.push('/manage-settings')}
+              onPress={() => router.push('/manage-clubs')}
             />
             <MenuRow 
               icon={<UserPlus size={20} color={colors.warning} />} 
@@ -85,62 +85,7 @@ export default function ClubScreen() {
           </View>
         </View>
 
-        {/* CONFIGURACIÓN */}
-        <View>
-          <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.textMuted, letterSpacing: 1, marginBottom: 8, textTransform: 'uppercase', marginLeft: 4 }}>
-            CONFIGURACIÓN
-          </Text>
-          <View style={[styles`bg-surface rounded-2xl border overflow-hidden`, { borderColor: colors.borderLight }]}>
-            <MenuRow 
-              icon={<Settings size={20} color={colors.textSecondary} />} 
-              title="Configuración general" 
-              subtitle="Preferencias de la app" 
-              onPress={() => router.push('/manage-settings')} 
-              isFirst
-            />
-            <MenuRow 
-              icon={<User size={20} color={colors.textSecondary} />} 
-              title="Perfil" 
-              subtitle="Mi cuenta y datos personales" 
-              onPress={() => router.push('/manage-settings')} 
-              isLast
-            />
-          </View>
-        </View>
-
-        {/* CERRAR SESIÓN */}
-        <TouchableOpacity 
-          onPress={() => setShowLogoutModal(true)}
-          style={[styles`flex-row items-center justify-center gap-2 py-4 rounded-xl border mt-2`, { borderColor: colors.dangerLight, backgroundColor: themeMode === 'dark' ? 'rgba(239,68,68,0.1)' : '#FEF2F2' }]}
-        >
-          <LogOut size={18} color={colors.danger} />
-          <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 15, color: colors.danger }}>CERRAR SESIÓN</Text>
-        </TouchableOpacity>
-
       </ScrollView>
-
-      {/* Logout Modal */}
-      <Modal visible={showLogoutModal} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
-          <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24, alignItems: 'center' }}>
-             <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: themeMode === 'dark' ? 'rgba(239,68,68,0.1)' : '#FEF2F2', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
-              <LogOut size={24} color={colors.danger} />
-            </View>
-            <Text style={{ fontFamily: fonts.heading, fontSize: 24, color: colors.textMain, marginBottom: 8, letterSpacing: 1 }}>¿CERRAR SESIÓN?</Text>
-            <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, textAlign: 'center', marginBottom: 24 }}>
-              Vas a salir de tu cuenta. Tus datos quedarán guardados.
-            </Text>
-            <View style={styles`flex-row gap-3`}>
-              <TouchableOpacity onPress={() => setShowLogoutModal(false)} style={{ flex: 1, borderWidth: 1, borderColor: colors.border, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}>
-                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 16, color: colors.textMain }}>CANCELAR</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => { logout(); router.replace('/'); }} style={{ flex: 1, backgroundColor: colors.danger, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}>
-                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 16, color: '#FFF' }}>SALIR</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
     </View>
   );

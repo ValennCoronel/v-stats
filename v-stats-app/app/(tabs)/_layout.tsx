@@ -28,6 +28,27 @@ export default function TabLayout() {
           title: 'Club',
         }}
       />
+      <Tabs.Screen
+        name="manage-teams"
+        options={{
+          title: 'Equipos',
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="manage-players"
+        options={{
+          title: 'Jugadores',
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="manage-clubs"
+        options={{
+          title: 'Clubes',
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
