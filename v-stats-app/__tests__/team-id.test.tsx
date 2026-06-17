@@ -7,13 +7,21 @@ const mockReplace = jest.fn();
 const mockPush = jest.fn();
 const mockGetMatches: any = jest.fn();
 
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    replace: mockReplace,
-    push: mockPush,
-  }),
-  useLocalSearchParams: () => ({ id: 'team-1' }),
-}));
+jest.mock('expo-router', () => {
+  const React = require('react');
+  return {
+    useRouter: () => ({
+      replace: mockReplace,
+      push: mockPush,
+    }),
+    useLocalSearchParams: () => ({ id: 'team-1' }),
+    useFocusEffect: (cb: () => void) => {
+      React.useEffect(() => {
+        cb();
+      }, [cb]);
+    },
+  };
+});
 
 jest.mock('expo-status-bar', () => ({
   StatusBar: () => null,

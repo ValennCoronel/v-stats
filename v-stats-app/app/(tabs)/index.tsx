@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image, StyleSheet, Modal } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image, StyleSheet, Modal, Alert } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronDown, ChevronRight, Play, Share, Settings, Bell, BarChart3, Trophy, TrendingUp, X, Target, Shield, User, LogOut } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useStyles } from '../../src/hooks/useStyles';
@@ -9,6 +9,9 @@ import { useProfile } from '../../src/context/ProfileContext';
 import { useAuth } from '../../src/context/AuthContext';
 import { matchesService, Match } from '../../src/services/matches.service';
 import { statsService, ClubStats } from '../../src/services/stats.service';
+import { storage } from '../../src/services/storage.service';
+
+let hasCheckedActiveMatchOnAppStart = false;
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -23,6 +26,43 @@ export default function HomeScreen() {
   const [showTeamSelector, setShowTeamSelector] = useState(false);
   const [showClubSelector, setShowClubSelector] = useState(false);
   const [teamStats, setTeamStats] = useState<ClubStats | null>(null);
+
+  const [activeMatch, setActiveMatch] = useState<any>(null);
+  const [showActiveMatchModal, setShowActiveMatchModal] = useState(false);
+
+  const checkActiveMatch = useCallback(async () => {
+    const saved = await storage.getItem('vstats-active-match');
+    const isFirstCheck = !hasCheckedActiveMatchOnAppStart;
+    hasCheckedActiveMatchOnAppStart = true;
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setActiveMatch(parsed);
+        if (isFirstCheck) {
+          setShowActiveMatchModal(true);
+        }
+      } catch (e) {
+        console.error("Error parsing saved match", e);
+      }
+    } else {
+      setActiveMatch(null);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        checkActiveMatch();
+      }
+    }, [isAuthenticated, checkActiveMatch])
+  );
+
+  useEffect(() => {
+    return () => {
+      hasCheckedActiveMatchOnAppStart = false;
+    };
+  }, []);
 
   // Auto-select first team if available
   useEffect(() => {
@@ -58,8 +98,13 @@ export default function HomeScreen() {
   };
 
   // Redirect to login if not authenticated
-  if (!authLoading && !isAuthenticated) {
-    router.replace('/');
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace('/');
+    }
+  }, [authLoading, isAuthenticated]);
+
+  if (!isAuthenticated) {
     return null;
   }
 
@@ -119,6 +164,53 @@ export default function HomeScreen() {
             </View>
           </View>
         </View>
+        
+        {/* ── Active Match Resuming Banner ── */}
+        {activeMatch && (
+          <TouchableOpacity 
+            activeOpacity={0.9}
+            onPress={() => {
+              router.push({
+                pathname: '/match/new',
+                params: { resume: 'true' }
+              });
+            }}
+            style={{ 
+              backgroundColor: 'rgba(30,111,217,0.08)', 
+              borderColor: '#1E6FD9', 
+              borderWidth: 1.5, 
+              borderRadius: 16, 
+              padding: 16, 
+              marginBottom: 8, 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              justifyContent: 'space-between'
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+              <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(30,111,217,0.15)', justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ fontSize: 20 }}>🏐</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: '#1E6FD9', letterSpacing: 0.5 }}>
+                  PARTIDO EN CURSO
+                </Text>
+                <Text style={{ fontFamily: fonts.heading, fontSize: 15, color: '#0D1F33', marginTop: 2 }} numberOfLines={1}>
+                  vs {activeMatch.metadata?.rival || "Rival"}
+                </Text>
+                <Text style={{ fontFamily: fonts.body, fontSize: 12, color: '#64748B', marginTop: 1 }}>
+                  Set {activeMatch.currentSet} · {activeMatch.homeScore} - {activeMatch.awayScore}
+                </Text>
+              </View>
+            </View>
+            <View style={{ backgroundColor: '#1E6FD9', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 }}>
+              <Text style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: '#fff', letterSpacing: 0.5 }}>
+                REANUDAR
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
         {/* ── Equipo Activo Card ── */}
         <LinearGradient 
           colors={['#E0F2FE', '#BAE6FD']} 
@@ -378,6 +470,95 @@ export default function HomeScreen() {
           </View>
         </View>
       )}
+
+      {/* ── Active Match Resuming Modal ── */}
+      <Modal visible={showActiveMatchModal} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24, alignItems: 'center' }}>
+            <Text style={{ fontSize: 48, marginBottom: 12 }}>🏐</Text>
+            <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain, marginBottom: 8, textAlign: 'center' }}>
+              Partido en Curso
+            </Text>
+            <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, textAlign: 'center', marginBottom: 16 }}>
+              Tenés un partido sin finalizar contra:
+            </Text>
+            
+            {activeMatch && (
+              <View style={{ backgroundColor: colors.bgMain, borderRadius: 16, padding: 16, width: '100%', alignItems: 'center', marginBottom: 24, borderWidth: 1, borderColor: colors.borderLight }}>
+                <Text style={{ fontFamily: fonts.heading, fontSize: 20, color: colors.primary }}>
+                  {activeMatch.metadata?.rival || "Rival"}
+                </Text>
+                {activeMatch.metadata?.torneo ? (
+                  <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>
+                    {activeMatch.metadata.torneo}
+                  </Text>
+                ) : null}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 }}>
+                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textMain }}>
+                    Set {activeMatch.currentSet}
+                  </Text>
+                  <Text style={{ color: colors.border }}>|</Text>
+                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textMain }}>
+                    Marcador: {activeMatch.homeScore} - {activeMatch.awayScore}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            <View style={{ width: '100%', gap: 10 }}>
+              <TouchableOpacity 
+                onPress={() => {
+                  setShowActiveMatchModal(false);
+                  router.push({
+                    pathname: '/match/new',
+                    params: { resume: 'true' }
+                  });
+                }} 
+                style={{ backgroundColor: colors.primary, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff' }}>
+                  VOLVER AL PARTIDO
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                onPress={() => setShowActiveMatchModal(false)} 
+                style={{ borderWidth: 1, borderColor: colors.border, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textMain }}>
+                  CONTINUAR NAVEGANDO
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                onPress={() => {
+                  Alert.alert(
+                    "Eliminar partido",
+                    "¿Estás seguro de que querés eliminar el partido en curso? Se perderá todo el progreso.",
+                    [
+                      { text: "Cancelar", style: "cancel" },
+                      { 
+                        text: "Eliminar", 
+                        style: "destructive",
+                        onPress: async () => {
+                          await storage.removeItem('vstats-active-match');
+                          setShowActiveMatchModal(false);
+                          setActiveMatch(null);
+                        }
+                      }
+                    ]
+                  );
+                }} 
+                style={{ paddingVertical: 8, alignItems: 'center', marginTop: 4 }}
+              >
+                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.danger }}>
+                  Eliminar partido en curso
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
     </View>
   );

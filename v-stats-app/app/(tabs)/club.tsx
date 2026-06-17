@@ -11,9 +11,20 @@ export default function ClubScreen() {
   const router = useRouter();
   const { styles, colors, fonts, themeMode } = useStyles();
   const { activeProfile, coach } = useProfile();
-  const { logout } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, logout } = useAuth();
   
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Redirect to login if not authenticated
+  React.useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace('/');
+    }
+  }, [authLoading, isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <View style={styles`flex-1 bg-screen`}>

@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, Dimensions, TextInput, FlatList, ActivityIndicator } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Plus, Check, Users, ChevronRight, CheckCircle2, Calendar, Clock } from 'lucide-react-native';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { ArrowLeft, Plus, Play, Check, Users, ChevronRight, CheckCircle2, Calendar, Clock } from 'lucide-react-native';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../../src/context/ProfileContext';
 import { matchesService, Match } from '../../src/services/matches.service';
 import { MIN_PLAYERS_REQUIRED, canStartMatch as canStartMatchForm, hasMinimumPlayersSelected, toggleAllPlayers as toggleAllPlayersForm } from '../../src/features/matches/create-match-form';
+import { storage } from '../../src/services/storage.service';
 
 const WEEK_DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => hour);
@@ -114,11 +115,7 @@ export default function TeamMatchesScreen() {
   const hasEnoughSelectedPlayers = hasMinimumPlayersSelected(selectedPlayerIds);
   const canStartMatch = canStartMatchForm(formRival, selectedPlayerIds);
 
-  useEffect(() => {
-    loadMatches();
-  }, [id]);
-
-  const loadMatches = async () => {
+  const loadMatches = useCallback(async () => {
     if (!id) return;
     setIsLoading(true);
     const res = await matchesService.getMatches(id as string, 'finished');
@@ -126,7 +123,30 @@ export default function TeamMatchesScreen() {
       setMatches(res.data.matches);
     }
     setIsLoading(false);
-  };
+  }, [id]);
+
+  const [activeMatch, setActiveMatch] = useState<any>(null);
+
+  const checkActiveMatch = useCallback(async () => {
+    const saved = await storage.getItem('vstats-active-match');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setActiveMatch(parsed);
+      } catch (e) {
+        console.error("Error parsing saved match", e);
+      }
+    } else {
+      setActiveMatch(null);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadMatches();
+      checkActiveMatch();
+    }, [id, loadMatches, checkActiveMatch])
+  );
 
   const togglePlayer = useCallback((playerId: string) => {
     setSelectedPlayerIds(prev =>
@@ -208,6 +228,51 @@ export default function TeamMatchesScreen() {
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 40 }}>
 
+        {activeMatch && activeMatch.metadata?.teamId === id && (
+          <TouchableOpacity 
+            activeOpacity={0.9}
+            onPress={() => {
+              router.push({
+                pathname: '/match/new',
+                params: { resume: 'true' }
+              });
+            }}
+            style={{ 
+              backgroundColor: 'rgba(30,111,217,0.08)', 
+              borderColor: '#1E6FD9', 
+              borderWidth: 1.5, 
+              borderRadius: 16, 
+              padding: 16, 
+              marginBottom: 20, 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              justifyContent: 'space-between'
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+              <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(30,111,217,0.15)', justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ fontSize: 20 }}>🏐</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, fontWeight: '700', color: '#1E6FD9', letterSpacing: 0.5 }}>
+                  PARTIDO EN CURSO
+                </Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', color: '#0D1F33', marginTop: 2 }} numberOfLines={1}>
+                  vs {activeMatch.metadata?.rival || "Rival"}
+                </Text>
+                <Text style={{ fontSize: 12, color: '#64748B', marginTop: 1 }}>
+                  Set {activeMatch.currentSet} · {activeMatch.homeScore} - {activeMatch.awayScore}
+                </Text>
+              </View>
+            </View>
+            <View style={{ backgroundColor: '#1E6FD9', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 }}>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, fontWeight: '700', color: '#fff', letterSpacing: 0.5 }}>
+                REANUDAR
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
         {/* NUEVO PARTIDO button */}
         <TouchableOpacity
           activeOpacity={0.8}
@@ -220,10 +285,17 @@ export default function TeamMatchesScreen() {
             setSelectedPlayerIds(roster.map(p => p.id)); // select all by default
             setShowCreateModal(true);
           }}
-          style={{ backgroundColor: '#1E6FD9', borderRadius: 12, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 24 }}
+          style={[
+            styles`w-full flex-row items-center justify-center gap-2`,
+            { marginBottom: 24, borderRadius: 12, backgroundColor: '#1C64F2', paddingVertical: 14, elevation: 4, shadowColor: '#1C64F2', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 }
+          ]}
         >
-          <Plus size={20} color="#fff" />
-          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>NUEVO PARTIDO</Text>
+          <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center' }}>
+            <Play size={12} color="#1C64F2" fill="#1C64F2" style={{ marginLeft: 2 }} />
+          </View>
+          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: '#FFFFFF', letterSpacing: 0.5, marginTop: 1 }}>
+            NUEVO PARTIDO
+          </Text>
         </TouchableOpacity>
 
         {isLoading ? (

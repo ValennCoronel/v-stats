@@ -43,7 +43,7 @@ export default function PartidoScreen() {
         {/* Header */}
         <View style={{ paddingTop: 32, paddingBottom: 8 }}>
           <View style={styles`flex-row items-center justify-between`}>
-            <View style={{ width: 24 }} /> {/* Spacer */}
+            <View style={{ width: 24 }} />
             <Text style={{ fontFamily: fonts.heading, fontSize: 24, color: colors.textMain, letterSpacing: 1 }}>
               PARTIDO
             </Text>
@@ -140,9 +140,7 @@ export default function PartidoScreen() {
             </View>
           </>
         ) : (
-          <View>
-            {/* Active Match State (Placeholder for now) */}
-          </View>
+          <View />
         )}
       </ScrollView>
 
@@ -206,22 +204,18 @@ export default function PartidoScreen() {
       </Modal>
 
       {/* Placeholder Modal */}
-      {showPlaceholderModal && (
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 24, zIndex: 100 }]}>
-          <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24, width: '100%', alignItems: 'center' }}>
+      <Modal visible={showPlaceholderModal} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24, alignItems: 'center' }}>
             <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#E0F2FE', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
               <Calendar size={32} color={colors.primary} />
             </View>
             <Text style={{ fontFamily: fonts.heading, fontSize: 28, color: colors.textMain, marginBottom: 8, textAlign: 'center' }}>Próximamente</Text>
-            <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, textAlign: 'center', marginBottom: 24 }}>
-              Esta funcionalidad aún no está disponible. Pronto podrás ver el calendario de partidos.
-            </Text>
-            <TouchableOpacity onPress={() => setShowPlaceholderModal(false)} style={{ backgroundColor: colors.primary, paddingVertical: 14, paddingHorizontal: 32, borderRadius: 12, width: '100%', alignItems: 'center' }}>
-              <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 16, color: '#FFF' }}>Entendido</Text>
-            </TouchableOpacity>
+            <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, textAlign: 'center', marginBottom: 24 }}>Esta funcionalidad aún no está disponible. Pronto podrás ver el calendario de partidos.</Text>
+            <TouchableOpacity onPress={() => setShowPlaceholderModal(false)} style={{ backgroundColor: colors.primary, paddingVertical: 14, paddingHorizontal: 32, borderRadius: 12, width: '100%', alignItems: 'center' }}><Text style={{ fontFamily: fonts.bodyMedium, fontSize: 16, color: '#FFF' }}>Entendido</Text></TouchableOpacity>
           </View>
         </View>
-      )}
+      </Modal>
 
     </View>
   );

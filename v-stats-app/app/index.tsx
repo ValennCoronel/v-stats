@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
@@ -33,7 +33,13 @@ const GoogleIcon = ({ size = 20 }: { size?: number }) => (
 export default function LoginScreen() {
   const { styles, colors } = useStyles();
   const router = useRouter();
-  const { login, loginWithGoogleToken, isLoading: authLoading } = useAuth();
+  const { login, loginWithGoogleToken, isLoading: authLoading, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace('/(tabs)');
+    }
+  }, [authLoading, isAuthenticated]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
