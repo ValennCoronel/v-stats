@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Building2, Plus, X, ArrowLeft, Check, Pencil, Trash2 } from 'lucide-react-native';
+import { Building2, Plus, ArrowLeft, Check, Pencil, Trash2 } from 'lucide-react-native';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../../src/context/ProfileContext';
+import { Modal } from '../../src/components/ui/Modal';
+import { Input } from '../../src/components/ui/Input';
+import { Button } from '../../src/components/ui/Button';
 
 export default function ManageClubsScreen() {
   const router = useRouter();
-  const { styles, colors, fonts, themeMode } = useStyles();
-  const { coach, profiles, activeProfile, activeProfileId, switchProfile, addProfile, updateProfile, deleteProfile, isLoading } = useProfile();
+  const { styles, colors, fonts } = useStyles();
+  const { profiles, activeProfileId, switchProfile, addProfile, updateProfile, deleteProfile, isLoading } = useProfile();
 
   type AccessRole = 'admin' | 'coach' | 'assistant';
   const PROFILE_COLORS = ['#1E6FD9', '#D97706', '#16A34A', '#7C3AED', '#DC2626', '#0891B2'];
@@ -115,13 +118,13 @@ export default function ManageClubsScreen() {
               <Text style={{ fontFamily: fonts.heading, fontSize: 18, color: colors.textMain, marginTop: 16 }}>Sin clubes aún</Text>
               <Text style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, marginTop: 4, textAlign: 'center', marginBottom: 24 }}>Por favor crea un club para empezar.</Text>
               
-              <TouchableOpacity 
+              <Button 
+                variant="primary" 
                 onPress={openAddClub}
-                style={{ backgroundColor: colors.primary, paddingVertical: 14, paddingHorizontal: 24, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}
+                leftIcon={<Plus size={20} color="#fff" />}
               >
-                <Plus size={20} color="#fff" />
-                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff' }}>Crea tu primer club</Text>
-              </TouchableOpacity>
+                Crea tu primer club
+              </Button>
             </View>
           ) : (
             <View style={{ gap: 12 }}>
@@ -171,98 +174,67 @@ export default function ManageClubsScreen() {
       </ScrollView>
 
       {/* ── Add / Edit Club Modal ── */}
-      <Modal visible={clubModal !== null} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
-          <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <View>
-                <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain, marginBottom: 16 }}>
-                  {clubModal?.mode === 'add' ? 'Agregar Club' : 'Editar Club'}
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setClubModal(null)} style={{ padding: 4, backgroundColor: colors.borderLight, borderRadius: 16 }}>
-                <X size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            
-            <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 12, letterSpacing: 1, color: colors.textSecondary, marginBottom: 4 }}>NOMBRE DEL CLUB</Text>
-            <TextInput 
-              value={clubForm.clubName} 
-              onChangeText={t => setClubForm(f => ({ ...f, clubName: t }))} 
-              style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 16, fontSize: 16, marginBottom: 16, color: colors.textMain, backgroundColor: colors.bgMain }} 
-              placeholder="Ej: Club Atlético..."
-              placeholderTextColor={colors.textMuted}
-            />
-            
-            <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 12, letterSpacing: 1, color: colors.textSecondary, marginBottom: 4 }}>CIUDAD / SEDE</Text>
-            <TextInput 
-              value={clubForm.city} 
-              onChangeText={t => setClubForm(f => ({ ...f, city: t }))} 
-              style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 16, fontSize: 16, marginBottom: 20, color: colors.textMain, backgroundColor: colors.bgMain }} 
-              placeholder="Ej: Buenos Aires"
-              placeholderTextColor={colors.textMuted}
-            />
+      <Modal visible={clubModal !== null} onClose={() => setClubModal(null)}>
+        <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain, marginBottom: 16 }}>
+          {clubModal?.mode === 'add' ? 'Agregar Club' : 'Editar Club'}
+        </Text>
+        
+        <Input 
+          label="NOMBRE DEL CLUB"
+          value={clubForm.clubName} 
+          onChangeText={t => setClubForm(f => ({ ...f, clubName: t }))} 
+          placeholder="Ej: Club Atlético..."
+          containerStyle={{ marginBottom: 12 }}
+        />
+        
+        <Input 
+          label="CIUDAD / SEDE"
+          value={clubForm.city} 
+          onChangeText={t => setClubForm(f => ({ ...f, city: t }))} 
+          placeholder="Ej: Buenos Aires"
+          containerStyle={{ marginBottom: 20 }}
+        />
 
-            <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 12, letterSpacing: 1, color: colors.textSecondary, marginBottom: 8 }}>COLOR PRINCIPAL</Text>
-            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-              {PROFILE_COLORS.map(color => (
-                <TouchableOpacity 
-                  key={color} 
-                  onPress={() => setClubForm(f => ({ ...f, color }))} 
-                  style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: color, justifyContent: 'center', alignItems: 'center' }}
-                >
-                  {clubForm.color === color && <Check size={16} color="#fff" />}
-                </TouchableOpacity>
-              ))}
-            </View>
-
+        <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 12, letterSpacing: 1, color: colors.textSecondary, marginBottom: 8 }}>COLOR PRINCIPAL</Text>
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+          {PROFILE_COLORS.map(color => (
             <TouchableOpacity 
-              disabled={!clubForm.clubName.trim()} 
-              onPress={saveClub} 
-              style={{ backgroundColor: clubForm.clubName.trim() ? colors.success : colors.textMuted, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              key={color} 
+              onPress={() => setClubForm(f => ({ ...f, color }))} 
+              style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: color, justifyContent: 'center', alignItems: 'center' }}
             >
-              <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff' }}>
-                {clubModal?.mode === 'add' ? 'AGREGAR CLUB' : 'GUARDAR CAMBIOS'}
-              </Text>
+              {clubForm.color === color && <Check size={16} color="#fff" />}
             </TouchableOpacity>
-          </View>
+          ))}
         </View>
+
+        <Button 
+          variant="primary"
+          disabled={!clubForm.clubName.trim()} 
+          onPress={saveClub}
+          style={{ backgroundColor: clubForm.clubName.trim() ? colors.success : colors.textMuted }}
+        >
+          {clubModal?.mode === 'add' ? 'AGREGAR CLUB' : 'GUARDAR CAMBIOS'}
+        </Button>
       </Modal>
 
       {/* ── Confirm Modal ── */}
-      <Modal visible={!!confirmDialog?.visible} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
-          <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <View style={{ flex: 1, paddingRight: 16 }}>
-                <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain }}>
-                  {confirmDialog?.title}
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setConfirmDialog(null)} style={{ padding: 4, backgroundColor: colors.borderLight, borderRadius: 16 }}>
-                <X size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, marginTop: 12, marginBottom: 24, lineHeight: 22 }}>
-              {confirmDialog?.message}
-            </Text>
-            <View style={styles`flex-row gap-4`}>
-              <TouchableOpacity 
-                onPress={() => setConfirmDialog(null)}
-                style={{ flex: 1, borderWidth: 1, borderColor: colors.border, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
-              >
-                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textMain }}>CANCELAR</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                onPress={() => {
-                  if (confirmDialog?.onConfirm) confirmDialog.onConfirm();
-                  setConfirmDialog(null);
-                }}
-                style={{ flex: 1, backgroundColor: colors.danger, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
-              >
-                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff' }}>ELIMINAR</Text>
-              </TouchableOpacity>
-            </View>
+      <Modal visible={!!confirmDialog?.visible} onClose={() => setConfirmDialog(null)}>
+        <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain }}>
+          {confirmDialog?.title}
+        </Text>
+        <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, marginTop: 12, marginBottom: 24, lineHeight: 22 }}>
+          {confirmDialog?.message}
+        </Text>
+        <View style={styles`flex-row gap-4`}>
+          <View style={{ flex: 1 }}>
+            <Button variant="outline" onPress={() => setConfirmDialog(null)}>CANCELAR</Button>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button variant="danger" onPress={() => {
+              if (confirmDialog?.onConfirm) confirmDialog.onConfirm();
+              setConfirmDialog(null);
+            }}>ELIMINAR</Button>
           </View>
         </View>
       </Modal>

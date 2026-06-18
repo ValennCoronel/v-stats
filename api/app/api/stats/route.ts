@@ -28,13 +28,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 })
     }
 
-    const requestedTeam = teamId ? club.teams.find((team) => team.id === teamId) : null
+    const requestedTeam = teamId ? club.teams.find((team: any) => team.id === teamId) : null
     if (teamId && !requestedTeam) {
       return NextResponse.json({ error: "Equipo no encontrado" }, { status: 404 })
     }
 
     const selectedTeam = requestedTeam ? { id: requestedTeam.id, name: requestedTeam.name } : null
-    const teamIds = selectedTeam ? [selectedTeam.id] : club.teams.map(t => t.id)
+    const teamIds = selectedTeam ? [selectedTeam.id] : club.teams.map((t: any) => t.id)
 
     if (teamIds.length === 0) {
       return NextResponse.json({
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
         totalPoints: 0,
         topScorers: [],
         recentMatches: [],
-        teamBreakdown: club.teams.map((team) => ({
+        teamBreakdown: club.teams.map((team: any) => ({
           id: team.id,
           name: team.name,
           matches: 0,
@@ -79,8 +79,8 @@ export async function GET(request: Request) {
     })
 
     const totalMatches = matches.length
-    const wins = matches.filter(m => m.result === "WIN").length
-    const losses = matches.filter(m => m.result === "LOSS").length
+    const wins = matches.filter((m: any) => m.result === "WIN").length
+    const losses = matches.filter((m: any) => m.result === "LOSS").length
     const winRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0
 
     let setsWon = 0
@@ -96,14 +96,14 @@ export async function GET(request: Request) {
     }
 
     const allClubMatches = await prisma.match.findMany({
-      where: { teamId: { in: club.teams.map(t => t.id) }, status: "finished" },
+      where: { teamId: { in: club.teams.map((t: any) => t.id) }, status: "finished" },
       select: { teamId: true, result: true },
     })
 
-    const teamBreakdown = club.teams.map((team) => {
-      const teamMatches = allClubMatches.filter((match) => match.teamId === team.id)
-      const teamWins = teamMatches.filter((match) => match.result === "WIN").length
-      const teamLosses = teamMatches.filter((match) => match.result === "LOSS").length
+    const teamBreakdown = club.teams.map((team: any) => {
+      const teamMatches = allClubMatches.filter((match: any) => match.teamId === team.id)
+      const teamWins = teamMatches.filter((match: any) => match.result === "WIN").length
+      const teamLosses = teamMatches.filter((match: any) => match.result === "LOSS").length
 
       return {
         id: team.id,
@@ -140,17 +140,17 @@ export async function GET(request: Request) {
     })
 
     // Fetch player names and avatars
-    const playerIds = playerStats.map(s => s.playerId)
+    const playerIds = playerStats.map((s: any) => s.playerId)
     const playersInfo = await prisma.player.findMany({
       where: { id: { in: playerIds } },
       select: { id: true, name: true, number: true, position: true, avatarUrl: true }
     })
 
-    const playerMap = new Map(playersInfo.map(p => [p.id, p]))
+    const playerMap = new Map(playersInfo.map((p: any) => [p.id, p]))
 
     const topScorers = playerStats
-      .map(stat => {
-        const player = playerMap.get(stat.playerId)
+      .map((stat: any) => {
+        const player = playerMap.get(stat.playerId) || {}
         const totalPositive = (stat._sum.puntos || 0) + (stat._sum.ataquesPositivos || 0) + (stat._sum.bloqueosPositivos || 0) + (stat._sum.aces || 0) + (stat._sum.defensasPositivas || 0) + (stat._sum.ventajasTacticas || 0)
         const totalNegative = (stat._sum.erroresAtaque || 0) + (stat._sum.erroresRecepcion || 0) + (stat._sum.erroresSaque || 0) + (stat._sum.bloqueosErrados || 0) + (stat._sum.erroresTacticos || 0)
         const total = totalPositive + totalNegative
@@ -168,20 +168,20 @@ export async function GET(request: Request) {
           matchesPlayed: stat._count.matchId,
         }
       })
-      .filter(p => p.name)
-      .sort((a, b) => b.puntos - a.puntos)
+      .filter((p: any) => p.name)
+      .sort((a: any, b: any) => b.puntos - a.puntos)
 
-    const attacks = playerStats.reduce((sum, stat) => sum + (stat._sum.ataquesPositivos || 0), 0)
-    const defenses = playerStats.reduce((sum, stat) => sum + (stat._sum.defensasPositivas || 0), 0)
-    const blocks = playerStats.reduce((sum, stat) => sum + (stat._sum.bloqueosPositivos || 0), 0)
-    const aces = playerStats.reduce((sum, stat) => sum + (stat._sum.aces || 0), 0)
-    const tacticalAdvantages = playerStats.reduce((sum, stat) => sum + (stat._sum.ventajasTacticas || 0), 0)
+    const attacks = playerStats.reduce((sum: any, stat: any) => sum + (stat._sum.ataquesPositivos || 0), 0)
+    const defenses = playerStats.reduce((sum: any, stat: any) => sum + (stat._sum.defensasPositivas || 0), 0)
+    const blocks = playerStats.reduce((sum: any, stat: any) => sum + (stat._sum.bloqueosPositivos || 0), 0)
+    const aces = playerStats.reduce((sum: any, stat: any) => sum + (stat._sum.aces || 0), 0)
+    const tacticalAdvantages = playerStats.reduce((sum: any, stat: any) => sum + (stat._sum.ventajasTacticas || 0), 0)
 
-    const attackErrors = playerStats.reduce((sum, stat) => sum + (stat._sum.erroresAtaque || 0), 0)
-    const receptionErrors = playerStats.reduce((sum, stat) => sum + (stat._sum.erroresRecepcion || 0), 0)
-    const serveErrors = playerStats.reduce((sum, stat) => sum + (stat._sum.erroresSaque || 0), 0)
+    const attackErrors = playerStats.reduce((sum: any, stat: any) => sum + (stat._sum.erroresAtaque || 0), 0)
+    const receptionErrors = playerStats.reduce((sum: any, stat: any) => sum + (stat._sum.erroresRecepcion || 0), 0)
+    const serveErrors = playerStats.reduce((sum: any, stat: any) => sum + (stat._sum.erroresSaque || 0), 0)
 
-    const errors = playerStats.reduce((sum, stat) =>
+    const errors = playerStats.reduce((sum: any, stat: any) =>
       sum
       + (stat._sum.erroresAtaque || 0)
       + (stat._sum.erroresRecepcion || 0)
@@ -195,7 +195,7 @@ export async function GET(request: Request) {
     const totalActions = positiveActions + negativeActions
 
     // Compute total points
-    const totalPoints = topScorers.reduce((sum, p) => sum + p.puntos, 0)
+    const totalPoints = topScorers.reduce((sum: any, p: any) => sum + p.puntos, 0)
     const avgActionsPerPoint = totalPoints > 0 ? Number((totalActions / totalPoints).toFixed(1)) : 0
     const pointsPerMatch = totalMatches > 0 ? Number((totalPoints / totalMatches).toFixed(1)) : 0
 

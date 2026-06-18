@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Building2, Plus, X, ArrowLeft } from 'lucide-react-native';
+import { Building2, Plus, ArrowLeft } from 'lucide-react-native';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../../src/context/ProfileContext';
 import { teamsService } from '../../src/services/teams.service';
+import { Modal } from '../../src/components/ui/Modal';
+import { Input } from '../../src/components/ui/Input';
+import { Button } from '../../src/components/ui/Button';
 
 export default function ManageTeamsScreen() {
   const router = useRouter();
-  const { styles, colors, fonts, themeMode } = useStyles();
+  const { styles, colors, fonts } = useStyles();
   const { activeProfile, refreshProfiles, isLoading } = useProfile();
 
   const [showAddTeam, setShowAddTeam] = useState(false);
@@ -131,90 +134,66 @@ export default function ManageTeamsScreen() {
       </ScrollView>
 
       {/* ── Add Team Modal ── */}
-      <Modal visible={showAddTeam} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
-          <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <View>
-                <Text style={{ fontFamily: fonts.heading, fontSize: 24, color: colors.textMain }}>
-                  {editingTeamId ? 'Editar Equipo' : 'Nuevo Equipo'}
-                </Text>
-                <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, marginBottom: 20 }}>
-                  {editingTeamId ? 'Modificar datos del equipo' : 'Agregar equipo en '} 
-                  {!editingTeamId && <Text style={{ fontFamily: fonts.bodyBold }}>{activeProfile?.clubName}</Text>}
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setShowAddTeam(false)} style={{ padding: 4, backgroundColor: colors.borderLight, borderRadius: 16 }}>
-                <X size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            
-            <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary, letterSpacing: 1, marginBottom: 8 }}>NOMBRE DEL EQUIPO</Text>
-            <TextInput 
-              style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 16, fontSize: 16, marginBottom: 24, color: colors.textMain, backgroundColor: colors.bgMain }}
-              placeholder="Ej: Equipo Masculino Superior"
-              placeholderTextColor={colors.textMuted}
-              value={teamName}
-              onChangeText={setTeamName}
-              autoFocus={!editingTeamId}
-            />
+      <Modal visible={showAddTeam} onClose={() => setShowAddTeam(false)}>
+        <Text style={{ fontFamily: fonts.heading, fontSize: 24, color: colors.textMain }}>
+          {editingTeamId ? 'Editar Equipo' : 'Nuevo Equipo'}
+        </Text>
+        <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, marginBottom: 20 }}>
+          {editingTeamId ? 'Modificar datos del equipo' : 'Agregar equipo en '} 
+          {!editingTeamId && <Text style={{ fontFamily: fonts.bodyBold }}>{activeProfile?.clubName}</Text>}
+        </Text>
+        
+        <Input 
+          label="NOMBRE DEL EQUIPO"
+          placeholder="Ej: Equipo Masculino Superior"
+          value={teamName}
+          onChangeText={setTeamName}
+          autoFocus={!editingTeamId}
+          containerStyle={{ marginBottom: 24 }}
+        />
 
-            <View style={styles`flex-row gap-4`}>
-              {editingTeamId && (
-                <TouchableOpacity 
-                  onPress={() => handleDeleteTeam(editingTeamId)}
-                  style={{ flex: 1, backgroundColor: colors.danger, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
-                >
-                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff' }}>ELIMINAR</Text>
-                </TouchableOpacity>
-              )}
-
-              <TouchableOpacity 
-                onPress={handleAddTeam}
-                disabled={!teamName.trim()}
-                style={{ flex: 1, backgroundColor: teamName.trim() ? colors.success : colors.textMuted, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+        <View style={styles`flex-row gap-4`}>
+          {editingTeamId && (
+            <View style={{ flex: 1 }}>
+              <Button 
+                variant="danger" 
+                onPress={() => handleDeleteTeam(editingTeamId)}
               >
-                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff' }}>GUARDAR</Text>
-              </TouchableOpacity>
+                ELIMINAR
+              </Button>
             </View>
+          )}
+
+          <View style={{ flex: 1 }}>
+            <Button 
+              variant="primary"
+              disabled={!teamName.trim()}
+              onPress={handleAddTeam}
+              style={{ backgroundColor: teamName.trim() ? colors.success : colors.textMuted }}
+            >
+              GUARDAR
+            </Button>
           </View>
         </View>
       </Modal>
 
       {/* ── Confirm Modal ── */}
-      <Modal visible={!!confirmDialog?.visible} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
-          <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <View style={{ flex: 1, paddingRight: 16 }}>
-                <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain }}>
-                  {confirmDialog?.title}
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setConfirmDialog(null)} style={{ padding: 4, backgroundColor: colors.borderLight, borderRadius: 16 }}>
-                <X size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, marginTop: 12, marginBottom: 24, lineHeight: 22 }}>
-              {confirmDialog?.message}
-            </Text>
-            <View style={styles`flex-row gap-4`}>
-              <TouchableOpacity 
-                onPress={() => setConfirmDialog(null)}
-                style={{ flex: 1, borderWidth: 1, borderColor: colors.border, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
-              >
-                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textMain }}>CANCELAR</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                onPress={() => {
-                  if (confirmDialog?.onConfirm) confirmDialog.onConfirm();
-                  setConfirmDialog(null);
-                }}
-                style={{ flex: 1, backgroundColor: colors.danger, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
-              >
-                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff' }}>ELIMINAR</Text>
-              </TouchableOpacity>
-            </View>
+      <Modal visible={!!confirmDialog?.visible} onClose={() => setConfirmDialog(null)}>
+        <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain }}>
+          {confirmDialog?.title}
+        </Text>
+        <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, marginTop: 12, marginBottom: 24, lineHeight: 22 }}>
+          {confirmDialog?.message}
+        </Text>
+        <View style={styles`flex-row gap-4`}>
+          <View style={{ flex: 1 }}>
+            <Button variant="outline" onPress={() => setConfirmDialog(null)}>CANCELAR</Button>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button variant="danger" onPress={() => {
+              if (confirmDialog?.onConfirm) confirmDialog.onConfirm();
+              setConfirmDialog(null);
+            }}>ELIMINAR</Button>
           </View>
         </View>
       </Modal>
