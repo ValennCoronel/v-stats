@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Users, Plus, X, ArrowLeft } from 'lucide-react-native';
+import { Users, Plus, ArrowLeft } from 'lucide-react-native';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../../src/context/ProfileContext';
 import { playersService } from '../../src/services/players.service';
+import { Modal } from '../../src/components/ui/Modal';
+import { Input } from '../../src/components/ui/Input';
+import { Button } from '../../src/components/ui/Button';
 
 export default function ManagePlayersScreen() {
   const router = useRouter();
@@ -180,145 +183,111 @@ export default function ManagePlayersScreen() {
       </ScrollView>
 
       {/* ── Add Player Modal ── */}
-      <Modal visible={showAddPlayer} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
-          <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <View>
-                <Text style={{ fontFamily: fonts.heading, fontSize: 24, color: colors.textMain }}>
-                  {editingPlayerId ? 'Editar Jugador' : 'Nuevo Jugador'}
-                </Text>
-                <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, marginBottom: 20 }}>
-                  {editingPlayerId ? 'Modificar datos del jugador' : `Agregar jugador al club `}
-                  {!editingPlayerId && <Text style={{ fontFamily: fonts.bodyBold }}>{activeProfile?.clubName}</Text>}
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setShowAddPlayer(false)} style={{ padding: 4, backgroundColor: colors.borderLight, borderRadius: 16 }}>
-                <X size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            
-            <TextInput 
-              style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12, fontSize: 16, marginBottom: 12, color: colors.textMain, backgroundColor: colors.bgMain }}
-              placeholder="Nombre Completo"
-              placeholderTextColor={colors.textMuted}
-              value={playerForm.name}
-              onChangeText={t => setPlayerForm(p => ({ ...p, name: t }))}
-            />
-            <TextInput 
-              style={{ 
-                borderWidth: 1, 
-                borderColor: colors.border, 
-                borderRadius: 12, 
-                padding: 12, 
-                fontSize: 16, 
-                marginBottom: 12,
-                backgroundColor: editingPlayerId ? colors.borderLight : colors.bgMain,
-                color: editingPlayerId ? colors.textMuted : colors.textMain
-              }}
-              placeholder="DNI"
-              placeholderTextColor={colors.textMuted}
-              keyboardType="numeric"
-              value={playerForm.dni}
-              onChangeText={t => setPlayerForm(p => ({ ...p, dni: t }))}
-              editable={!editingPlayerId}
-            />
-            <TextInput 
-              style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12, fontSize: 16, marginBottom: 16, color: colors.textMain, backgroundColor: colors.bgMain }}
-              placeholder="Número de Camiseta"
-              placeholderTextColor={colors.textMuted}
-              keyboardType="numeric"
-              value={playerForm.number}
-              onChangeText={t => setPlayerForm(p => ({ ...p, number: t }))}
-            />
+      <Modal visible={showAddPlayer} onClose={() => setShowAddPlayer(false)}>
+        <Text style={{ fontFamily: fonts.heading, fontSize: 24, color: colors.textMain }}>
+          {editingPlayerId ? 'Editar Jugador' : 'Nuevo Jugador'}
+        </Text>
+        <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, marginBottom: 20 }}>
+          {editingPlayerId ? 'Modificar datos del jugador' : `Agregar jugador al club `}
+          {!editingPlayerId && <Text style={{ fontFamily: fonts.bodyBold }}>{activeProfile?.clubName}</Text>}
+        </Text>
+        
+        <Input 
+          placeholder="Nombre Completo"
+          value={playerForm.name}
+          onChangeText={t => setPlayerForm(p => ({ ...p, name: t }))}
+          containerStyle={{ marginBottom: 12 }}
+        />
+        <Input 
+          placeholder="DNI"
+          keyboardType="numeric"
+          value={playerForm.dni}
+          onChangeText={t => setPlayerForm(p => ({ ...p, dni: t }))}
+          editable={!editingPlayerId}
+          containerStyle={{ marginBottom: 12 }}
+          style={{ 
+            backgroundColor: editingPlayerId ? colors.borderLight : colors.bgMain,
+            color: editingPlayerId ? colors.textMuted : colors.textMain
+          }}
+        />
+        <Input 
+          placeholder="Número de Camiseta"
+          keyboardType="numeric"
+          value={playerForm.number}
+          onChangeText={t => setPlayerForm(p => ({ ...p, number: t }))}
+          containerStyle={{ marginBottom: 16 }}
+        />
 
-            <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary, letterSpacing: 1, marginBottom: 8 }}>POSICIÓN</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 24, maxHeight: 40 }}>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                {POSITIONS.map(pos => (
-                  <TouchableOpacity
-                    key={pos.id}
-                    onPress={() => setPlayerForm(p => ({ ...p, position: pos.id }))}
-                    style={{
-                      paddingHorizontal: 16,
-                      paddingVertical: 8,
-                      borderRadius: 20,
-                      backgroundColor: playerForm.position === pos.id ? (activeProfile?.color || colors.primary) : colors.borderLight,
-                    }}
-                  >
-                    <Text style={{ 
-                      fontFamily: fonts.bodyMedium,
-                      fontSize: 14, 
-                      color: playerForm.position === pos.id ? '#fff' : colors.textSecondary 
-                    }}>
-                      {pos.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-
-            <View style={styles`flex-row gap-4 mt-4`}>
-              {editingPlayerId && (
-                <TouchableOpacity 
-                  onPress={() => handleDeletePlayer(editingPlayerId)}
-                  disabled={isSubmittingPlayer}
-                  style={{ flex: 1, backgroundColor: colors.danger, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
-                >
-                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff' }}>ELIMINAR</Text>
-                </TouchableOpacity>
-              )}
-
-              <TouchableOpacity 
-                onPress={handleSubmitPlayer}
-                disabled={isSubmittingPlayer || !playerForm.name || !playerForm.dni || !playerForm.number}
-                style={{ flex: 1, backgroundColor: playerForm.name && playerForm.dni ? colors.success : colors.textMuted, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+        <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary, letterSpacing: 1, marginBottom: 8 }}>POSICIÓN</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 24, maxHeight: 40 }}>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {POSITIONS.map(pos => (
+              <TouchableOpacity
+                key={pos.id}
+                onPress={() => setPlayerForm(p => ({ ...p, position: pos.id }))}
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                  backgroundColor: playerForm.position === pos.id ? (activeProfile?.color || colors.primary) : colors.borderLight,
+                }}
               >
-                {isSubmittingPlayer ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff' }}>GUARDAR</Text>
-                )}
+                <Text style={{ 
+                  fontFamily: fonts.bodyMedium,
+                  fontSize: 14, 
+                  color: playerForm.position === pos.id ? '#fff' : colors.textSecondary 
+                }}>
+                  {pos.label}
+                </Text>
               </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+
+        <View style={styles`flex-row gap-4 mt-4`}>
+          {editingPlayerId && (
+            <View style={{ flex: 1 }}>
+              <Button 
+                variant="danger" 
+                onPress={() => handleDeletePlayer(editingPlayerId)}
+                disabled={isSubmittingPlayer}
+              >
+                ELIMINAR
+              </Button>
             </View>
+          )}
+
+          <View style={{ flex: 1 }}>
+            <Button 
+              variant="primary"
+              onPress={handleSubmitPlayer}
+              disabled={isSubmittingPlayer || !playerForm.name || !playerForm.dni || !playerForm.number}
+              isLoading={isSubmittingPlayer}
+              style={{ backgroundColor: playerForm.name && playerForm.dni ? colors.success : colors.textMuted }}
+            >
+              GUARDAR
+            </Button>
           </View>
         </View>
       </Modal>
 
       {/* ── Confirm Modal ── */}
-      <Modal visible={!!confirmDialog?.visible} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
-          <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <View style={{ flex: 1, paddingRight: 16 }}>
-                <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain }}>
-                  {confirmDialog?.title}
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setConfirmDialog(null)} style={{ padding: 4, backgroundColor: colors.borderLight, borderRadius: 16 }}>
-                <X size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, marginTop: 12, marginBottom: 24, lineHeight: 22 }}>
-              {confirmDialog?.message}
-            </Text>
-            <View style={styles`flex-row gap-4`}>
-              <TouchableOpacity 
-                onPress={() => setConfirmDialog(null)}
-                style={{ flex: 1, borderWidth: 1, borderColor: colors.border, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
-              >
-                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textMain }}>CANCELAR</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                onPress={() => {
-                  if (confirmDialog?.onConfirm) confirmDialog.onConfirm();
-                  setConfirmDialog(null);
-                }}
-                style={{ flex: 1, backgroundColor: colors.danger, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
-              >
-                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff' }}>ELIMINAR</Text>
-              </TouchableOpacity>
-            </View>
+      <Modal visible={!!confirmDialog?.visible} onClose={() => setConfirmDialog(null)}>
+        <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain }}>
+          {confirmDialog?.title}
+        </Text>
+        <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, marginTop: 12, marginBottom: 24, lineHeight: 22 }}>
+          {confirmDialog?.message}
+        </Text>
+        <View style={styles`flex-row gap-4`}>
+          <View style={{ flex: 1 }}>
+            <Button variant="outline" onPress={() => setConfirmDialog(null)}>CANCELAR</Button>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button variant="danger" onPress={() => {
+              if (confirmDialog?.onConfirm) confirmDialog.onConfirm();
+              setConfirmDialog(null);
+            }}>ELIMINAR</Button>
           </View>
         </View>
       </Modal>

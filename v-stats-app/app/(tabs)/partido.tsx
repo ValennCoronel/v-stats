@@ -6,6 +6,8 @@ import { Play, Users, Calendar, BarChart3, ChevronDown, Shield, Shirt, History, 
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../../src/context/ProfileContext';
+import { Modal as CustomModal } from '../../src/components/ui/Modal';
+import { Button } from '../../src/components/ui/Button';
 import { MIN_PLAYERS_REQUIRED, canStartMatch as canStartMatchForm, hasMinimumPlayersSelected, toggleAllPlayers as toggleAllPlayersForm } from '../../src/features/matches/create-match-form';
 
 const WEEK_DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
@@ -358,77 +360,59 @@ export default function PartidoScreen() {
       </ScrollView>
 
       {/* Club Selector Modal */}
-      <Modal visible={showClubSelector} transparent animationType="fade">
-        <TouchableOpacity
-          style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 24, zIndex: 100 }]}
-          activeOpacity={1}
-          onPress={() => setShowClubSelector(false)}
-        >
-          <View style={{ backgroundColor: colors.bgSurface, width: '100%', borderRadius: 24, padding: 24 }}>
-            <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain, marginBottom: 16 }}>Seleccionar Club</Text>
-            {profiles?.map(profile => (
-              <TouchableOpacity
-                key={profile.id}
-                style={{ paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
-                onPress={() => {
-                  switchProfile(profile.id);
-                  setActiveTeamId(null);
-                  setShowClubSelector(false);
-                }}
-              >
-                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 16, color: activeProfile?.id === profile.id ? colors.primary : colors.textMain }}>{profile.clubName}</Text>
-                {activeProfile?.id === profile.id && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.primary }} />}
-              </TouchableOpacity>
-            ))}
-            {(!profiles || profiles.length === 0) && (
-              <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textMuted, textAlign: 'center', marginVertical: 16 }}>No hay clubes disponibles</Text>
-            )}
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      <CustomModal visible={showClubSelector} onClose={() => setShowClubSelector(false)}>
+        <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain, marginBottom: 16 }}>Seleccionar Club</Text>
+        {profiles?.map(profile => (
+          <TouchableOpacity 
+            key={profile.id}
+            style={{ paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+            onPress={() => {
+              switchProfile(profile.id);
+              setActiveTeamId(null);
+              setShowClubSelector(false);
+            }}
+          >
+            <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 16, color: activeProfile?.id === profile.id ? colors.primary : colors.textMain }}>{profile.clubName}</Text>
+            {activeProfile?.id === profile.id && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.primary }} />}
+          </TouchableOpacity>
+        ))}
+        {(!profiles || profiles.length === 0) && (
+          <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textMuted, textAlign: 'center', marginVertical: 16 }}>No hay clubes disponibles</Text>
+        )}
+      </CustomModal>
 
       {/* Team Selector Modal */}
-      <Modal visible={showTeamSelector} transparent animationType="fade">
-        <TouchableOpacity
-          style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 24, zIndex: 100 }]}
-          activeOpacity={1}
-          onPress={() => setShowTeamSelector(false)}
-        >
-          <View style={{ backgroundColor: colors.bgSurface, width: '100%', borderRadius: 24, padding: 24 }}>
-            <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain, marginBottom: 16 }}>Seleccionar Equipo</Text>
-            {activeProfile?.teams?.map(team => (
-              <TouchableOpacity
-                key={team.id}
-                style={{ paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
-                onPress={() => {
-                  setActiveTeamId(team.id);
-                  setShowTeamSelector(false);
-                }}
-              >
-                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 16, color: activeTeamId === team.id ? colors.primary : colors.textMain }}>{team.name}</Text>
-                {activeTeamId === team.id && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.primary }} />}
-              </TouchableOpacity>
-            ))}
-            {(!activeProfile?.teams || activeProfile.teams.length === 0) && (
-              <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textMuted, textAlign: 'center', marginVertical: 16 }}>No hay equipos disponibles</Text>
-            )}
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      <CustomModal visible={showTeamSelector} onClose={() => setShowTeamSelector(false)}>
+        <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain, marginBottom: 16 }}>Seleccionar Equipo</Text>
+        {activeProfile?.teams?.map(team => (
+          <TouchableOpacity 
+            key={team.id}
+            style={{ paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+            onPress={() => {
+              setActiveTeamId(team.id);
+              setShowTeamSelector(false);
+            }}
+          >
+            <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 16, color: activeTeamId === team.id ? colors.primary : colors.textMain }}>{team.name}</Text>
+            {activeTeamId === team.id && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.primary }} />}
+          </TouchableOpacity>
+        ))}
+        {(!activeProfile?.teams || activeProfile.teams.length === 0) && (
+          <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textMuted, textAlign: 'center', marginVertical: 16 }}>No hay equipos disponibles</Text>
+        )}
+      </CustomModal>
 
       {/* Placeholder Modal */}
-      <Modal visible={showPlaceholderModal} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
-          <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24, alignItems: 'center' }}>
-            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#E0F2FE', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
-              <Calendar size={32} color={colors.primary} />
-            </View>
-            <Text style={{ fontFamily: fonts.heading, fontSize: 28, color: colors.textMain, marginBottom: 8, textAlign: 'center' }}>Próximamente</Text>
-            <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, textAlign: 'center', marginBottom: 24 }}>Esta funcionalidad aún no está disponible. Pronto podrás ver el calendario de partidos.</Text>
-            <TouchableOpacity onPress={() => setShowPlaceholderModal(false)} style={{ backgroundColor: colors.primary, paddingVertical: 14, paddingHorizontal: 32, borderRadius: 12, width: '100%', alignItems: 'center' }}><Text style={{ fontFamily: fonts.bodyMedium, fontSize: 16, color: '#FFF' }}>Entendido</Text></TouchableOpacity>
+      <CustomModal visible={showPlaceholderModal} onClose={() => setShowPlaceholderModal(false)}>
+        <View style={{ alignItems: 'center' }}>
+          <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#E0F2FE', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+            <Calendar size={32} color={colors.primary} />
           </View>
+          <Text style={{ fontFamily: fonts.heading, fontSize: 28, color: colors.textMain, marginBottom: 8, textAlign: 'center' }}>Próximamente</Text>
+          <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, textAlign: 'center', marginBottom: 24 }}>Esta funcionalidad aún no está disponible. Pronto podrás ver el calendario de partidos.</Text>
+          <Button variant="primary" onPress={() => setShowPlaceholderModal(false)} style={{ width: '100%' }}>Entendido</Button>
         </View>
-      </Modal>
+      </CustomModal>
 
       {/* Create Match Modal */}
       <Modal 
