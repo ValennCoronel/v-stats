@@ -2,6 +2,14 @@ import { NextResponse } from "next/server"
 import { getAuthUserFromRequest } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+type IncomingAction = {
+  playerId: string
+  action: string
+  set: number
+  timestamp: string
+  activePlayerIds?: string[]
+}
+
 // GET /api/matches — List matches for a team
 // Query params: ?teamId=xxx (required), ?status=finished, ?limit=10
 export async function GET(request: Request) {
@@ -76,6 +84,9 @@ export async function POST(request: Request) {
       tournament,
     } = body
 
+    const typedActions: IncomingAction[] = Array.isArray(actions) ? actions : []
+    const rosterPlayerIds = new Set<string>(Array.isArray(allPlayers) ? allPlayers : [])
+
     if (!teamId) {
       return NextResponse.json({ error: "teamId es requerido" }, { status: 400 })
     }
@@ -88,6 +99,30 @@ export async function POST(request: Request) {
 
     if (!team || team.club.ownerId !== authUser.userId) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 })
+    }
+
+    for (const action of typedActions) {
+      if (!action?.playerId || !rosterPlayerIds.has(action.playerId)) {
+        return NextResponse.json(
+          { error: "Hay acciones asociadas a jugadoras que no pertenecen al plantel del partido" },
+          { status: 400 }
+        )
+      }
+
+      const activePlayerIds = Array.isArray(action.activePlayerIds) ? action.activePlayerIds : []
+      if (activePlayerIds.length === 0 || !activePlayerIds.includes(action.playerId)) {
+        return NextResponse.json(
+          { error: "Solo se pueden guardar estadísticas de jugadoras que estaban en cancha" },
+          { status: 400 }
+        )
+      }
+
+      if (!activePlayerIds.every((playerId) => rosterPlayerIds.has(playerId))) {
+        return NextResponse.json(
+          { error: "La formación activa contiene jugadoras fuera del plantel del partido" },
+          { status: 400 }
+        )
+      }
     }
 
     // Create match with stats in a transaction
@@ -109,11 +144,11 @@ export async function POST(request: Request) {
       })
 
       // Aggregate actions into PlayerMatchStats
-      if (actions && actions.length > 0 && allPlayers) {
+      if (typedActions.length > 0 && allPlayers) {
         // Build stats map per player
         const statsMap = new Map<string, Record<string, number>>()
 
-        for (const action of actions) {
+        for (const action of typedActions) {
           if (!statsMap.has(action.playerId)) {
             statsMap.set(action.playerId, {
               puntos: 0,
@@ -162,7 +197,7 @@ export async function POST(request: Request) {
         }
 
         // Create raw action log entries
-        for (const action of actions) {
+        for (const action of typedActions) {
           const playerExists = await tx.player.findUnique({ where: { id: action.playerId } })
           await tx.matchActionLog.create({
             data: {

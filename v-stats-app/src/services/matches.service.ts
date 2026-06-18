@@ -36,6 +36,14 @@ export type MatchDetail = {
   }[];
 };
 
+export type MatchActionPayload = {
+  playerId: string;
+  action: string;
+  set: number;
+  timestamp: string;
+  activePlayerIds: string[];
+};
+
 type MatchesResponse = { matches: Match[] };
 type MatchResponse = { match: Match };
 
@@ -61,7 +69,7 @@ export const matchesService = {
     result: string;
     finalScore: string;
     setScores: any[];
-    actions: any[];
+    actions: MatchActionPayload[];
     allPlayers: string[];
   }) {
     return api.post<MatchResponse>('/api/matches', data);

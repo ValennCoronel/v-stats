@@ -6,9 +6,10 @@ import { useStyles } from "../../src/hooks/useStyles";
 import { StatusBar } from "expo-status-bar";
 import { useProfile } from "../../src/context/ProfileContext";
 import { matchesService } from "../../src/services/matches.service";
+import { canRecordStatForPlayer, getEffectiveActivePlayerIds, substitutePlayingPlayer } from "../../src/features/matches/live-match";
 
 type Player = { id: string; number: string; name: string; position: string; isLibero?: boolean; };
-type ActionRecord = { id: string; playerId: string; action: string; result: string; homeScoreBefore: number; awayScoreBefore: number; timestamp: number; set: number; };
+type ActionRecord = { id: string; playerId: string; action: string; result: string; homeScoreBefore: number; awayScoreBefore: number; timestamp: number; set: number; activePlayerIds: string[]; };
 type PlayerSetStats = { id: string; number: string; name: string; position: string; puntos: number; ataquesPts: number; saquesPts: number; bloqueosPts: number; recepciones: number; errores: number; };
 
 const EMPTY_SLOTS = 7; // 6 starters + 1 libero
@@ -188,7 +189,7 @@ export default function LiveMatchScreen() {
       setLiberoPlayer(libero);
       setCurrentSetStats(initStats(starters, libero));
     } else if (starters.length > 0) {
-      setCurrentSetStats(initStats(starters, starters[0]));
+      setCurrentSetStats(initStats(starters, null));
     }
 
     const assignedIds = new Set(assignedSlots.filter((p): p is Player => p !== null).map(p => p.id));
@@ -204,9 +205,17 @@ export default function LiveMatchScreen() {
       const playerId = selectedPlayer;
       const action = selectedAction;
       const result = selectedResult;
+      const activePlayerIds = getEffectiveActivePlayerIds(courtPlayers, liberoPlayer, assignedSlots);
+      if (!canRecordStatForPlayer(playerId, courtPlayers, liberoPlayer, assignedSlots)) {
+        alert("Solo se pueden cargar estadísticas para jugadoras que están en cancha.");
+        setSelectedPlayer(null);
+        setSelectedAction(null);
+        setSelectedResult(null);
+        return;
+      }
       const homePoint = (action === "ataque" || action === "saque" || action === "bloqueo") && result === "dbl";
       const awayPoint = result === "err";
-      setActionHistory((h) => [...h, { id: Date.now().toString(), playerId, action, result, homeScoreBefore: homeScore, awayScoreBefore: awayScore, timestamp: Date.now(), set: currentSet }]);
+      setActionHistory((h) => [...h, { id: Date.now().toString(), playerId, action, result, homeScoreBefore: homeScore, awayScoreBefore: awayScore, timestamp: Date.now(), set: currentSet, activePlayerIds }]);
       updatePlayerStat(playerId, action, result, homePoint, awayPoint);
       setHomeScore((prev) => homePoint ? prev + 1 : prev);
       setAwayScore((prev) => awayPoint ? prev + 1 : prev);
@@ -214,7 +223,7 @@ export default function LiveMatchScreen() {
       setSelectedAction(null);
       setSelectedResult(null);
     }
-  }, [selectedPlayer, selectedAction, selectedResult]);
+  }, [selectedPlayer, selectedAction, selectedResult, courtPlayers, liberoPlayer, assignedSlots]);
 
   const getLastActionText = () => {
     const last = actionHistory[actionHistory.length - 1];
@@ -249,7 +258,7 @@ export default function LiveMatchScreen() {
 
   const handleRivalError = (type: "saque" | "ataque") => {
     finalizeCourtSetup();
-    const record: ActionRecord = { id: Date.now().toString(), playerId: "rival", action: `rival_${type}`, result: "error", homeScoreBefore: homeScore, awayScoreBefore: awayScore, timestamp: Date.now(), set: currentSet };
+    const record: ActionRecord = { id: Date.now().toString(), playerId: "rival", action: `rival_${type}`, result: "error", homeScoreBefore: homeScore, awayScoreBefore: awayScore, timestamp: Date.now(), set: currentSet, activePlayerIds: getEffectiveActivePlayerIds(courtPlayers, liberoPlayer, assignedSlots) };
     applyScore(homeScore + 1, awayScore, record);
     setSelectedAction(null); setSelectedResult(null);
   };
@@ -310,10 +319,11 @@ export default function LiveMatchScreen() {
   const openSubstitution = () => { if (selectedPlayer === null) return; setPlayerOutId(selectedPlayer); setShowSubstitution(true); };
   const handleSelectIn = (benchPlayer: Player) => {
     if (playerOutId === null) return;
-    const outPlayer = courtPlayers.find(p => p.id === playerOutId);
-    if (!outPlayer) { setShowSubstitution(false); return; }
-    setCourtPlayers(prev => prev.map(p => p.id === playerOutId ? benchPlayer : p));
-    setBench(prev => prev.map(p => p.id === benchPlayer.id ? outPlayer : p));
+    const substitution = substitutePlayingPlayer(courtPlayers, liberoPlayer, bench, playerOutId, benchPlayer);
+    if (!substitution) { setShowSubstitution(false); return; }
+    setCourtPlayers(substitution.courtPlayers);
+    setLiberoPlayer(substitution.libero);
+    setBench(substitution.bench);
     setCurrentSetStats(prev => ({ ...prev, [benchPlayer.id]: prev[benchPlayer.id] ?? { id: benchPlayer.id, number: benchPlayer.number, name: benchPlayer.name, position: benchPlayer.position, puntos: 0, ataquesPts: 0, saquesPts: 0, bloqueosPts: 0, recepciones: 0, errores: 0 } }));
     if (selectedPlayer === playerOutId) setSelectedPlayer(null);
     setShowSubstitution(false);
@@ -337,7 +347,8 @@ export default function LiveMatchScreen() {
             playerId: record.playerId,
             action: evt,
             set: record.set,
-            timestamp: new Date(record.timestamp).toISOString()
+            timestamp: new Date(record.timestamp).toISOString(),
+            activePlayerIds: record.activePlayerIds,
           });
         }
       }
