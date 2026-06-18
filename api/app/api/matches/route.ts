@@ -126,7 +126,7 @@ export async function POST(request: Request) {
     }
 
     // Create match with stats in a transaction
-    const match = await prisma.$transaction(async (tx) => {
+    const match = await prisma.$transaction(async (tx: any) => {
       // Create the match record
       const newMatch = await tx.match.create({
         data: {

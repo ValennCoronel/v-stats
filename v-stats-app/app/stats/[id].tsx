@@ -26,6 +26,7 @@ export default function StatsScreen() {
   const [stats, setStats] = useState<ClubStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [showAllPlayers, setShowAllPlayers] = useState(false);
 
   useEffect(() => {
     loadStats();
@@ -60,6 +61,8 @@ export default function StatsScreen() {
 
   const sortedByPoints = [...players].sort((a, b) => b.puntos - a.puntos);
   const topScorer = sortedByPoints[0];
+  const sortedByParticipation = [...players].sort((a, b) => b.matchesPlayed - a.matchesPlayed || b.puntos - a.puntos);
+  const displayedPlayers = showAllPlayers ? sortedByParticipation : sortedByParticipation.slice(0, 5);
   const topBlocker = [...players].sort((a, b) => b.bloqueos - a.bloqueos)[0];
   const topDefense = [...players].sort((a, b) => b.recepciones - a.recepciones)[0];
   const setsRate = Math.round((setsWon / Math.max(setsWon + setsLost, 1)) * 100);
@@ -107,7 +110,7 @@ export default function StatsScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles`px-4 pt-5 pb-24 gap-5`}>
+      <ScrollView contentContainerStyle={styles`px-4 pt-5 pb-8 gap-5`}>
         {teamBreakdown.length > 0 && (
           <View>
             <SectionTitle icon={<Building2 size={16} color="#64748B" />} label="DRILL DOWN POR EQUIPO" />
@@ -180,14 +183,19 @@ export default function StatsScreen() {
           </View>
         )}
 
-        {sortedByPoints.length > 0 && (
+        {sortedByParticipation.length > 0 && (
           <View>
-            <SectionTitle icon={<BarChart3 size={16} color="#64748B" />} label="RENDIMIENTO INDIVIDUAL" />
+            <SectionTitle icon={<BarChart3 size={16} color="#64748B" />} label="JUGADORES (PARTICIPACIÓN)" />
             <View style={styles`gap-2`}>
-              {sortedByPoints.map((player, idx) => {
+              {displayedPlayers.map((player, idx) => {
                 const initials = player.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || '??';
                 return (
-                  <View key={player.id} style={[styles`bg-white rounded-xl overflow-hidden`, { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)' }]}>
+                  <TouchableOpacity
+                    key={player.id}
+                    activeOpacity={0.8}
+                    onPress={() => router.push(`/player-stats/${player.id}${selectedTeamId ? `?teamId=${selectedTeamId}` : ''}`)}
+                    style={[styles`bg-white rounded-xl overflow-hidden`, { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)' }]}
+                  >
                     <View style={styles`flex-row items-center gap-3 px-4 py-3`}>
                       <MedalIcon rank={idx + 1} />
                       {idx >= 3 && (
@@ -202,7 +210,7 @@ export default function StatsScreen() {
                         <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }} numberOfLines={1}>
                           #{player.number} {player.name}
                         </Text>
-                        <Text style={{ fontSize: 11, color: '#94A3B8' }}>{getPositionLabel(player.position)}</Text>
+                        <Text style={{ fontSize: 11, color: '#94A3B8' }}>{player.matchesPlayed} {player.matchesPlayed === 1 ? 'partido' : 'partidos'} · {getPositionLabel(player.position)}</Text>
                       </View>
                       <View style={styles`flex-row gap-4 flex-shrink-0`}>
                         <StatKpi label="PTS" value={player.puntos} color="#1E6FD9" />
@@ -220,9 +228,21 @@ export default function StatsScreen() {
                         }}
                       />
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 );
               })}
+              
+              {sortedByParticipation.length > 5 && (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => setShowAllPlayers(!showAllPlayers)}
+                  style={{ marginTop: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: '#F1F5F9', alignItems: 'center' }}
+                >
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 14, fontWeight: '600', color: '#1E6FD9' }}>
+                    {showAllPlayers ? 'VER MENOS' : `VER ${sortedByParticipation.length - 5} MÁS`}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         )}
@@ -247,20 +267,7 @@ export default function StatsScreen() {
         )}
       </ScrollView>
 
-      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#E2E8F0', flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, paddingBottom: 24 }}>
-        <TouchableOpacity style={styles`items-center`} onPress={() => router.replace('/home')}>
-          <Home size={24} color="#64748B" />
-          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#64748B', marginTop: 4 }}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles`items-center`}>
-          <BarChart3 size={24} color={activeProfile.color} />
-          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: activeProfile.color, marginTop: 4 }}>Stats</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles`items-center`} onPress={() => router.push('/club')}>
-          <Building2 size={24} color="#64748B" />
-          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, color: '#64748B', marginTop: 4 }}>Club</Text>
-        </TouchableOpacity>
-      </View>
+
     </View>
   );
 }

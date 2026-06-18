@@ -1,20 +1,29 @@
 import { useThemeContext } from '../context/ThemeContext';
-import { themeColors } from '../theme/colors';
 import { baseStyles, RNStyle } from '../theme/baseStyles';
 
 export function useStyles() {
-  const { theme, toggleTheme } = useThemeContext();
-  const colors = themeColors[theme];
+  const { theme, themeMode, setThemeMode, colors, fonts } = useThemeContext();
+
+  const toggleTheme = () => {
+    setThemeMode(themeMode === 'dark' ? 'light' : 'dark');
+  };
 
   // Definimos clases dinámicas que mapean directamente a la paleta del tema actual
   const dynamicStyles: Record<string, RNStyle> = {
     'bg-main': { backgroundColor: colors.bgMain },
     'bg-surface': { backgroundColor: colors.bgSurface },
+    'bg-card': { backgroundColor: colors.bgCard },
     'bg-primary': { backgroundColor: colors.primary },
+    'bg-primary-light': { backgroundColor: colors.primaryLight },
     'border-theme': { borderColor: colors.border },
+    'border-light': { borderColor: colors.borderLight },
     'text-main': { color: colors.textMain },
+    'text-secondary': { color: colors.textSecondary },
     'text-muted': { color: colors.textMuted },
     'text-white': { color: '#ffffff' },
+    'text-primary': { color: colors.primary },
+    
+    // Alias y semántica
     'bg-brand': { backgroundColor: colors.brand },
     'text-brand': { color: colors.brand },
     'border-brand': { borderColor: colors.brand },
@@ -44,5 +53,5 @@ export function useStyles() {
       .filter(Boolean) as RNStyle[];
   };
 
-  return { styles, theme, toggleTheme, colors };
+  return { styles, theme, themeMode, setThemeMode, toggleTheme, colors, fonts };
 }

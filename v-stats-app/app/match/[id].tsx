@@ -7,10 +7,22 @@ import { StatusBar } from "expo-status-bar";
 import { useProfile } from "../../src/context/ProfileContext";
 import { matchesService } from "../../src/services/matches.service";
 import { canRecordStatForPlayer, getEffectiveActivePlayerIds, substitutePlayingPlayer } from "../../src/features/matches/live-match";
+import { storage } from "../../src/services/storage.service";
 
 type Player = { id: string; number: string; name: string; position: string; isLibero?: boolean; };
 type ActionRecord = { id: string; playerId: string; action: string; result: string; homeScoreBefore: number; awayScoreBefore: number; timestamp: number; set: number; activePlayerIds: string[]; };
 type PlayerSetStats = { id: string; number: string; name: string; position: string; puntos: number; ataquesPts: number; saquesPts: number; bloqueosPts: number; recepciones: number; errores: number; };
+
+const POSITION_MAP: Record<string, string> = {
+  'SETTER': 'Armador',
+  'OUTSIDE_HITTER': 'Punta',
+  'OPPOSITE_HITTER': 'Opuesto',
+  'MIDDLE_BLOCKER': 'Central',
+  'LIBERO': 'Líbero',
+  'DEFENSIVE_SPECIALIST': 'Especialista',
+};
+
+const getPositionLabel = (pos: string) => POSITION_MAP[pos] || pos;
 
 const EMPTY_SLOTS = 7; // 6 starters + 1 libero
 
@@ -107,14 +119,25 @@ function computeSetStats(actions: ActionRecord[], setNum: number, allPlayers: Pl
 
 export default function LiveMatchScreen() {
   const router = useRouter();
-  const { id, teamId, rival, fecha, torneo, players } = useLocalSearchParams<{ id: string, teamId: string, rival: string, fecha: string, torneo: string, players: string }>();
+  const { id, resume, teamId: paramTeamId, rival: paramRival, fecha: paramFecha, torneo: paramTorneo, players: paramPlayers } = useLocalSearchParams<{ id: string, resume?: string, teamId: string, rival: string, fecha: string, torneo: string, players: string }>();
   const { styles } = useStyles();
 
   const { activeProfile } = useProfile();
 
-  const team = activeProfile.teams.find(t => t.id === teamId);
+  const [matchMetadata, setMatchMetadata] = useState({
+    teamId: paramTeamId || "",
+    rival: paramRival || "",
+    fecha: paramFecha || "",
+    torneo: paramTorneo || "",
+    players: paramPlayers || "[]",
+  });
+
+  const [isStateLoaded, setIsStateLoaded] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+
+  const team = activeProfile.teams.find(t => t.id === matchMetadata.teamId);
   const fullRoster = activeProfile.players || [];
-  const playerIds: string[] = players ? JSON.parse(players) : [];
+  const playerIds: string[] = matchMetadata.players ? JSON.parse(matchMetadata.players) : [];
   const convocados = fullRoster.filter(p => playerIds.includes(p.id));
 
   const [courtPlayers, setCourtPlayers] = useState<Player[]>([]);
@@ -160,6 +183,74 @@ export default function LiveMatchScreen() {
       }
     }
   }, [homeScore, awayScore]);
+
+  // ── Load Resumed Match State ──
+  useEffect(() => {
+    async function loadResumedMatch() {
+      if (resume === "true") {
+        const saved = await storage.getItem('vstats-active-match');
+        if (saved) {
+          try {
+            const data = JSON.parse(saved);
+            if (data.metadata) setMatchMetadata(data.metadata);
+            if (data.courtPlayers) setCourtPlayers(data.courtPlayers);
+            if (data.liberoPlayer) setLiberoPlayer(data.liberoPlayer);
+            if (data.bench) setBench(data.bench);
+            if (data.assignedSlots) setAssignedSlots(data.assignedSlots);
+            if (data.homeScore !== undefined) setHomeScore(data.homeScore);
+            if (data.awayScore !== undefined) setAwayScore(data.awayScore);
+            if (data.currentSet !== undefined) setCurrentSet(data.currentSet);
+            if (data.setsWon) setSetsWon(data.setsWon);
+            if (data.setScoresHistory) setSetScoresHistory(data.setScoresHistory);
+            if (data.actionHistory) setActionHistory(data.actionHistory);
+            if (data.currentSetStats) setCurrentSetStats(data.currentSetStats);
+          } catch (e) {
+            console.error("Error parsing saved match", e);
+          }
+        }
+      } else {
+        // If starting a brand new match, clear any old saved state
+        await storage.removeItem('vstats-active-match');
+      }
+      setIsStateLoaded(true);
+    }
+    loadResumedMatch();
+  }, [resume]);
+
+  // ── Save Match State Automatically ──
+  useEffect(() => {
+    if (!isStateLoaded) return;
+    
+    const state = {
+      metadata: matchMetadata,
+      courtPlayers,
+      liberoPlayer,
+      bench,
+      assignedSlots,
+      homeScore,
+      awayScore,
+      currentSet,
+      setsWon,
+      setScoresHistory,
+      actionHistory,
+      currentSetStats,
+    };
+    storage.setItem('vstats-active-match', JSON.stringify(state));
+  }, [
+    isStateLoaded,
+    matchMetadata,
+    courtPlayers,
+    liberoPlayer,
+    bench,
+    assignedSlots,
+    homeScore,
+    awayScore,
+    currentSet,
+    setsWon,
+    setScoresHistory,
+    actionHistory,
+    currentSetStats,
+  ]);
 
   const applyScore = (newHome: number, newAway: number, record: ActionRecord) => {
     setActionHistory((h) => [...h, record]);
@@ -354,10 +445,10 @@ export default function LiveMatchScreen() {
       }
 
       const res = await matchesService.createFinishedMatch({
-        teamId: teamId!,
-        opponent: rival || 'Rival',
-        tournament: torneo || undefined,
-        date: fecha || new Date().toISOString(),
+        teamId: matchMetadata.teamId,
+        opponent: matchMetadata.rival || 'Rival',
+        tournament: matchMetadata.torneo || undefined,
+        date: matchMetadata.fecha || new Date().toISOString(),
         result: isWin ? 'WIN' : 'LOSS',
         finalScore: `${setsWon.home}-${setsWon.away}`,
         setScores: setScoresHistory,
@@ -366,6 +457,7 @@ export default function LiveMatchScreen() {
       });
 
       if (res.data?.match) {
+        await storage.removeItem('vstats-active-match');
         router.replace(`/match-summary/${res.data.match.id}`);
       } else {
         alert("Error guardando el partido: " + res.error);
@@ -377,8 +469,26 @@ export default function LiveMatchScreen() {
     }
   };
 
+  const handleBackPress = () => {
+    if (homeScore === 0 && awayScore === 0 && courtPlayers.length === 0 && !assignedSlots.some(p => p !== null)) {
+      router.back();
+    } else {
+      setShowCancelModal(true);
+    }
+  };
+
   const isGameReady = assignedSlots.slice(0, 6).every(p => p !== null);
+  const isMatchOver = setsWon.home >= 3 || setsWon.away >= 3;
   const viewSetStats = selectedViewSet !== null ? computeSetStats(actionHistory, selectedViewSet, allPlayersList) : [];
+
+  if (!isStateLoaded) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0D1F33', justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#1E6FD9" />
+        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, color: '#fff', marginTop: 16 }}>Cargando partido...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles`flex-1 bg-screen`}>
@@ -387,7 +497,7 @@ export default function LiveMatchScreen() {
       {/* TOP DARK ZONE */}
       <View style={[styles`bg-header flex-shrink-0`, { paddingTop: 24 }]}>
         <View style={styles`flex-row items-center gap-2 px-4 pt-3 pb-2`}>
-          <TouchableOpacity onPress={() => router.back()} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' }}>
+          <TouchableOpacity onPress={handleBackPress} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' }}>
             <ArrowLeft size={16} color="#fff" />
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', flex: 1, gap: 6 }}>
@@ -431,15 +541,15 @@ export default function LiveMatchScreen() {
 
         <View style={styles`flex-row items-center justify-between px-5 pb-1`}>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1, color: 'rgba(255,255,255,0.6)' }}>EQUIPO LOCAL</Text>
-            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 54, fontWeight: '700', lineHeight: 60, color: '#3D8EF5' }}>{homeScore}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1, color: 'rgba(255,255,255,0.6)' }}>{"EQUIPO LOCAL"}</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 54, fontWeight: '700', lineHeight: 60, color: '#fff' }}>{homeScore}</Text>
           </View>
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 4 }}>
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 13, letterSpacing: 2, color: 'rgba(255,255,255,0.4)' }}>VS</Text>
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>{setsWon.home} – {setsWon.away}</Text>
           </View>
           <View style={{ flex: 1, alignItems: 'flex-end' }}>
-            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1, color: 'rgba(255,255,255,0.6)' }}>VISITANTE</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1, color: 'rgba(255,255,255,0.6)' }}>{"VISITANTE"}</Text>
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 54, fontWeight: '700', lineHeight: 60, color: '#fff' }}>{awayScore}</Text>
           </View>
         </View>
@@ -474,7 +584,7 @@ export default function LiveMatchScreen() {
                         >
                           <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#1E6FD9', lineHeight: 28 }}>{player.number}</Text>
                           <Text style={{ fontSize: 10, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{player.name}</Text>
-                          <Text style={{ fontSize: 9, color: '#64748B' }}>{player.position}</Text>
+                          <Text style={{ fontSize: 9, color: '#64748B' }}>{getPositionLabel(player.position)}</Text>
                         </TouchableOpacity>
                       ) : (
                         <TouchableOpacity
@@ -497,7 +607,7 @@ export default function LiveMatchScreen() {
                         </View>
                         <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#92400E', lineHeight: 26 }}>{assignedSlots[6]!.number}</Text>
                         <Text style={{ fontSize: 9, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{assignedSlots[6]!.name}</Text>
-                        <Text style={{ fontSize: 8, color: '#92400E' }}>{assignedSlots[6]!.position}</Text>
+                        <Text style={{ fontSize: 8, color: '#92400E' }}>{getPositionLabel(assignedSlots[6]!.position)}</Text>
                       </TouchableOpacity>
                     </View>
                   ) : (
@@ -517,7 +627,7 @@ export default function LiveMatchScreen() {
                       <TouchableOpacity key={player.id} onPress={() => setSelectedPlayer(player.id)} style={[styles`w-1/3 bg-white rounded-lg p-2`, { borderWidth: 2, borderColor: selectedPlayer === player.id ? '#1E6FD9' : 'transparent', backgroundColor: selectedPlayer === player.id ? 'rgba(30,111,217,0.05)' : '#fff' }]}>
                         <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 24, fontWeight: '700', color: '#1E6FD9', lineHeight: 28 }}>{player.number}</Text>
                         <Text style={{ fontSize: 10, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{player.name}</Text>
-                        <Text style={{ fontSize: 9, color: '#64748B' }}>{player.position}</Text>
+                        <Text style={{ fontSize: 9, color: '#64748B' }}>{getPositionLabel(player.position)}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -529,7 +639,7 @@ export default function LiveMatchScreen() {
                         </View>
                         <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#92400E', lineHeight: 26 }}>{liberoPlayer.number}</Text>
                         <Text style={{ fontSize: 9, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{liberoPlayer.name}</Text>
-                        <Text style={{ fontSize: 8, color: '#92400E' }}>{liberoPlayer.position}</Text>
+                        <Text style={{ fontSize: 8, color: '#92400E' }}>{getPositionLabel(liberoPlayer.position)}</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -723,10 +833,18 @@ export default function LiveMatchScreen() {
       {/* Bottom Bar */}
       {selectedViewSet !== null ? (
         <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 32 }}>
-          <TouchableOpacity onPress={() => setSelectedViewSet(null)} style={{ backgroundColor: '#1E6FD9', paddingVertical: 16, borderRadius: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 10 }}>
-            <Text style={{ fontSize: 20 }}>▶</Text>
+          <TouchableOpacity 
+            onPress={() => {
+              if (isMatchOver) {
+                setMatchOver(true);
+              } else {
+                setSelectedViewSet(null);
+              }
+            }} 
+            style={{ backgroundColor: '#1E6FD9', paddingVertical: 16, borderRadius: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 10 }}
+          >
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: '#fff', letterSpacing: 1 }}>
-              VOLVER AL JUEGO EN VIVO (SET {currentSet})
+              {isMatchOver ? "FINALIZAR PARTIDO" : `IR AL JUEGO EN VIVO (SET ${currentSet})`}
             </Text>
           </TouchableOpacity>
         </View>
@@ -779,7 +897,7 @@ export default function LiveMatchScreen() {
                     </View>
                     <View>
                       <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>{player.name}</Text>
-                      <Text style={{ fontSize: 12, color: '#64748B' }}>{player.position}</Text>
+                      <Text style={{ fontSize: 12, color: '#64748B' }}>{getPositionLabel(player.position)}</Text>
                     </View>
                   </TouchableOpacity>
                 ))
@@ -865,11 +983,18 @@ export default function LiveMatchScreen() {
             )}
             <Text style={{ fontSize: 14, color: '#64748B', marginBottom: 24 }}>Set {currentSet} finalizado</Text>
             <View style={styles`flex-row gap-3`}>
-              <TouchableOpacity onPress={() => { setShowEndSet(false); setPendingSetEnd(null); }} style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>CANCELAR</Text>
+              <TouchableOpacity 
+                onPress={() => {
+                  const finishedSet = currentSet;
+                  confirmEndSet();
+                  setSelectedViewSet(finishedSet);
+                }} 
+                style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>VER STATS</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={confirmEndSet} style={{ flex: 1, backgroundColor: '#1E6FD9', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>{setsWon.home >= 3 || setsWon.away >= 3 ? "FINALIZAR PARTIDO" : "INICIAR SIGUIENTE"}</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff', justifyContent: 'center', alignItems: 'center' }}>{setsWon.home >= 3 || setsWon.away >= 3 ? "FINALIZAR PARTIDO" : "INICIAR SIGUIENTE"}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -901,6 +1026,64 @@ export default function LiveMatchScreen() {
                 {isSubmitting ? 'GUARDANDO...' : 'FINALIZAR Y GUARDAR'}
               </Text>
             </TouchableOpacity>
+
+            <TouchableOpacity 
+              onPress={() => setMatchOver(false)} 
+              style={{ marginTop: 16, paddingVertical: 10, width: '100%', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8 }}
+            >
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 14, color: '#64748B', fontWeight: '600' }}>VER ESTADÍSTICAS</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Cancel Match Modal ── */}
+      <Modal visible={showCancelModal} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 24, padding: 24, alignItems: 'center' }}>
+            <Text style={{ fontSize: 48, marginBottom: 12 }}>⚠️</Text>
+            <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#0D1F33', marginBottom: 8, textAlign: 'center' }}>
+              Partido en Curso
+            </Text>
+            <Text style={{ fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 24 }}>
+              ¿Querés guardar el progreso para seguir más tarde o preferís cancelar y borrar este partido?
+            </Text>
+            
+            <View style={{ width: '100%', gap: 10 }}>
+              <TouchableOpacity 
+                onPress={() => {
+                  setShowCancelModal(false);
+                  router.back();
+                }} 
+                style={{ backgroundColor: '#1E6FD9', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff' }}>
+                  SALIR Y SEGUIR MÁS TARDE
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                onPress={async () => {
+                  setShowCancelModal(false);
+                  await storage.removeItem('vstats-active-match');
+                  router.back();
+                }} 
+                style={{ borderWidth: 1, borderColor: '#EF4444', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#EF4444' }}>
+                  ELIMINAR / CANCELAR PARTIDO
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                onPress={() => setShowCancelModal(false)} 
+                style={{ borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>
+                  VOLVER AL JUEGO
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
