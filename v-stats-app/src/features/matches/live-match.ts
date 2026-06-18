@@ -13,6 +13,7 @@ export function getEffectiveActivePlayerIds<T extends ActivePlayerLike>(
   if (liveIds.length > 0) return liveIds;
 
   return assignedSlots
+    .slice(0, 6)
     .filter((player): player is T => player !== null)
     .map((player) => player.id);
 }
@@ -27,11 +28,11 @@ export function canRecordStatForPlayer<T extends ActivePlayerLike>(
 }
 
 export function substitutePlayingPlayer<T extends ActivePlayerLike>(
-  courtPlayers: T[],
-  libero: T | null,
-  bench: T[],
+  courtPlayers: (T & { isLibero?: boolean })[],
+  libero: (T & { isLibero?: boolean }) | null,
+  bench: (T & { isLibero?: boolean })[],
   playerOutId: string,
-  benchPlayer: T,
+  benchPlayer: T & { isLibero?: boolean },
 ) {
   const courtIndex = courtPlayers.findIndex((player) => player.id === playerOutId);
   const liberoOut = libero?.id === playerOutId ? libero : null;
@@ -49,8 +50,14 @@ export function substitutePlayingPlayer<T extends ActivePlayerLike>(
   let nextLibero = libero;
   const playerLeavingCourt = courtIndex >= 0 ? courtPlayers[courtIndex] : liberoOut!;
 
-  if (courtIndex >= 0) {
+  if (courtIndex >= 0 && !libero && benchPlayer.isLibero) {
+    nextCourtPlayers.splice(courtIndex, 1);
+    nextLibero = benchPlayer;
+  } else if (courtIndex >= 0) {
     nextCourtPlayers[courtIndex] = benchPlayer;
+  } else if (liberoOut && !benchPlayer.isLibero) {
+    nextLibero = null;
+    nextCourtPlayers.push(benchPlayer);
   } else {
     nextLibero = benchPlayer;
   }

@@ -274,19 +274,16 @@ export default function LiveMatchScreen() {
     if (courtPlayers.length > 0 || !assignedSlots.some(p => p !== null)) return;
 
     const starters = assignedSlots.slice(0, 6).filter((p): p is Player => p !== null);
-    const libero = assignedSlots[6];
     setCourtPlayers(starters);
-    if (libero) {
-      setLiberoPlayer(libero);
-      setCurrentSetStats(initStats(starters, libero));
-    } else if (starters.length > 0) {
+    setLiberoPlayer(null);
+    if (starters.length > 0) {
       setCurrentSetStats(initStats(starters, null));
     }
 
-    const assignedIds = new Set(assignedSlots.filter((p): p is Player => p !== null).map(p => p.id));
+    const starterIds = new Set(starters.map(p => p.id));
     const benchPlayers = convocados
-      .filter(rp => !assignedIds.has(rp.id))
-      .map(rp => rosterToPlayer(rp as any));
+      .filter(rp => !starterIds.has(rp.id))
+      .map(rp => rosterToPlayer(rp as any, assignedSlots[6]?.id === rp.id));
     setBench(benchPlayers);
   };
 
@@ -480,6 +477,7 @@ export default function LiveMatchScreen() {
   const isGameReady = assignedSlots.slice(0, 6).every(p => p !== null);
   const isMatchOver = setsWon.home >= 3 || setsWon.away >= 3;
   const viewSetStats = selectedViewSet !== null ? computeSetStats(actionHistory, selectedViewSet, allPlayersList) : [];
+  const substitutionOptions = [...bench].sort((a, b) => Number(Boolean(b.isLibero)) - Number(Boolean(a.isLibero)));
 
   if (!isStateLoaded) {
     return (
@@ -601,13 +599,14 @@ export default function LiveMatchScreen() {
 
                   {assignedSlots[6] ? (
                     <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-                      <TouchableOpacity onPress={() => setSelectedPlayer(assignedSlots[6]!.id)} style={{ width: '31%', backgroundColor: '#FEF9C3', borderRadius: 8, padding: 8, borderWidth: 2, borderColor: selectedPlayer === assignedSlots[6]!.id ? '#1E6FD9' : '#FDE047', alignItems: 'center' }}>
+                      <TouchableOpacity disabled style={{ width: '31%', backgroundColor: '#FEF9C3', borderRadius: 8, padding: 8, borderWidth: 2, borderColor: '#FDE047', alignItems: 'center', opacity: 0.7 }}>
                         <View style={{ backgroundColor: '#FDE047', paddingHorizontal: 8, paddingVertical: 1, borderRadius: 4, marginBottom: 2 }}>
                           <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, fontWeight: '700', color: '#92400E' }}>LÍBERO</Text>
                         </View>
                         <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#92400E', lineHeight: 26 }}>{assignedSlots[6]!.number}</Text>
                         <Text style={{ fontSize: 9, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{assignedSlots[6]!.name}</Text>
                         <Text style={{ fontSize: 8, color: '#92400E' }}>{getPositionLabel(assignedSlots[6]!.position)}</Text>
+                        <Text style={{ fontSize: 8, color: '#92400E', marginTop: 4, textAlign: 'center' }}>Disponible para cambio</Text>
                       </TouchableOpacity>
                     </View>
                   ) : (
@@ -890,15 +889,33 @@ export default function LiveMatchScreen() {
               {bench.length === 0 ? (
                 <Text style={{ textAlign: 'center', paddingVertical: 24, color: '#94A3B8' }}>No hay jugadoras en el banco</Text>
               ) : (
-                bench.map((player) => (
-                  <TouchableOpacity key={player.id} onPress={() => handleSelectIn(player)} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, marginBottom: 8 }}>
-                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(30,111,217,0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: '#1E6FD9' }}>{player.number}</Text>
+                substitutionOptions.map((player) => (
+                  <TouchableOpacity
+                    key={player.id}
+                    onPress={() => handleSelectIn(player)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      padding: 12,
+                      borderWidth: 1,
+                      borderColor: player.isLibero ? '#F59E0B' : '#E2E8F0',
+                      borderRadius: 8,
+                      marginBottom: 8,
+                      backgroundColor: player.isLibero ? '#FFF7ED' : '#fff',
+                    }}
+                  >
+                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: player.isLibero ? '#FDE68A' : 'rgba(30,111,217,0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: player.isLibero ? '#92400E' : '#1E6FD9' }}>{player.number}</Text>
                     </View>
-                    <View>
+                    <View style={{ flex: 1 }}>
                       <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>{player.name}</Text>
                       <Text style={{ fontSize: 12, color: '#64748B' }}>{getPositionLabel(player.position)}</Text>
                     </View>
+                    {player.isLibero && (
+                      <View style={{ backgroundColor: '#F59E0B', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, fontWeight: '700', color: '#fff' }}>LÍBERO</Text>
+                      </View>
+                    )}
                   </TouchableOpacity>
                 ))
               )}

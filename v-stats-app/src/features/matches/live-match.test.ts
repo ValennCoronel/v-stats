@@ -16,7 +16,7 @@ const assigned = [
 ];
 
 describe('live-match playing rules', () => {
-  it('treats assigned starters as active before the first rally is recorded', () => {
+  it('treats only the six assigned starters as active before the first rally is recorded', () => {
     expect(getEffectiveActivePlayerIds([], null, assigned)).toEqual([
       'p1',
       'p2',
@@ -24,10 +24,9 @@ describe('live-match playing rules', () => {
       'p4',
       'p5',
       'p6',
-      'lib',
     ]);
     expect(canRecordStatForPlayer('p3', [], null, assigned)).toBe(true);
-    expect(canRecordStatForPlayer('bench-1', [], null, assigned)).toBe(false);
+    expect(canRecordStatForPlayer('lib', [], null, assigned)).toBe(false);
   });
 
   it('substitutes a court player with a bench player', () => {
@@ -56,9 +55,25 @@ describe('live-match playing rules', () => {
     );
 
     expect(result).toEqual({
-      courtPlayers: [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }],
-      libero: { id: 'bench-1' },
+      courtPlayers: [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }, { id: 'bench-1' }],
+      libero: null,
       bench: [{ id: 'lib' }],
+    });
+  });
+
+  it('brings the libero in only after replacing a court player', () => {
+    const result = substitutePlayingPlayer(
+      [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }, { id: 'p4' }, { id: 'p5' }, { id: 'p6' }],
+      null,
+      [{ id: 'lib', isLibero: true }, { id: 'bench-1' }],
+      'p6',
+      { id: 'lib', isLibero: true },
+    );
+
+    expect(result).toEqual({
+      courtPlayers: [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }, { id: 'p4' }, { id: 'p5' }],
+      libero: { id: 'lib', isLibero: true },
+      bench: [{ id: 'p6' }, { id: 'bench-1' }],
     });
   });
 });
