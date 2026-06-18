@@ -1,22 +1,31 @@
 import React, { createContext, useState, useContext } from 'react';
-import { Theme } from '../theme/colors';
+import { useColorScheme } from 'react-native';
+import { Theme, ThemeMode, themeColors, fonts } from '../theme/colors';
 
 type ThemeContextType = {
-  theme: Theme;
-  toggleTheme: () => void;
+  theme: Theme;           // Resolved theme: 'light' | 'dark'
+  themeMode: ThemeMode;   // User preference: 'light' | 'dark' | 'auto'
+  setThemeMode: (mode: ThemeMode) => void;
+  colors: typeof themeColors.light;
+  fonts: typeof fonts;
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light'); // Por defecto claro
+  const systemScheme = useColorScheme(); // 'light' | 'dark' | null
+  const [themeMode, setThemeMode] = useState<ThemeMode>('light');
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
+  // Resolve the actual theme
+  const theme: Theme =
+    themeMode === 'auto'
+      ? (systemScheme === 'dark' ? 'dark' : 'light')
+      : themeMode;
+
+  const colors = themeColors[theme];
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, themeMode, setThemeMode, colors, fonts }}>
       {children}
     </ThemeContext.Provider>
   );

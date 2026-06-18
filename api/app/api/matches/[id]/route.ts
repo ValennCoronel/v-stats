@@ -48,12 +48,12 @@ export async function GET(
 
     // Compute team aggregate stats
     const teamStats = {
-      ataques: match.playerStats.reduce((sum, s) => sum + s.ataquesPositivos, 0),
-      bloqueos: match.playerStats.reduce((sum, s) => sum + s.bloqueosPositivos, 0),
-      aces: match.playerStats.reduce((sum, s) => sum + s.aces, 0),
-      errores: match.playerStats.reduce((sum, s) =>
+      ataques: match.playerStats.reduce((sum: any, s: any) => sum + s.ataquesPositivos, 0),
+      bloqueos: match.playerStats.reduce((sum: any, s: any) => sum + s.bloqueosPositivos, 0),
+      aces: match.playerStats.reduce((sum: any, s: any) => sum + s.aces, 0),
+      errores: match.playerStats.reduce((sum: any, s: any) =>
         sum + s.bloqueosErrados + s.erroresAtaque + s.erroresRecepcion + s.erroresSaque + s.erroresTacticos, 0),
-      puntosTotales: match.playerStats.reduce((sum, s) => sum + s.puntos, 0),
+      puntosTotales: match.playerStats.reduce((sum: any, s: any) => sum + s.puntos, 0),
     }
 
     // Top performers

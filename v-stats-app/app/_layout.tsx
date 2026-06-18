@@ -11,10 +11,17 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
+    // Legacy — Gotham Rounded (kept during migration)
     'Gotham Rounded': require('../assets/fonts/gothamrnd_book.otf'),
     'Gotham Rounded Medium': require('../assets/fonts/gothamrnd_medium.otf'),
     'Gotham Rounded Bold': require('../assets/fonts/gothamrnd_bold.otf'),
     'Gotham Rounded Light': require('../assets/fonts/gothamrnd_light.otf'),
+    // New design system
+    'BebasNeue': require('../assets/fonts/BebasNeue-Regular.ttf'),
+    'Inter': require('../assets/fonts/Inter-Regular.ttf'),
+    'Inter-Medium': require('../assets/fonts/Inter-Medium.ttf'),
+    'Inter-SemiBold': require('../assets/fonts/Inter-SemiBold.ttf'),
+    'Inter-Bold': require('../assets/fonts/Inter-Bold.ttf'),
   });
 
   useEffect(() => {
@@ -31,9 +38,12 @@ export default function RootLayout() {
     <ThemeProvider>
       <AuthProvider>
         <ProfileProvider>
-          <Stack screenOptions={{ headerShown: false }} />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="manage-settings" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+          </Stack>
         </ProfileProvider>
       </AuthProvider>
     </ThemeProvider>
   );
-}
+}
