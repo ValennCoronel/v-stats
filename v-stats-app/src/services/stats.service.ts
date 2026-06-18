@@ -51,9 +51,73 @@ export type ClubStats = {
   recentMatches: any[];
 };
 
+export type PlayerStats = {
+  player: {
+    id: string;
+    name: string;
+    dni: string;
+    number: number;
+    position: string;
+    avatarUrl: string | null;
+    isActive: boolean;
+    teams: { id: string; name: string }[];
+  };
+  selectedTeam: { id: string; name: string } | null;
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  winRate: number;
+  setsWon: number;
+  setsLost: number;
+  totals: {
+    puntos: number;
+    ataques: number;
+    bloqueos: number;
+    aces: number;
+    defensas: number;
+    ventajas: number;
+    erroresAtaque: number;
+    erroresRecepcion: number;
+    erroresSaque: number;
+    bloqueosErrados: number;
+    erroresTacticos: number;
+  };
+  positiveActions: number;
+  negativeActions: number;
+  totalActions: number;
+  efficiency: number;
+  pointsPerMatch: number;
+  actionsPerMatch: number;
+  errorsPerMatch: number;
+  matchTimeline: {
+    matchId: string;
+    teamId: string;
+    teamName: string;
+    opponent: string;
+    tournament: string | null;
+    date: string;
+    result: string | null;
+    finalScore: string | null;
+    puntos: number;
+    ataques: number;
+    bloqueos: number;
+    aces: number;
+    defensas: number;
+    ventajas: number;
+    errores: number;
+    eficiencia: number;
+    accionesTotales: number;
+  }[];
+};
+
 export const statsService = {
   async getClubStats(clubId: string, teamId?: string) {
     const teamParam = teamId ? `&teamId=${teamId}` : '';
     return api.get<ClubStats>(`/api/stats?clubId=${clubId}${teamParam}`);
+  },
+
+  async getPlayerStats(clubId: string, playerId: string, teamId?: string) {
+    const teamParam = teamId ? `&teamId=${teamId}` : '';
+    return api.get<PlayerStats>(`/api/stats/player?clubId=${clubId}&playerId=${playerId}${teamParam}`);
   },
 };
