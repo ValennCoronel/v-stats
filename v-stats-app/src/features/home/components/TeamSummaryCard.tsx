@@ -56,7 +56,7 @@ export function TeamSummaryCard({
             </View>
           </TouchableOpacity>
           <Text style={{ fontFamily: fonts.body, fontSize: 12, color: '#475569', marginBottom: 20 }}>
-            Vóley Femenino · Primera
+            {""}
           </Text>
 
           <View style={styles`flex-row justify-between mb-4`}>
