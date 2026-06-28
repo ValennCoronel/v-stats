@@ -1,17 +1,41 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || (
-  __DEV__
-    ? Platform.OS === 'web'
-      ? 'http://localhost:3000'
-      : 'http://192.168.0.100:3000' // ← Change this to your local network IP for testing on phone
-    : 'https://your-app.vercel.app'
-);
+const DEV_BASE_URLS = {
+  web: 'http://localhost:3000',
+  android: 'http://10.0.2.2:3000',
+  ios: 'http://localhost:3000',
+  default: 'http://192.168.1.6:3000',
+} as const;
 
+function getBaseUrl() {
+  if (Platform.OS === 'web') {
+    return process.env.EXPO_PUBLIC_API_URL_WEB
+      || process.env.EXPO_PUBLIC_API_URL
+      || DEV_BASE_URLS.web;
+  }
+
+  if (__DEV__) {
+    if (Platform.OS === 'android') {
+      return process.env.EXPO_PUBLIC_API_URL_ANDROID
+        || process.env.EXPO_PUBLIC_API_URL
+        || DEV_BASE_URLS.android;
+    }
+
+    if (Platform.OS === 'ios') {
+      return process.env.EXPO_PUBLIC_API_URL_IOS
+        || process.env.EXPO_PUBLIC_API_URL
+        || DEV_BASE_URLS.ios;
+    }
+
+    return process.env.EXPO_PUBLIC_API_URL || DEV_BASE_URLS.default;
+  }
+
+  return process.env.EXPO_PUBLIC_API_URL || 'https://your-app.vercel.app';
+}
+
+const BASE_URL = getBaseUrl();
 const TOKEN_KEY = 'vstats-auth-token';
-
-// ── Token Management ─────────────────────────────────────────────────────
 
 export async function getToken(): Promise<string | null> {
   try {
@@ -48,8 +72,6 @@ export async function removeToken(): Promise<void> {
   }
 }
 
-// ── API Client ───────────────────────────────────────────────────────────
-
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 interface ApiResponse<T> {
@@ -71,7 +93,7 @@ async function request<T>(
   };
 
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers.Authorization = `Bearer ${token}`;
   }
 
   try {
@@ -84,7 +106,6 @@ async function request<T>(
     const json = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      // If 401, token might be expired
       if (response.status === 401) {
         await removeToken();
       }
@@ -99,20 +120,16 @@ async function request<T>(
   } catch (err: any) {
     return {
       data: null,
-      error: err.message || 'Error de conexión',
+      error: err.message || 'Error de conexion',
       status: 0,
     };
   }
 }
-
-// ── Convenience Methods ──────────────────────────────────────────────────
 
 export const api = {
   get: <T>(path: string) => request<T>('GET', path),
   post: <T>(path: string, body?: any) => request<T>('POST', path, body),
   put: <T>(path: string, body?: any) => request<T>('PUT', path, body),
   del: <T>(path: string) => request<T>('DELETE', path),
-  
-  // Base URL getter for debugging
   getBaseUrl: () => BASE_URL,
 };

@@ -25,6 +25,8 @@ export default function Home() {
       "POST /api/matches",
       "GET  /api/matches/:id",
       "GET  /api/stats?clubId=",
+      "POST /api/share-links",
+      "GET  /share/:token",
       "GET  /api/opponent-teams",
       "POST /api/opponent-teams",
       "GET  /api/tournaments",
