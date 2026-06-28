@@ -1,20 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, Share as NativeShare } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { ChevronDown, Play, Share } from 'lucide-react-native';
+import { ChevronDown, Play } from 'lucide-react-native';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../../src/context/ProfileContext';
 import { useAuth } from '../../src/context/AuthContext';
 import { matchesService, Match } from '../../src/services/matches.service';
-import { shareLinksService } from '../../src/services/share-links.service';
 import { statsService, ClubStats } from '../../src/services/stats.service';
 import { storage } from '../../src/services/storage.service';
 import { Avatar } from '../../src/components/ui/Avatar';
 import { ActiveMatchBanner } from '../../src/features/home/components/ActiveMatchBanner';
 import { TeamSummaryCard } from '../../src/features/home/components/TeamSummaryCard';
 import { RecentMatchesList } from '../../src/features/home/components/RecentMatchesList';
-import { ClubSelectorModal, TeamSelectorModal, ShareStatsModal, ActiveMatchModal } from '../../src/features/home/components/HomeModals';
+import { ClubSelectorModal, TeamSelectorModal, ActiveMatchModal } from '../../src/features/home/components/HomeModals';
 
 let hasCheckedActiveMatchOnAppStart = false;
 
@@ -26,10 +25,6 @@ export default function HomeScreen() {
 
   const [activeTeamId, setActiveTeamId] = useState<string | null>(null);
   const [recentMatches, setRecentMatches] = useState<Match[]>([]);
-  const [showSharePlaceholder, setShowSharePlaceholder] = useState(false);
-  const [shareUrl, setShareUrl] = useState<string | null>(null);
-  const [shareError, setShareError] = useState<string | null>(null);
-  const [isCreatingShareLink, setIsCreatingShareLink] = useState(false);
   const [showTeamSelector, setShowTeamSelector] = useState(false);
   const [showClubSelector, setShowClubSelector] = useState(false);
   const [teamStats, setTeamStats] = useState<ClubStats | null>(null);
@@ -49,7 +44,7 @@ export default function HomeScreen() {
           setShowActiveMatchModal(true);
         }
       } catch (e) {
-        console.error("Error parsing saved match", e);
+        console.error('Error parsing saved match', e);
       }
     } else {
       setActiveMatch(null);
@@ -76,7 +71,7 @@ export default function HomeScreen() {
     }
   }, [activeProfile, activeTeamId]);
 
-  const activeTeam = activeProfile?.teams?.find(t => t.id === activeTeamId) || activeProfile?.teams?.[0];
+  const activeTeam = activeProfile?.teams?.find((t) => t.id === activeTeamId) || activeProfile?.teams?.[0];
 
   useEffect(() => {
     if (activeTeam) {
@@ -106,70 +101,7 @@ export default function HomeScreen() {
     if (!authLoading && !isAuthenticated) {
       router.replace('/');
     }
-  }, [authLoading, isAuthenticated]);
-
-  const openShareSheet = useCallback(async (url: string) => {
-    const message = activeTeam?.name
-      ? `Mira las estadisticas de ${activeTeam.name} en V-Stats: ${url}`
-      : `Mira estas estadisticas de V-Stats: ${url}`;
-
-    if (Platform.OS === 'web') {
-      const browserNavigator = typeof navigator !== 'undefined' ? navigator : undefined;
-      if (browserNavigator?.share) {
-        await browserNavigator.share({ title: activeTeam?.name || 'Estadisticas V-Stats', text: message, url });
-        return;
-      }
-
-      if (browserNavigator?.clipboard?.writeText) {
-        await browserNavigator.clipboard.writeText(url);
-        Alert.alert('Link copiado', 'Copiamos el link publico para que puedas pegarlo y enviarlo.');
-        return;
-      }
-
-      Alert.alert('Link listo', url);
-      return;
-    }
-
-    await NativeShare.share({
-      title: activeTeam?.name || 'Estadisticas V-Stats',
-      message,
-      url,
-    });
-  }, [activeTeam?.name]);
-
-  const handleShareStats = useCallback(async () => {
-    if (!activeTeam || activeProfile.id === '__empty__') {
-      Alert.alert('Falta un equipo', 'Selecciona un equipo antes de compartir sus estadisticas.');
-      return;
-    }
-
-    setShowSharePlaceholder(true);
-    setShareError(null);
-    setShareUrl(null);
-    setIsCreatingShareLink(true);
-
-    try {
-      const response = await shareLinksService.createTeamShareLink(activeProfile.id, activeTeam.id);
-
-      if (!response.data?.shareLink?.url) {
-        const nextError = response.error || 'No se pudo generar el link. Intenta nuevamente en unos segundos.';
-        setShareError(nextError);
-        Alert.alert('No se pudo crear el link', nextError);
-        return;
-      }
-
-      const nextUrl = response.data.shareLink.url;
-      setShareUrl(nextUrl);
-
-      await openShareSheet(nextUrl);
-    } catch (error) {
-      console.error('Share error', error);
-      setShareError('El link se genero, pero no se pudo abrir el menu para compartir. Puedes copiarlo desde esta ventana.');
-      Alert.alert('Link creado', 'El link se genero correctamente. Puedes copiarlo desde esta ventana.');
-    } finally {
-      setIsCreatingShareLink(false);
-    }
-  }, [activeProfile.id, activeTeam, openShareSheet]);
+  }, [authLoading, isAuthenticated, router]);
 
   if (!isAuthenticated) return null;
 
@@ -185,8 +117,8 @@ export default function HomeScreen() {
   const firstName = coach.name.split(' ')[0];
 
   const activeTeamMatches = activeTeam?.matches || [];
-  const winsCount = activeTeamMatches.filter(m => m.result === 'WIN').length;
-  const lossesCount = activeTeamMatches.filter(m => m.result === 'LOSS').length;
+  const winsCount = activeTeamMatches.filter((m) => m.result === 'WIN').length;
+  const lossesCount = activeTeamMatches.filter((m) => m.result === 'LOSS').length;
   const totalMatchesCount = activeTeamMatches.length;
   const winRatePercent = totalMatchesCount > 0 ? Math.round((winsCount / totalMatchesCount) * 100) : 0;
 
@@ -207,14 +139,15 @@ export default function HomeScreen() {
       <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
 
       <ScrollView contentContainerStyle={styles`px-4 pb-24 gap-6`}>
-        {/* Header */}
         <View style={{ paddingTop: 24, paddingBottom: 24 }}>
           <View style={styles`flex-row items-center justify-between`}>
             <View style={styles`flex-row items-center gap-3`}>
               <Avatar name={coach.name} size={44} onPress={() => router.push('/manage-settings')} />
               <View>
-                <Text style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary }}>¡Bienvenido, <Text style={{ fontFamily: fonts.bodyBold, color: colors.textMain }}>{firstName}</Text>!</Text>
-                <TouchableOpacity 
+                <Text style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary }}>
+                  Bienvenido, <Text style={{ fontFamily: fonts.bodyBold, color: colors.textMain }}>{firstName}</Text>!
+                </Text>
+                <TouchableOpacity
                   style={styles`flex-row items-center gap-1 mt-0.5`}
                   onPress={() => setShowClubSelector(true)}
                   activeOpacity={0.7}
@@ -229,7 +162,7 @@ export default function HomeScreen() {
 
         <ActiveMatchBanner activeMatch={activeMatch} />
 
-        <TeamSummaryCard 
+        <TeamSummaryCard
           activeTeam={activeTeam}
           totalMatchesCount={totalMatchesCount}
           winsCount={winsCount}
@@ -241,13 +174,12 @@ export default function HomeScreen() {
           onSelectTeam={() => setShowTeamSelector(true)}
         />
 
-        {/* Compartir */}
         <TouchableOpacity
           onPress={() => router.push('/(tabs)/partido')}
           activeOpacity={0.8}
           style={[
             styles`w-full flex-row items-center justify-center gap-2`,
-            { marginTop: 16, marginBottom: 32, borderRadius: 12, backgroundColor: '#1C64F2', paddingVertical: 14, elevation: 4, shadowColor: '#1C64F2', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 }
+            { marginTop: 16, marginBottom: 32, borderRadius: 12, backgroundColor: '#1C64F2', paddingVertical: 14, elevation: 4, shadowColor: '#1C64F2', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
           ]}
         >
           <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center' }}>
@@ -259,16 +191,6 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         <RecentMatchesList recentMatches={recentMatches} activeTeam={activeTeam} />
-
-        <TouchableOpacity
-          onPress={handleShareStats}
-          style={{ width: '100%', paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.primary, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 32 }}
-        >
-          <Share size={18} color={colors.primary} />
-          <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.primary, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            COMPARTIR ESTADÍSTICAS
-          </Text>
-        </TouchableOpacity>
       </ScrollView>
 
       <ClubSelectorModal
@@ -276,7 +198,11 @@ export default function HomeScreen() {
         onClose={() => setShowClubSelector(false)}
         profiles={profiles}
         activeProfileId={activeProfile?.id}
-        onSelect={(id: string) => { switchProfile(id); setActiveTeamId(null); setShowClubSelector(false); }}
+        onSelect={(id: string) => {
+          switchProfile(id);
+          setActiveTeamId(null);
+          setShowClubSelector(false);
+        }}
       />
 
       <TeamSelectorModal
@@ -284,20 +210,10 @@ export default function HomeScreen() {
         onClose={() => setShowTeamSelector(false)}
         teams={activeProfile?.teams}
         activeTeamId={activeTeamId}
-        onSelect={(id: string) => { setActiveTeamId(id); setShowTeamSelector(false); }}
-      />
-
-      <ShareStatsModal
-        visible={showSharePlaceholder}
-        onClose={() => {
-          setShowSharePlaceholder(false);
-          setShareError(null);
+        onSelect={(id: string) => {
+          setActiveTeamId(id);
+          setShowTeamSelector(false);
         }}
-        teamName={activeTeam?.name}
-        shareUrl={shareUrl}
-        isLoading={isCreatingShareLink}
-        errorMessage={shareError}
-        onShareAgain={() => shareUrl ? openShareSheet(shareUrl) : handleShareStats()}
       />
 
       <ActiveMatchModal
@@ -310,19 +226,19 @@ export default function HomeScreen() {
         }}
         onDelete={() => {
           Alert.alert(
-            "Eliminar partido",
-            "¿Estás seguro de que querés eliminar el partido en curso? Se perderá todo el progreso.",
+            'Eliminar partido',
+            'Estas seguro de que queres eliminar el partido en curso? Se perdera todo el progreso.',
             [
-              { text: "Cancelar", style: "cancel" },
-              { 
-                text: "Eliminar", 
-                style: "destructive",
+              { text: 'Cancelar', style: 'cancel' },
+              {
+                text: 'Eliminar',
+                style: 'destructive',
                 onPress: async () => {
                   await storage.removeItem('vstats-active-match');
                   setShowActiveMatchModal(false);
                   setActiveMatch(null);
-                }
-              }
+                },
+              },
             ]
           );
         }}

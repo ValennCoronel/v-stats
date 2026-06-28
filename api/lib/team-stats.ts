@@ -49,6 +49,22 @@ export type TeamDashboardStats = {
     errores: number
     eficiencia: number
     matchesPlayed: number
+    recentMatchesPlayed: number
+    recentWins: number
+    recentLosses: number
+    recentPuntos: number
+    recentBloqueos: number
+    recentRecepciones: number
+    recentErrores: number
+    recentEficiencia: number
+    recentForm: {
+      matchId: string
+      opponent: string
+      date: Date
+      result: string | null
+      puntos: number
+      eficiencia: number
+    }[]
   }[]
   recentMatches: {
     id: string
@@ -178,6 +194,23 @@ export async function getTeamDashboardStats(clubId: string, teamId?: string): Pr
     },
   })
 
+  const playerMatchRows = await prisma.playerMatchStats.findMany({
+    where: {
+      match: { teamId: { in: teamIds }, status: "finished" },
+    },
+    include: {
+      match: {
+        select: {
+          id: true,
+          date: true,
+          result: true,
+          opponent: true,
+          opponentTeam: { select: { name: true } },
+        },
+      },
+    },
+  })
+
   const playerIds = playerStats.map((stat) => stat.playerId)
   const playersInfo = await prisma.player.findMany({
     where: { id: { in: playerIds } },
@@ -185,6 +218,15 @@ export async function getTeamDashboardStats(clubId: string, teamId?: string): Pr
   })
 
   const playerMap = new Map(playersInfo.map((player) => [player.id, player]))
+  const recentRowsByPlayer = new Map<string, typeof playerMatchRows>()
+
+  for (const row of [...playerMatchRows].sort((a, b) => b.match.date.getTime() - a.match.date.getTime())) {
+    const currentRows = recentRowsByPlayer.get(row.playerId) || []
+    if (currentRows.length < 3) {
+      currentRows.push(row)
+      recentRowsByPlayer.set(row.playerId, currentRows)
+    }
+  }
 
   const topScorers = playerStats
     .map((stat) => {
@@ -203,6 +245,48 @@ export async function getTeamDashboardStats(clubId: string, teamId?: string): Pr
         (stat._sum.bloqueosErrados || 0) +
         (stat._sum.erroresTacticos || 0)
       const total = totalPositive + totalNegative
+      const recentRows = recentRowsByPlayer.get(stat.playerId) || []
+      const recentForm = recentRows.map((row) => {
+        const recentPositive =
+          row.puntos +
+          row.ataquesPositivos +
+          row.bloqueosPositivos +
+          row.aces +
+          row.defensasPositivas +
+          row.ventajasTacticas
+        const recentNegative =
+          row.erroresAtaque +
+          row.erroresRecepcion +
+          row.erroresSaque +
+          row.bloqueosErrados +
+          row.erroresTacticos
+
+        return {
+          matchId: row.matchId,
+          opponent: row.match.opponentTeam?.name || row.match.opponent,
+          date: row.match.date,
+          result: row.match.result,
+          puntos: row.puntos,
+          eficiencia: recentPositive + recentNegative > 0 ? Math.round((recentPositive / (recentPositive + recentNegative)) * 100) : 0,
+        }
+      })
+      const recentWins = recentRows.filter((row) => row.match.result === "WIN").length
+      const recentLosses = recentRows.filter((row) => row.match.result === "LOSS").length
+      const recentPuntos = recentRows.reduce((sum, row) => sum + row.puntos, 0)
+      const recentBloqueos = recentRows.reduce((sum, row) => sum + row.bloqueosPositivos, 0)
+      const recentRecepciones = recentRows.reduce((sum, row) => sum + row.defensasPositivas, 0)
+      const recentErrores = recentRows.reduce(
+        (sum, row) =>
+          sum + row.erroresAtaque + row.erroresRecepcion + row.erroresSaque + row.bloqueosErrados + row.erroresTacticos,
+        0,
+      )
+      const recentPositiveActions = recentRows.reduce(
+        (sum, row) =>
+          sum + row.puntos + row.ataquesPositivos + row.bloqueosPositivos + row.aces + row.defensasPositivas + row.ventajasTacticas,
+        0,
+      )
+      const recentEficiencia =
+        recentPositiveActions + recentErrores > 0 ? Math.round((recentPositiveActions / (recentPositiveActions + recentErrores)) * 100) : 0
 
       return {
         id: player?.id || stat.playerId,
@@ -218,6 +302,15 @@ export async function getTeamDashboardStats(clubId: string, teamId?: string): Pr
         errores: totalNegative,
         eficiencia: total > 0 ? Math.round((totalPositive / total) * 100) : 0,
         matchesPlayed: stat._count.matchId,
+        recentMatchesPlayed: recentRows.length,
+        recentWins,
+        recentLosses,
+        recentPuntos,
+        recentBloqueos,
+        recentRecepciones,
+        recentErrores,
+        recentEficiencia,
+        recentForm,
       }
     })
     .filter((player) => player.name)

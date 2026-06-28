@@ -47,6 +47,22 @@ export type ClubStats = {
     errores: number;
     eficiencia: number;
     matchesPlayed: number;
+    recentMatchesPlayed: number;
+    recentWins: number;
+    recentLosses: number;
+    recentPuntos: number;
+    recentBloqueos: number;
+    recentRecepciones: number;
+    recentErrores: number;
+    recentEficiencia: number;
+    recentForm: {
+      matchId: string;
+      opponent: string;
+      date: string;
+      result: string | null;
+      puntos: number;
+      eficiencia: number;
+    }[];
   }[];
   recentMatches: any[];
 };
