@@ -49,7 +49,7 @@ export default function HomeScreen() {
           setShowActiveMatchModal(true);
         }
       } catch (e) {
-        console.error('Error parsing saved match', e);
+        console.error("Error parsing saved match", e);
       }
     } else {
       setActiveMatch(null);
@@ -106,7 +106,7 @@ export default function HomeScreen() {
     if (!authLoading && !isAuthenticated) {
       router.replace('/');
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [authLoading, isAuthenticated]);
 
   const openShareSheet = useCallback(async (url: string) => {
     const message = activeTeam?.name
@@ -207,15 +207,14 @@ export default function HomeScreen() {
       <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
 
       <ScrollView contentContainerStyle={styles`px-4 pb-24 gap-6`}>
+        {/* Header */}
         <View style={{ paddingTop: 24, paddingBottom: 24 }}>
           <View style={styles`flex-row items-center justify-between`}>
             <View style={styles`flex-row items-center gap-3`}>
               <Avatar name={coach.name} size={44} onPress={() => router.push('/manage-settings')} />
               <View>
-                <Text style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary }}>
-                  Bienvenido, <Text style={{ fontFamily: fonts.bodyBold, color: colors.textMain }}>{firstName}</Text>
-                </Text>
-                <TouchableOpacity
+                <Text style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary }}>¡Bienvenido, <Text style={{ fontFamily: fonts.bodyBold, color: colors.textMain }}>{firstName}</Text>!</Text>
+                <TouchableOpacity 
                   style={styles`flex-row items-center gap-1 mt-0.5`}
                   onPress={() => setShowClubSelector(true)}
                   activeOpacity={0.7}
@@ -230,7 +229,7 @@ export default function HomeScreen() {
 
         <ActiveMatchBanner activeMatch={activeMatch} />
 
-        <TeamSummaryCard
+        <TeamSummaryCard 
           activeTeam={activeTeam}
           totalMatchesCount={totalMatchesCount}
           winsCount={winsCount}
@@ -242,6 +241,7 @@ export default function HomeScreen() {
           onSelectTeam={() => setShowTeamSelector(true)}
         />
 
+        {/* Compartir */}
         <TouchableOpacity
           onPress={() => router.push('/(tabs)/partido')}
           activeOpacity={0.8}
@@ -266,7 +266,7 @@ export default function HomeScreen() {
         >
           <Share size={18} color={colors.primary} />
           <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.primary, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            COMPARTIR ESTADISTICAS
+            COMPARTIR ESTADÍSTICAS
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -310,13 +310,13 @@ export default function HomeScreen() {
         }}
         onDelete={() => {
           Alert.alert(
-            'Eliminar partido',
-            'Estas seguro de que queres eliminar el partido en curso? Se perdera todo el progreso.',
+            "Eliminar partido",
+            "¿Estás seguro de que querés eliminar el partido en curso? Se perderá todo el progreso.",
             [
-              { text: 'Cancelar', style: 'cancel' },
-              {
-                text: 'Eliminar',
-                style: 'destructive',
+              { text: "Cancelar", style: "cancel" },
+              { 
+                text: "Eliminar", 
+                style: "destructive",
                 onPress: async () => {
                   await storage.removeItem('vstats-active-match');
                   setShowActiveMatchModal(false);

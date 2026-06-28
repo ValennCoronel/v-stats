@@ -60,20 +60,20 @@ export function ShareStatsModal({ visible, onClose, teamName, shareUrl, isLoadin
         <Share size={32} color={colors.primary} />
       </View>
       <Text style={{ fontFamily: fonts.heading, fontSize: 28, color: colors.textMain, marginBottom: 8 }}>
-        Compartir estadisticas
+        Compartir estadísticas
       </Text>
 
       {isLoading ? (
         <View style={{ alignItems: 'center', marginBottom: 24 }}>
           <ActivityIndicator size="small" color={colors.primary} />
           <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, textAlign: 'center', marginTop: 14 }}>
-            Generando el link publico para {teamName || 'tu equipo'}...
+            Generando el link público para {teamName || 'tu equipo'}...
           </Text>
         </View>
       ) : (
         <>
           <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, textAlign: 'center', marginBottom: 16 }}>
-            Comparte este link con {teamName || 'tu equipo'} para que puedan abrir el dashboard publico desde cualquier navegador.
+            Comparte este link con {teamName || 'tu equipo'} para que puedan abrir el dashboard público desde cualquier navegador.
           </Text>
           {errorMessage ? (
             <View style={{ width: '100%', borderRadius: 16, borderWidth: 1, borderColor: '#FCA5A5', backgroundColor: '#FEF2F2', padding: 14, marginBottom: 12 }}>
@@ -84,7 +84,7 @@ export function ShareStatsModal({ visible, onClose, teamName, shareUrl, isLoadin
           ) : null}
           <View style={{ width: '100%', borderRadius: 16, borderWidth: 1, borderColor: colors.borderLight, backgroundColor: colors.bgMain, padding: 14, marginBottom: 20 }}>
             <Text selectable style={{ fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textMain }}>
-              {shareUrl || 'Todavia no se genero ningun link. Toca el boton para crearlo.'}
+              {shareUrl || 'Todavía no se generó ningún link. Tocá el botón para crearlo.'}
             </Text>
           </View>
           <View style={{ width: '100%', gap: 10 }}>
@@ -104,20 +104,18 @@ export function ActiveMatchModal({ visible, onClose, activeMatch, onResume, onDe
 
   return (
     <Modal visible={visible} onClose={onClose} contentStyle={{ alignItems: 'center' }}>
-      <Text style={{ fontSize: 16, marginBottom: 12, color: colors.primary, fontFamily: fonts.bodyBold }}>
-        PARTIDO ACTIVO
-      </Text>
+      <Text style={{ fontSize: 48, marginBottom: 12 }}>🏐</Text>
       <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain, marginBottom: 8, textAlign: 'center' }}>
         Partido en Curso
       </Text>
       <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, textAlign: 'center', marginBottom: 16 }}>
-        Tenes un partido sin finalizar contra:
+        Tenés un partido sin finalizar contra:
       </Text>
 
       {activeMatch && (
         <View style={{ backgroundColor: colors.bgMain, borderRadius: 16, padding: 16, width: '100%', alignItems: 'center', marginBottom: 24, borderWidth: 1, borderColor: colors.borderLight }}>
           <Text style={{ fontFamily: fonts.heading, fontSize: 20, color: colors.primary }}>
-            {activeMatch.metadata?.rival || 'Rival'}
+            {activeMatch.metadata?.rival || "Rival"}
           </Text>
           {activeMatch.metadata?.torneo ? (
             <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>
