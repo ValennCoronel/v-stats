@@ -18,6 +18,8 @@ export default function ManageTeamsScreen() {
   const [showAddTeam, setShowAddTeam] = useState(false);
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [teamName, setTeamName] = useState('');
+  const [gender, setGender] = useState('Femenino');
+  const [category, setCategory] = useState('Primera');
   const [confirmDialog, setConfirmDialog] = useState<{
     visible: boolean;
     title: string;
@@ -28,6 +30,8 @@ export default function ManageTeamsScreen() {
   const handleEditTeam = (team: any) => {
     setEditingTeamId(team.id);
     setTeamName(team.name);
+    setGender(team.gender || 'Femenino');
+    setCategory(team.category || 'Primera');
     setShowAddTeam(true);
   };
 
@@ -55,15 +59,23 @@ export default function ManageTeamsScreen() {
     if (!teamName.trim()) return;
     try {
       if (editingTeamId) {
-        await teamsService.updateTeam(editingTeamId, { name: teamName.trim() });
+        await teamsService.updateTeam(editingTeamId, {
+          name: teamName.trim(),
+          gender,
+          category: category.trim()
+        });
       } else {
         await teamsService.createTeam({
           clubId: activeProfile.id,
-          name: teamName.trim()
+          name: teamName.trim(),
+          gender,
+          category: category.trim()
         });
       }
       await refreshProfiles();
       setTeamName('');
+      setGender('Femenino');
+      setCategory('Primera');
       setShowAddTeam(false);
       setEditingTeamId(null);
     } catch (e) {
@@ -75,6 +87,8 @@ export default function ManageTeamsScreen() {
   const openAddTeam = () => {
     setEditingTeamId(null);
     setTeamName('');
+    setGender('Femenino');
+    setCategory('Primera');
     setShowAddTeam(true);
   };
 
@@ -149,6 +163,46 @@ export default function ManageTeamsScreen() {
           value={teamName}
           onChangeText={setTeamName}
           autoFocus={!editingTeamId}
+          containerStyle={{ marginBottom: 20 }}
+        />
+
+        <View style={{ marginBottom: 20 }}>
+          <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 12, letterSpacing: 1, color: '#64748B', marginBottom: 8, fontWeight: '600' }}>
+            GÉNERO
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {['Femenino', 'Masculino', 'Mixto'].map((g) => {
+              const isSelected = gender === g;
+              return (
+                <TouchableOpacity
+                  key={g}
+                  onPress={() => setGender(g)}
+                  style={{
+                    flex: 1,
+                    height: 40,
+                    borderRadius: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: isSelected ? colors.primary : '#F1F5F9',
+                    borderWidth: 1,
+                    borderColor: isSelected ? colors.primary : colors.borderLight
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 13, fontWeight: '600', color: isSelected ? '#FFFFFF' : '#475569' }}>
+                    {g}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        <Input 
+          label="CATEGORÍA"
+          placeholder="Ej: Primera, Sub-18, Superior"
+          value={category}
+          onChangeText={setCategory}
           containerStyle={{ marginBottom: 24 }}
         />
 

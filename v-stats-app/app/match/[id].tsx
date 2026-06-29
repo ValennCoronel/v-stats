@@ -978,12 +978,17 @@ export default function LiveMatchScreen() {
                   confirmEndSet();
                   setSelectedViewSet(finishedSet);
                 }} 
-                style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+                style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', height: 52, borderRadius: 8, justifyContent: 'center', alignItems: 'center' }}
               >
-                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>VER STATS</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 14, fontWeight: '600', color: '#0D1F33', textAlign: 'center' }}>VER STATS</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={confirmEndSet} style={{ flex: 1, backgroundColor: '#1E6FD9', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff', justifyContent: 'center', alignItems: 'center' }}>{setsWon.home >= 3 || setsWon.away >= 3 ? "FINALIZAR PARTIDO" : "INICIAR SIGUIENTE"}</Text>
+              <TouchableOpacity 
+                onPress={confirmEndSet} 
+                style={{ flex: 1, backgroundColor: '#1E6FD9', height: 52, borderRadius: 8, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4 }}
+              >
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 14, fontWeight: '600', color: '#fff', textAlign: 'center' }}>
+                  {setsWon.home >= 3 || setsWon.away >= 3 ? "FINALIZAR PARTIDO" : "INICIAR SIGUIENTE"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

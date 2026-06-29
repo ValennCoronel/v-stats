@@ -734,7 +734,14 @@ export default function PartidoScreen() {
                     onPress={closeModalWithAnimation}
                     style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}
                   >
-                    <Text style={{ fontFamily: 'Gotham Rounded Bold', fontSize: 16, fontWeight: '600', textAlign: 'center' }}>CANCELAR</Text>
+                    <Text 
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.7}
+                      style={{ fontFamily: 'Gotham Rounded Bold', fontSize: 14, fontWeight: '600', textAlign: 'center', width: '100%', paddingHorizontal: 4 }}
+                    >
+                      CANCELAR
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     testID="start-match-button"
@@ -745,7 +752,14 @@ export default function PartidoScreen() {
                       paddingVertical: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
                     }}
                   >
-                    <Text style={{ fontFamily: 'Gotham Rounded Bold', fontSize: 16, fontWeight: '600', color: '#fff', textAlign: 'center' }}>COMENZAR PARTIDO</Text>
+                    <Text 
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.7}
+                      style={{ fontFamily: 'Gotham Rounded Bold', fontSize: 14, fontWeight: '600', color: '#fff', textAlign: 'center', width: '100%', paddingHorizontal: 4 }}
+                    >
+                      COMENZAR PARTIDO
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>

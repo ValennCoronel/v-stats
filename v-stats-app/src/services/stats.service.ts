@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { api } from '../api/api';
 
 export type ClubStats = {
@@ -120,4 +121,54 @@ export const statsService = {
     const teamParam = teamId ? `&teamId=${teamId}` : '';
     return api.get<PlayerStats>(`/api/stats/player?clubId=${clubId}&playerId=${playerId}${teamParam}`);
   },
+
+  async exportClubStats(clubId: string, teamId?: string, clubName: string = 'Club', teamName?: string): Promise<{ success: boolean; error: string | null }> {
+    const teamParam = teamId ? `&teamId=${teamId}` : '';
+    const res = await api.getText(`/api/stats/export?clubId=${clubId}${teamParam}`);
+    
+    if (res.error || !res.data) {
+      return { success: false, error: res.error || 'No se pudieron descargar los datos' };
+    }
+    
+    const csvContent = res.data;
+    const cleanClubName = clubName.replace(/\s+/g, '_');
+    const cleanTeamName = teamName ? teamName.replace(/\s+/g, '_') : 'General';
+    const filename = `${cleanClubName}_${cleanTeamName}_Stats.csv`;
+
+    try {
+      if (Platform.OS === 'web') {
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return { success: true, error: null };
+      } else {
+        const FileSystem = require('expo-file-system');
+        const Sharing = require('expo-sharing');
+        
+        const fileUri = `${FileSystem.documentDirectory}${filename}`;
+        await FileSystem.writeAsStringAsync(fileUri, csvContent, {
+          encoding: FileSystem.EncodingType.UTF8,
+        });
+        
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(fileUri, {
+            mimeType: 'text/csv',
+            dialogTitle: 'Exportar Estadísticas',
+            UTI: 'public.comma-separated-values-text',
+          });
+          return { success: true, error: null };
+        } else {
+          return { success: false, error: 'Compartir no disponible en este dispositivo' };
+        }
+      }
+    } catch (e: any) {
+      console.error('Export error', e);
+      return { success: false, error: e.message || 'Error al guardar el archivo' };
+    }
+  }
 };

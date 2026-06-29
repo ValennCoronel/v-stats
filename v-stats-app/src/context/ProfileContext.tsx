@@ -18,6 +18,8 @@ export type Player = {
 export type TeamProfile = {
   id: string;
   name: string;
+  gender?: string | null;
+  category?: string | null;
   roster: Player[];
   matchCount: number;
   matches?: any[];
@@ -129,6 +131,8 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
             teams.push({
               id: team.id,
               name: team.name,
+              gender: team.gender,
+              category: team.category,
               roster,
               matchCount: team._count?.matches || 0,
             });

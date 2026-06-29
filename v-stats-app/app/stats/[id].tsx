@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Activity, ArrowLeft, Award, BarChart3, Building2, Home, Shield, Target, TrendingUp, Zap } from 'lucide-react-native';
+import { Activity, ArrowLeft, Award, BarChart3, Building2, Home, Shield, Target, TrendingUp, Zap, Download } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useStyles } from '../../src/hooks/useStyles';
 import { useProfile } from '../../src/context/ProfileContext';
@@ -27,6 +27,7 @@ export default function StatsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [showAllPlayers, setShowAllPlayers] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     loadStats();
@@ -38,6 +39,25 @@ export default function StatsScreen() {
     const res = await statsService.getClubStats(activeProfile.id, selectedTeamId || undefined);
     if (res.data) setStats(res.data);
     setIsLoading(false);
+  };
+
+  const handleExport = async () => {
+    if (activeProfile.id === '__empty__') return;
+    setIsExporting(true);
+    
+    const teamBreakdown = stats?.teamBreakdown || [];
+    const teamName = selectedTeamId ? teamBreakdown.find(t => t.id === selectedTeamId)?.name : undefined;
+    const res = await statsService.exportClubStats(
+      activeProfile.id, 
+      selectedTeamId || undefined, 
+      activeProfile.clubName, 
+      teamName
+    );
+    
+    setIsExporting(false);
+    if (!res.success) {
+      Alert.alert('Error', res.error || 'No se pudo exportar el archivo');
+    }
   };
 
   if (isLoading) {
@@ -92,6 +112,26 @@ export default function StatsScreen() {
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#fff', lineHeight: 26 }}>{activeProfile.clubName}</Text>
             <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>{scopeLabel}</Text>
           </View>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleExport}
+            disabled={isExporting}
+            style={{ 
+              width: 36, 
+              height: 36, 
+              borderRadius: 18, 
+              backgroundColor: 'rgba(255,255,255,0.15)', 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              marginRight: 8
+            }}
+          >
+            {isExporting ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Download size={18} color="#fff" />
+            )}
+          </TouchableOpacity>
           <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: activeProfile.color }} />
         </View>
 

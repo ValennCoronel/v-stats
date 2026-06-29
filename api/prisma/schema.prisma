@@ -61,6 +61,8 @@ model Team {
   clubId    String   @map("club_id")
   name      String
   logoUrl   String?  @map("logo_url")
+  gender    String?
+  category  String?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
