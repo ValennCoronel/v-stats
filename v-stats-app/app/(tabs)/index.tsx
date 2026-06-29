@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Modal } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { ChevronDown, Play, Share } from 'lucide-react-native';
+import { ChevronDown, Play, Share, X } from 'lucide-react-native';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../../src/context/ProfileContext';
@@ -31,6 +31,17 @@ export default function HomeScreen() {
   const [teamStats, setTeamStats] = useState<ClubStats | null>(null);
   const [activeMatch, setActiveMatch] = useState<any>(null);
   const [showActiveMatchModal, setShowActiveMatchModal] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+
+  const lastConfirmDialog = useRef<any>(null);
+  if (confirmDialog) {
+    lastConfirmDialog.current = confirmDialog;
+  }
 
   const checkActiveMatch = useCallback(async () => {
     const saved = await storage.getItem('vstats-active-match');
@@ -236,24 +247,56 @@ export default function HomeScreen() {
           router.push({ pathname: '/match/new', params: { resume: 'true' } });
         }}
         onDelete={() => {
-          Alert.alert(
-            "Eliminar partido",
-            "¿Estás seguro de que querés eliminar el partido en curso? Se perderá todo el progreso.",
-            [
-              { text: "Cancelar", style: "cancel" },
-              { 
-                text: "Eliminar", 
-                style: "destructive",
-                onPress: async () => {
-                  await storage.removeItem('vstats-active-match');
-                  setShowActiveMatchModal(false);
-                  setActiveMatch(null);
-                }
-              }
-            ]
-          );
+          setConfirmDialog({
+            visible: true,
+            title: "Eliminar partido",
+            message: "¿Estás seguro de que querés eliminar el partido en curso? Se perderá todo el progreso.",
+            onConfirm: async () => {
+              await storage.removeItem('vstats-active-match');
+              setShowActiveMatchModal(false);
+              setActiveMatch(null);
+            }
+          });
         }}
       />
+
+      {/* ── Confirm Modal ── */}
+      <Modal visible={!!confirmDialog?.visible} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View style={{ flex: 1, paddingRight: 16 }}>
+                <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain }}>
+                  {confirmDialog?.title || lastConfirmDialog.current?.title}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setConfirmDialog(null)} style={{ padding: 4, backgroundColor: colors.borderLight, borderRadius: 16 }}>
+                <X size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, marginTop: 12, marginBottom: 24, lineHeight: 22 }}>
+              {confirmDialog?.message || lastConfirmDialog.current?.message}
+            </Text>
+            <View style={styles`flex-row gap-4`}>
+              <TouchableOpacity 
+                onPress={() => setConfirmDialog(null)}
+                style={{ flex: 1, borderWidth: 1, borderColor: colors.border, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textMain }}>CANCELAR</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => {
+                  if (confirmDialog?.onConfirm) confirmDialog.onConfirm();
+                  setConfirmDialog(null);
+                }}
+                style={{ flex: 1, backgroundColor: colors.danger, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff' }}>ELIMINAR</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
