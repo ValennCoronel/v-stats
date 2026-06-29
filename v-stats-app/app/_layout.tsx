@@ -6,6 +6,8 @@ import { ThemeProvider } from '../src/context/ThemeContext';
 import { AuthProvider } from '../src/context/AuthContext';
 import { ProfileProvider } from '../src/context/ProfileContext';
 
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 // Evita que la pantalla de splash se oculte automáticamente antes de cargar fuentes
 SplashScreen.preventAutoHideAsync();
 
@@ -35,15 +37,17 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <ProfileProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="manage-settings" options={{ presentation: 'card', animation: 'slide_from_right' }} />
-          </Stack>
-        </ProfileProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ProfileProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="manage-settings" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+            </Stack>
+          </ProfileProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

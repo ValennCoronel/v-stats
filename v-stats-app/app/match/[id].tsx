@@ -18,7 +18,6 @@ const POSITION_MAP: Record<string, string> = {
   'OPPOSITE_HITTER': 'Opuesto',
   'MIDDLE_BLOCKER': 'Central',
   'LIBERO': 'Líbero',
-  'DEFENSIVE_SPECIALIST': 'Especialista',
 };
 
 const getPositionLabel = (pos: string) => POSITION_MAP[pos] || pos;
@@ -983,7 +982,9 @@ export default function LiveMatchScreen() {
                 <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600' }}>VER STATS</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={confirmEndSet} style={{ flex: 1, backgroundColor: '#1E6FD9', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff', justifyContent: 'center', alignItems: 'center' }}>{setsWon.home >= 3 || setsWon.away >= 3 ? "FINALIZAR PARTIDO" : "INICIAR SIGUIENTE"}</Text>
+                <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#fff', justifyContent: 'center', textAlign: 'center' }}>
+                  {setsWon.home >= 3 || setsWon.away >= 3 ? "FINALIZAR PARTIDO" : "INICIAR SIGUIENTE"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

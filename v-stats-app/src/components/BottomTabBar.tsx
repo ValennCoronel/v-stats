@@ -1,14 +1,29 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, Platform } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Home, Play, Shield } from 'lucide-react-native';
 import { useThemeContext } from '../context/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function BottomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const { colors, fonts, themeMode } = useThemeContext();
+  const { colors, fonts } = useThemeContext();
+  const insets = useSafeAreaInsets();
+
+  // On Android, if insets.bottom is 0 (meaning navigation bar is not translucent or is hidden), 
+  // we still want some padding for visual balance.
+  const bottomPadding = Math.max(insets.bottom, 12);
+  const containerHeight = 60 + bottomPadding;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.tabBar, borderTopColor: colors.tabBarBorder }]}>
+    <View style={[
+      styles.container, 
+      { 
+        backgroundColor: colors.tabBar, 
+        borderTopColor: colors.tabBarBorder,
+        height: containerHeight,
+        paddingBottom: bottomPadding,
+      }
+    ]}>
       {state.routes.map((route, index) => {
         // Only render the main tabs
         if (!['index', 'partido', 'club'].includes(route.name)) return null;
@@ -99,9 +114,7 @@ export function BottomTabBar({ state, descriptors, navigation }: BottomTabBarPro
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    height: 70, // Slightly taller for the custom look
     borderTopWidth: 1,
-    paddingBottom: 15, // Space for safe area
     paddingHorizontal: 10,
     alignItems: 'flex-end',
     justifyContent: 'space-between',
