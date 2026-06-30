@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Modal, Dimensions, ActivityIndicator, Alert } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Modal, Dimensions, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, RotateCcw, Plus } from "lucide-react-native";
 import { useStyles } from "../../src/hooks/useStyles";
 import { StatusBar } from "expo-status-bar";
 import { useProfile } from "../../src/context/ProfileContext";
 import { matchesService } from "../../src/services/matches.service";
+import { canRecordStatForPlayer, getEffectiveActivePlayerIds, substitutePlayingPlayer } from "../../src/features/matches/live-match";
 import { storage } from "../../src/services/storage.service";
 
 type Player = { id: string; number: string; name: string; position: string; isLibero?: boolean; };
-type ActionRecord = { id: string; playerId: string; action: string; result: string; homeScoreBefore: number; awayScoreBefore: number; timestamp: number; set: number; };
+type ActionRecord = { id: string; playerId: string; action: string; result: string; homeScoreBefore: number; awayScoreBefore: number; timestamp: number; set: number; activePlayerIds: string[]; };
 type PlayerSetStats = { id: string; number: string; name: string; position: string; puntos: number; ataquesPts: number; saquesPts: number; bloqueosPts: number; recepciones: number; errores: number; };
 
 const POSITION_MAP: Record<string, string> = {
@@ -272,19 +273,16 @@ export default function LiveMatchScreen() {
     if (courtPlayers.length > 0 || !assignedSlots.some(p => p !== null)) return;
 
     const starters = assignedSlots.slice(0, 6).filter((p): p is Player => p !== null);
-    const libero = assignedSlots[6];
     setCourtPlayers(starters);
-    if (libero) {
-      setLiberoPlayer(libero);
-      setCurrentSetStats(initStats(starters, libero));
-    } else if (starters.length > 0) {
-      setCurrentSetStats(initStats(starters, starters[0]));
+    setLiberoPlayer(null);
+    if (starters.length > 0) {
+      setCurrentSetStats(initStats(starters, null));
     }
 
-    const assignedIds = new Set(assignedSlots.filter((p): p is Player => p !== null).map(p => p.id));
+    const starterIds = new Set(starters.map(p => p.id));
     const benchPlayers = convocados
-      .filter(rp => !assignedIds.has(rp.id))
-      .map(rp => rosterToPlayer(rp as any));
+      .filter(rp => !starterIds.has(rp.id))
+      .map(rp => rosterToPlayer(rp as any, assignedSlots[6]?.id === rp.id));
     setBench(benchPlayers);
   };
 
@@ -294,9 +292,17 @@ export default function LiveMatchScreen() {
       const playerId = selectedPlayer;
       const action = selectedAction;
       const result = selectedResult;
+      const activePlayerIds = getEffectiveActivePlayerIds(courtPlayers, liberoPlayer, assignedSlots);
+      if (!canRecordStatForPlayer(playerId, courtPlayers, liberoPlayer, assignedSlots)) {
+        alert("Solo se pueden cargar estadísticas para jugadoras que están en cancha.");
+        setSelectedPlayer(null);
+        setSelectedAction(null);
+        setSelectedResult(null);
+        return;
+      }
       const homePoint = (action === "ataque" || action === "saque" || action === "bloqueo") && result === "dbl";
       const awayPoint = result === "err";
-      setActionHistory((h) => [...h, { id: Date.now().toString(), playerId, action, result, homeScoreBefore: homeScore, awayScoreBefore: awayScore, timestamp: Date.now(), set: currentSet }]);
+      setActionHistory((h) => [...h, { id: Date.now().toString(), playerId, action, result, homeScoreBefore: homeScore, awayScoreBefore: awayScore, timestamp: Date.now(), set: currentSet, activePlayerIds }]);
       updatePlayerStat(playerId, action, result, homePoint, awayPoint);
       setHomeScore((prev) => homePoint ? prev + 1 : prev);
       setAwayScore((prev) => awayPoint ? prev + 1 : prev);
@@ -304,7 +310,7 @@ export default function LiveMatchScreen() {
       setSelectedAction(null);
       setSelectedResult(null);
     }
-  }, [selectedPlayer, selectedAction, selectedResult]);
+  }, [selectedPlayer, selectedAction, selectedResult, courtPlayers, liberoPlayer, assignedSlots]);
 
   const getLastActionText = () => {
     const last = actionHistory[actionHistory.length - 1];
@@ -339,7 +345,7 @@ export default function LiveMatchScreen() {
 
   const handleRivalError = (type: "saque" | "ataque") => {
     finalizeCourtSetup();
-    const record: ActionRecord = { id: Date.now().toString(), playerId: "rival", action: `rival_${type}`, result: "error", homeScoreBefore: homeScore, awayScoreBefore: awayScore, timestamp: Date.now(), set: currentSet };
+    const record: ActionRecord = { id: Date.now().toString(), playerId: "rival", action: `rival_${type}`, result: "error", homeScoreBefore: homeScore, awayScoreBefore: awayScore, timestamp: Date.now(), set: currentSet, activePlayerIds: getEffectiveActivePlayerIds(courtPlayers, liberoPlayer, assignedSlots) };
     applyScore(homeScore + 1, awayScore, record);
     setSelectedAction(null); setSelectedResult(null);
   };
@@ -400,10 +406,11 @@ export default function LiveMatchScreen() {
   const openSubstitution = () => { if (selectedPlayer === null) return; setPlayerOutId(selectedPlayer); setShowSubstitution(true); };
   const handleSelectIn = (benchPlayer: Player) => {
     if (playerOutId === null) return;
-    const outPlayer = courtPlayers.find(p => p.id === playerOutId);
-    if (!outPlayer) { setShowSubstitution(false); return; }
-    setCourtPlayers(prev => prev.map(p => p.id === playerOutId ? benchPlayer : p));
-    setBench(prev => prev.map(p => p.id === benchPlayer.id ? outPlayer : p));
+    const substitution = substitutePlayingPlayer(courtPlayers, liberoPlayer, bench, playerOutId, benchPlayer);
+    if (!substitution) { setShowSubstitution(false); return; }
+    setCourtPlayers(substitution.courtPlayers);
+    setLiberoPlayer(substitution.libero);
+    setBench(substitution.bench);
     setCurrentSetStats(prev => ({ ...prev, [benchPlayer.id]: prev[benchPlayer.id] ?? { id: benchPlayer.id, number: benchPlayer.number, name: benchPlayer.name, position: benchPlayer.position, puntos: 0, ataquesPts: 0, saquesPts: 0, bloqueosPts: 0, recepciones: 0, errores: 0 } }));
     if (selectedPlayer === playerOutId) setSelectedPlayer(null);
     setShowSubstitution(false);
@@ -427,7 +434,8 @@ export default function LiveMatchScreen() {
             playerId: record.playerId,
             action: evt,
             set: record.set,
-            timestamp: new Date(record.timestamp).toISOString()
+            timestamp: new Date(record.timestamp).toISOString(),
+            activePlayerIds: record.activePlayerIds,
           });
         }
       }
@@ -468,6 +476,7 @@ export default function LiveMatchScreen() {
   const isGameReady = assignedSlots.slice(0, 6).every(p => p !== null);
   const isMatchOver = setsWon.home >= 3 || setsWon.away >= 3;
   const viewSetStats = selectedViewSet !== null ? computeSetStats(actionHistory, selectedViewSet, allPlayersList) : [];
+  const substitutionOptions = [...bench].sort((a, b) => Number(Boolean(b.isLibero)) - Number(Boolean(a.isLibero)));
 
   if (!isStateLoaded) {
     return (
@@ -589,13 +598,14 @@ export default function LiveMatchScreen() {
 
                   {assignedSlots[6] ? (
                     <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-                      <TouchableOpacity onPress={() => setSelectedPlayer(assignedSlots[6]!.id)} style={{ width: '31%', backgroundColor: '#FEF9C3', borderRadius: 8, padding: 8, borderWidth: 2, borderColor: selectedPlayer === assignedSlots[6]!.id ? '#1E6FD9' : '#FDE047', alignItems: 'center' }}>
+                      <TouchableOpacity disabled style={{ width: '31%', backgroundColor: '#FEF9C3', borderRadius: 8, padding: 8, borderWidth: 2, borderColor: '#FDE047', alignItems: 'center', opacity: 0.7 }}>
                         <View style={{ backgroundColor: '#FDE047', paddingHorizontal: 8, paddingVertical: 1, borderRadius: 4, marginBottom: 2 }}>
                           <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, fontWeight: '700', color: '#92400E' }}>LÍBERO</Text>
                         </View>
                         <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 22, fontWeight: '700', color: '#92400E', lineHeight: 26 }}>{assignedSlots[6]!.number}</Text>
                         <Text style={{ fontSize: 9, fontWeight: '500', color: '#0D1F33' }} numberOfLines={1}>{assignedSlots[6]!.name}</Text>
                         <Text style={{ fontSize: 8, color: '#92400E' }}>{getPositionLabel(assignedSlots[6]!.position)}</Text>
+                        <Text style={{ fontSize: 8, color: '#92400E', marginTop: 4, textAlign: 'center' }}>Disponible para cambio</Text>
                       </TouchableOpacity>
                     </View>
                   ) : (
@@ -878,15 +888,33 @@ export default function LiveMatchScreen() {
               {bench.length === 0 ? (
                 <Text style={{ textAlign: 'center', paddingVertical: 24, color: '#94A3B8' }}>No hay jugadoras en el banco</Text>
               ) : (
-                bench.map((player) => (
-                  <TouchableOpacity key={player.id} onPress={() => handleSelectIn(player)} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, marginBottom: 8 }}>
-                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(30,111,217,0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: '#1E6FD9' }}>{player.number}</Text>
+                substitutionOptions.map((player) => (
+                  <TouchableOpacity
+                    key={player.id}
+                    onPress={() => handleSelectIn(player)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      padding: 12,
+                      borderWidth: 1,
+                      borderColor: player.isLibero ? '#F59E0B' : '#E2E8F0',
+                      borderRadius: 8,
+                      marginBottom: 8,
+                      backgroundColor: player.isLibero ? '#FFF7ED' : '#fff',
+                    }}
+                  >
+                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: player.isLibero ? '#FDE68A' : 'rgba(30,111,217,0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                      <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 18, fontWeight: '700', color: player.isLibero ? '#92400E' : '#1E6FD9' }}>{player.number}</Text>
                     </View>
-                    <View>
+                    <View style={{ flex: 1 }}>
                       <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 16, fontWeight: '600', color: '#0D1F33' }}>{player.name}</Text>
                       <Text style={{ fontSize: 12, color: '#64748B' }}>{getPositionLabel(player.position)}</Text>
                     </View>
+                    {player.isLibero && (
+                      <View style={{ backgroundColor: '#F59E0B', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 }}>
+                        <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 10, fontWeight: '700', color: '#fff' }}>LÍBERO</Text>
+                      </View>
+                    )}
                   </TouchableOpacity>
                 ))
               )}

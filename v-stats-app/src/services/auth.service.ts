@@ -1,4 +1,4 @@
-import { api, setToken, removeToken } from '../api/api';
+import { api, setToken, removeToken } from '../api';
 
 export type AuthUser = {
   id: string;
