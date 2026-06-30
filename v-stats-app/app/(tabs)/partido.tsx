@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Play, Users, Calendar, BarChart3, ChevronDown, Shield, Shirt, History, Check, Clock, ArrowLeft } from 'lucide-react-native';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfile } from '../../src/context/ProfileContext';
 import { Modal as CustomModal } from '../../src/components/ui/Modal';
 import { Button } from '../../src/components/ui/Button';
@@ -94,6 +95,7 @@ function buildCalendarDays(monthDate: Date) {
 export default function PartidoScreen() {
   const router = useRouter();
   const { styles, colors, fonts, themeMode } = useStyles();
+  const insets = useSafeAreaInsets();
   const { activeProfile, profiles, switchProfile } = useProfile();
 
   const [activeTeamId, setActiveTeamId] = useState<string | null>(null);
@@ -230,7 +232,7 @@ export default function PartidoScreen() {
 
       <ScrollView contentContainerStyle={styles`px-5 pb-24 gap-6`}>
         {/* Header */}
-        <View style={{ paddingTop: 32, paddingBottom: 8 }}>
+        <View style={{ paddingTop: Math.max(insets.top, 16), paddingBottom: 8 }}>
           <View style={styles`flex-row items-center justify-between`}>
             <View style={{ width: 24 }} />
             <Text style={{ fontFamily: fonts.heading, fontSize: 24, color: colors.textMain, letterSpacing: 1 }}>

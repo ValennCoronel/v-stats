@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, ChevronRight, Camera, User, Shield, Bell, Lock, Fingerprint, LogOut, Trash2, Check, ShieldCheck, ShieldAlert, ShieldOff, Pencil } from 'lucide-react-native';
 import { useStyles } from '../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfile } from '../src/context/ProfileContext';
 import { useAuth } from '../src/context/AuthContext';
 import { Button } from '../src/components/ui/Button';
@@ -21,6 +22,7 @@ const PROFILE_COLORS = ['#1E6FD9', '#D97706', '#16A34A', '#7C3AED', '#DC2626', '
 export default function ConfigScreen() {
   const router = useRouter();
   const { styles } = useStyles();
+  const insets = useSafeAreaInsets();
   
   const { logout } = useAuth();
   const { coach, activeProfile, addProfile, updateProfile } = useProfile();
@@ -130,8 +132,8 @@ export default function ConfigScreen() {
     <View style={styles`flex-1 bg-screen`}>
       <StatusBar style="light" />
 
-      {/* ── Header ── */}
-      <View style={[styles`bg-header`, { paddingTop: 60 }]}>
+      {/* ── Header (Con insets de dev) ── */}
+      <View style={[styles`bg-header`, { paddingTop: Math.max(insets.top, 20) }]}>
         <View style={styles`flex-row items-center gap-3 px-4 pb-6`}>
           <TouchableOpacity onPress={() => router.back()} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' }}>
             <ArrowLeft size={16} color="#fff" />
@@ -337,7 +339,7 @@ export default function ConfigScreen() {
         </View>
       </Modal>
 
-      {/* Logout */}
+      {/* Logout (Con la lógica async y await de tu compañera) */}
       <Modal visible={showLogoutModal} onClose={() => setShowLogoutModal(false)}>
         <View style={{ alignItems: 'center' }}>
           <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: '#FEF2F2', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>

@@ -34,7 +34,6 @@ export default function ManagePlayersScreen() {
     { id: 'OPPOSITE_HITTER', label: 'Opuesto' },
     { id: 'MIDDLE_BLOCKER', label: 'Central' },
     { id: 'LIBERO', label: 'Líbero' },
-    { id: 'DEFENSIVE_SPECIALIST', label: 'Especialista' },
   ];
 
   const getPositionLabel = (pos: string) => POSITIONS.find(p => p.id === pos)?.label || pos;

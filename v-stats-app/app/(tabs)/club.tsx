@@ -4,12 +4,14 @@ import { useRouter } from 'expo-router';
 import { ChevronRight, LogOut, Shield, Users, Building2, UserPlus, Settings, User } from 'lucide-react-native';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfile } from '../../src/context/ProfileContext';
 import { useAuth } from '../../src/context/AuthContext';
 
 export default function ClubScreen() {
   const router = useRouter();
   const { styles, colors, fonts, themeMode } = useStyles();
+  const insets = useSafeAreaInsets();
   const { activeProfile, coach } = useProfile();
   const { isAuthenticated, isLoading: authLoading, logout } = useAuth();
   
@@ -31,7 +33,7 @@ export default function ClubScreen() {
       <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
 
       {/* Header */}
-      <View style={[styles`px-4`, { paddingTop: 60, paddingBottom: 16, backgroundColor: colors.bgMain }]}>
+      <View style={[styles`px-4`, { paddingTop: Math.max(insets.top, 16), paddingBottom: 16, backgroundColor: colors.bgMain }]}>
         <Text style={{ fontFamily: fonts.heading, fontSize: 32, color: colors.textMain, letterSpacing: 1, marginBottom: 16 }}>
           CLUB
         </Text>
@@ -51,9 +53,6 @@ export default function ClubScreen() {
               </Text>
             </View>
           </View>
-          <TouchableOpacity style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: colors.primary }}>
-            <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.primary }}>EDITAR</Text>
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -85,13 +84,6 @@ export default function ClubScreen() {
               title="Clubes" 
               subtitle="Creá o administrá tus clubes" 
               onPress={() => router.push('/manage-clubs')}
-            />
-            <MenuRow 
-              icon={<UserPlus size={20} color={colors.warning} />} 
-              title="Invitaciones" 
-              subtitle="Gestioná usuarios del club" 
-              onPress={() => {}} 
-              isLast
             />
           </View>
         </View>

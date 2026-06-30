@@ -14,8 +14,7 @@ const POSITIONS = [
   { id: 'OUTSIDE_HITTER', label: 'Punta' },
   { id: 'OPPOSITE_HITTER', label: 'Opuesto' },
   { id: 'MIDDLE_BLOCKER', label: 'Central' },
-  { id: 'LIBERO', label: 'Libero' },
-  { id: 'DEFENSIVE_SPECIALIST', label: 'Especialista' },
+  { id: 'LIBERO', label: 'Líbero' },
 ];
 
 const getPositionLabel = (pos: string) => POSITIONS.find((p) => p.id === pos)?.label || pos;
@@ -247,6 +246,17 @@ export default function StatsScreen() {
         )}
 
         <View>
+          <SectionTitle icon={<Target size={16} color="#64748B" />} label="TEMPORADA" />
+          <View style={[styles`bg-white px-4 py-4 rounded-xl`, { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)' }]}>
+            <View style={styles`flex-row justify-between items-center`}>
+              <SeasonKpi label="SETS WON" value={setsWon} detail={`de ${setsWon + setsLost}`} color="#1E6FD9" />
+              <SeasonKpi label="PUNTOS" value={totalPoints} detail="en total" color="#0D1F33" border />
+              <SeasonKpi label="SETS %" value={`${setsRate}%`} detail="efectividad" color="#16A34A" />
+            </View>
+          </View>
+        </View>
+
+        <View>
           <SectionTitle icon={<Activity size={16} color="#64748B" />} label="ACCIONES DEL EQUIPO" />
           <View style={styles`flex-row flex-wrap justify-between`}>
             {actionMetrics.map((metric) => (
@@ -380,7 +390,7 @@ export default function StatsScreen() {
                 <TouchableOpacity
                   activeOpacity={0.8}
                   onPress={() => setShowAllPlayers(!showAllPlayers)}
-                  style={{ marginTop: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: '#F1F5F9', alignItems: 'center' }}
+                  style={{ marginTop: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: '#F1F5F9', alignItems: 'center', paddingBottom: 24 }}
                 >
                   <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 14, fontWeight: '600', color: '#1E6FD9' }}>
                     {showAllPlayers ? 'VER MENOS' : `VER ${playerList.length - 5} MAS`}
@@ -390,17 +400,6 @@ export default function StatsScreen() {
             </View>
           </View>
         )}
-
-        <View>
-          <SectionTitle icon={<Target size={16} color="#64748B" />} label="TEMPORADA" />
-          <View style={[styles`bg-white px-4 py-4 rounded-xl`, { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)' }]}>
-            <View style={styles`flex-row justify-between items-center`}>
-              <SeasonKpi label="SETS WON" value={setsWon} detail={`de ${setsWon + setsLost}`} color="#1E6FD9" />
-              <SeasonKpi label="PUNTOS" value={totalPoints} detail="en total" color="#0D1F33" border />
-              <SeasonKpi label="SETS %" value={`${setsRate}%`} detail="efectividad" color="#16A34A" />
-            </View>
-          </View>
-        </View>
 
         {totalMatches === 0 && (
           <View style={{ alignItems: 'center', paddingVertical: 32 }}>

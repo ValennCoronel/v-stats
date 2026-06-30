@@ -14,7 +14,6 @@ const POSITIONS = [
   { id: 'OPPOSITE_HITTER', label: 'Opuesto' },
   { id: 'MIDDLE_BLOCKER', label: 'Central' },
   { id: 'LIBERO', label: 'Líbero' },
-  { id: 'DEFENSIVE_SPECIALIST', label: 'Especialista' },
 ];
 
 const getPositionLabel = (pos: string) => POSITIONS.find(p => p.id === pos)?.label || pos;
@@ -156,7 +155,7 @@ export default function PlayerStatsScreen() {
     { label: 'BLOQUEOS', value: totals.bloqueos, color: '#7C3AED', icon: <Shield size={16} color="#7C3AED" /> },
     { label: 'ACES', value: totals.aces, color: '#F59E0B', icon: <Zap size={16} color="#F59E0B" /> },
     { label: 'DEFENSAS', value: totals.defensas, color: '#16A34A', icon: <Shield size={16} color="#16A34A" /> },
-    { label: 'VENTAJAS', value: totals.ventajas, color: '#14B8A6', icon: <Activity size={16} color="#14B8A6" /> },
+    { label: 'RECEPCIONES', value: totals.ventajas, color: '#14B8A6', icon: <Activity size={16} color="#14B8A6" /> },
   ];
 
   const errorMetrics = [

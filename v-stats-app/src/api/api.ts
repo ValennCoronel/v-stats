@@ -5,7 +5,7 @@ const DEV_BASE_URLS = {
   web: 'http://localhost:3000',
   android: 'http://10.0.2.2:3000',
   ios: 'http://localhost:3000',
-  default: 'http://192.168.1.6:3000',
+  default: 'http://192.168.1.6:3000', // Podés cambiarla por la IP de tu red local actual (ej. 192.168.0.100)
 } as const;
 
 function getBaseUrl() {

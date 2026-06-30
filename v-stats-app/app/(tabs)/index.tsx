@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { ChevronDown, Play } from 'lucide-react-native';
+import { ChevronDown, Play, Share } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../../src/context/ProfileContext';
@@ -20,6 +21,7 @@ let hasCheckedActiveMatchOnAppStart = false;
 export default function HomeScreen() {
   const router = useRouter();
   const { styles, colors, fonts, themeMode } = useStyles();
+  const insets = useSafeAreaInsets();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { coach, profiles, activeProfile, switchProfile, isLoading } = useProfile();
 
@@ -138,8 +140,9 @@ export default function HomeScreen() {
     <View style={styles`flex-1 bg-screen`}>
       <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
 
-      <ScrollView contentContainerStyle={styles`px-4 pb-24 gap-6`}>
-        <View style={{ paddingTop: 24, paddingBottom: 24 }}>
+      <ScrollView contentContainerStyle={[styles`px-4 pb-24 gap-6`, { paddingTop: Math.max(insets.top, 16) }]}>
+        {/* ── Header ── */}
+        <View style={{ paddingBottom: 24 }}>
           <View style={styles`flex-row items-center justify-between`}>
             <View style={styles`flex-row items-center gap-3`}>
               <Avatar name={coach.name} size={44} onPress={() => router.push('/manage-settings')} />
