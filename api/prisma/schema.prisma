@@ -34,6 +34,7 @@ model User {
 
   ownedClubs    Club[]         @relation("ClubOwner")
   opponentTeams OpponentTeam[] @relation("OpponentTeamOwner")
+  teamShareLinks TeamShareLink[]
   tournaments   Tournament[]   @relation("TournamentOwner")
 
   @@map("users")
@@ -52,6 +53,7 @@ model Club {
   owner   User     @relation("ClubOwner", fields: [ownerId], references: [id])
   teams   Team[]
   players Player[]
+  teamShareLinks TeamShareLink[]
 
   @@map("clubs")
 }
@@ -69,6 +71,7 @@ model Team {
   club    Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
   players Player[]
   matches Match[]
+  shareLink TeamShareLink?
 
   @@map("teams")
 }
@@ -189,4 +192,20 @@ model Tournament {
   matches Match[]
 
   @@map("tournaments")
+}
+
+model TeamShareLink {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  ownerId   String   @map("owner_id")
+  clubId    String   @map("club_id")
+  teamId    String   @unique @map("team_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  club  Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  team  Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@map("team_share_links")
 }

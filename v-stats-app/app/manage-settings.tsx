@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, ChevronRight, Camera, User, Shield, Bell, Lock, Fingerprint, LogOut, Trash2, Check, ShieldCheck, ShieldAlert, ShieldOff, Pencil } from 'lucide-react-native';
 import { useStyles } from '../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfile } from '../src/context/ProfileContext';
 import { useAuth } from '../src/context/AuthContext';
 import { Button } from '../src/components/ui/Button';
@@ -11,7 +12,7 @@ import { Input } from '../src/components/ui/Input';
 import { Modal } from '../src/components/ui/Modal';
 import { Avatar } from '../src/components/ui/Avatar';
 import { Divider } from '../src/components/ui/Divider';
-import { Section, SettingRow, SwitchRow, RolePill, AccessRole } from '../src/features/settings/components/SettingsComponents';
+import { Section, SettingRow, SwitchRow, RolePill, AccessRole, normalizeAccessRole } from '../src/features/settings/components/SettingsComponents';
 
 type ClubProfile = { id: string; clubName: string; city: string; role: AccessRole; color: string; };
 type SecurityLevel = 'none' | 'pin' | 'biometric';
@@ -21,6 +22,7 @@ const PROFILE_COLORS = ['#1E6FD9', '#D97706', '#16A34A', '#7C3AED', '#DC2626', '
 export default function ConfigScreen() {
   const router = useRouter();
   const { styles } = useStyles();
+  const insets = useSafeAreaInsets();
   
   const { logout } = useAuth();
   const { coach, activeProfile, addProfile, updateProfile } = useProfile();
@@ -35,7 +37,7 @@ export default function ConfigScreen() {
   const [actionSheetProfile, setActionSheetProfile] = useState<ClubProfile | null>(null);
 
   const [securityLevel, setSecurityLevel] = useState<SecurityLevel>('none');
-  const [accessRole, setAccessRole] = useState<AccessRole>(activeProfile.role as AccessRole);
+  const [accessRole, setAccessRole] = useState<AccessRole>(normalizeAccessRole(activeProfile.role));
   const [pin, setPin] = useState('');
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinStep, setPinStep] = useState<'set' | 'confirm'>('set');
@@ -49,6 +51,10 @@ export default function ConfigScreen() {
   const [notifReminders, setNotifReminders] = useState(false);
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  useEffect(() => {
+    setAccessRole(normalizeAccessRole(activeProfile.role));
+  }, [activeProfile.role]);
 
   const handleAvatarChange = () => {
     Alert.alert("Cambiar Foto", "Acá conectaríamos expo-image-picker para abrir la galería del celular.");
@@ -126,8 +132,8 @@ export default function ConfigScreen() {
     <View style={styles`flex-1 bg-screen`}>
       <StatusBar style="light" />
 
-      {/* ── Header ── */}
-      <View style={[styles`bg-header`, { paddingTop: 60 }]}>
+      {/* ── Header (Con insets de dev) ── */}
+      <View style={[styles`bg-header`, { paddingTop: Math.max(insets.top, 20) }]}>
         <View style={styles`flex-row items-center gap-3 px-4 pb-6`}>
           <TouchableOpacity onPress={() => router.back()} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' }}>
             <ArrowLeft size={16} color="#fff" />
@@ -333,7 +339,7 @@ export default function ConfigScreen() {
         </View>
       </Modal>
 
-      {/* Logout */}
+      {/* Logout (Con la lógica async y await de tu compañera) */}
       <Modal visible={showLogoutModal} onClose={() => setShowLogoutModal(false)}>
         <View style={{ alignItems: 'center' }}>
           <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: '#FEF2F2', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
@@ -346,11 +352,11 @@ export default function ConfigScreen() {
               <Button variant="outline" onPress={() => setShowLogoutModal(false)}>CANCELAR</Button>
             </View>
             <View style={{ flex: 1 }}>
-              <Button variant="danger" onPress={() => { logout(); router.replace('/'); }}>SALIR</Button>
+              <Button variant="danger" onPress={async () => { await logout(); setShowLogoutModal(false); router.replace('/'); }}>SALIR</Button>
             </View>
           </View>
         </View>
       </Modal>
     </View>
   );
-}
+}

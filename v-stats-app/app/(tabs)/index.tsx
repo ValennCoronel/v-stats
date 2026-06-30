@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Modal, TextInput, FlatList, Dimensions, PanResponder, Animated, TouchableWithoutFeedback, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronDown, Play, Share, X, Users, Calendar, Shield, Shirt, Check, Clock } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useProfile } from '../../src/context/ProfileContext';
@@ -98,13 +99,13 @@ let hasCheckedActiveMatchOnAppStart = false;
 export default function HomeScreen() {
   const router = useRouter();
   const { styles, colors, fonts, themeMode } = useStyles();
+  const insets = useSafeAreaInsets();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { coach, profiles, activeProfile, switchProfile, isLoading } = useProfile();
 
   const [activeTeamId, setActiveTeamId] = useState<string | null>(null);
   const activeTeam = activeProfile?.teams?.find(t => t.id === activeTeamId) || activeProfile?.teams?.[0];
   const [recentMatches, setRecentMatches] = useState<Match[]>([]);
-  const [showSharePlaceholder, setShowSharePlaceholder] = useState(false);
   const [showTeamSelector, setShowTeamSelector] = useState(false);
   const [showClubSelector, setShowClubSelector] = useState(false);
   const [teamStats, setTeamStats] = useState<ClubStats | null>(null);
@@ -262,7 +263,7 @@ export default function HomeScreen() {
           setShowActiveMatchModal(true);
         }
       } catch (e) {
-        console.error("Error parsing saved match", e);
+        console.error('Error parsing saved match', e);
       }
     } else {
       setActiveMatch(null);
@@ -305,7 +306,7 @@ export default function HomeScreen() {
     if (!authLoading && !isAuthenticated) {
       router.replace('/');
     }
-  }, [authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated, router]);
 
   if (!isAuthenticated) return null;
 
@@ -342,15 +343,17 @@ export default function HomeScreen() {
     <View style={styles`flex-1 bg-screen`}>
       <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
 
-      <ScrollView contentContainerStyle={styles`px-4 pb-24 gap-6`}>
+      <ScrollView contentContainerStyle={[styles`px-4 pb-24 gap-6`, { paddingTop: Math.max(insets.top, 16) }]}>
         {/* ── Header ── */}
-        <View style={{ paddingTop: 24, paddingBottom: 24 }}>
+        <View style={{ paddingBottom: 24 }}>
           <View style={styles`flex-row items-center justify-between`}>
             <View style={styles`flex-row items-center gap-3`}>
               <Avatar name={coach.name} size={44} onPress={() => router.push('/manage-settings')} />
               <View>
-                <Text style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary }}>¡Bienvenido, <Text style={{ fontFamily: fonts.bodyBold, color: colors.textMain }}>{firstName}</Text>!</Text>
-                <TouchableOpacity 
+                <Text style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary }}>
+                  Bienvenido, <Text style={{ fontFamily: fonts.bodyBold, color: colors.textMain }}>{firstName}</Text>!
+                </Text>
+                <TouchableOpacity
                   style={styles`flex-row items-center gap-1 mt-0.5`}
                   onPress={() => setShowClubSelector(true)}
                   activeOpacity={0.7}
@@ -362,10 +365,10 @@ export default function HomeScreen() {
             </View>
           </View>
         </View>
-        
+
         <ActiveMatchBanner activeMatch={activeMatch} />
 
-        <TeamSummaryCard 
+        <TeamSummaryCard
           activeTeam={activeTeam}
           totalMatchesCount={totalMatchesCount}
           winsCount={winsCount}
@@ -377,13 +380,12 @@ export default function HomeScreen() {
           onSelectTeam={() => setShowTeamSelector(true)}
         />
 
-        {/* ── Main CTA ── */}
         <TouchableOpacity
           onPress={handleStartMatch}
           activeOpacity={0.8}
           style={[
             styles`w-full flex-row items-center justify-center gap-2`,
-            { marginTop: 16, marginBottom: 32, borderRadius: 12, backgroundColor: '#1C64F2', paddingVertical: 14, elevation: 4, shadowColor: '#1C64F2', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 }
+            { marginTop: 16, marginBottom: 32, borderRadius: 12, backgroundColor: '#1C64F2', paddingVertical: 14, elevation: 4, shadowColor: '#1C64F2', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
           ]}
         >
           <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center' }}>
@@ -395,44 +397,34 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         <RecentMatchesList recentMatches={recentMatches} activeTeam={activeTeam} />
-
-        {/* ── Compartir ── */}
-        <TouchableOpacity
-          onPress={() => setShowSharePlaceholder(true)}
-          style={{ width: '100%', paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.primary, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 32 }}
-        >
-          <Share size={18} color={colors.primary} />
-          <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.primary, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            COMPARTIR ESTADÍSTICAS
-          </Text>
-        </TouchableOpacity>
-
       </ScrollView>
 
-      <ClubSelectorModal 
-        visible={showClubSelector} 
-        onClose={() => setShowClubSelector(false)} 
-        profiles={profiles} 
+      <ClubSelectorModal
+        visible={showClubSelector}
+        onClose={() => setShowClubSelector(false)}
+        profiles={profiles}
         activeProfileId={activeProfile?.id}
-        onSelect={(id: string) => { switchProfile(id); setActiveTeamId(null); setShowClubSelector(false); }}
+        onSelect={(id: string) => {
+          switchProfile(id);
+          setActiveTeamId(null);
+          setShowClubSelector(false);
+        }}
       />
 
-      <TeamSelectorModal 
-        visible={showTeamSelector} 
-        onClose={() => setShowTeamSelector(false)} 
-        teams={activeProfile?.teams} 
+      <TeamSelectorModal
+        visible={showTeamSelector}
+        onClose={() => setShowTeamSelector(false)}
+        teams={activeProfile?.teams}
         activeTeamId={activeTeamId}
-        onSelect={(id: string) => { setActiveTeamId(id); setShowTeamSelector(false); }}
+        onSelect={(id: string) => {
+          setActiveTeamId(id);
+          setShowTeamSelector(false);
+        }}
       />
 
-      <SharePlaceholderModal 
-        visible={showSharePlaceholder} 
-        onClose={() => setShowSharePlaceholder(false)} 
-      />
-
-      <ActiveMatchModal 
-        visible={showActiveMatchModal} 
-        onClose={() => setShowActiveMatchModal(false)} 
+      <ActiveMatchModal
+        visible={showActiveMatchModal}
+        onClose={() => setShowActiveMatchModal(false)}
         activeMatch={activeMatch}
         onResume={() => {
           setShowActiveMatchModal(false);
