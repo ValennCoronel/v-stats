@@ -1,21 +1,55 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronRight, LogOut, Shield, Users, Building2, UserPlus, Settings, User } from 'lucide-react-native';
+import { ChevronRight, LogOut, Shield, Users, Building2, UserPlus, Settings, User, Check } from 'lucide-react-native';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfile } from '../../src/context/ProfileContext';
 import { useAuth } from '../../src/context/AuthContext';
+import { Modal } from '../../src/components/ui/Modal';
+import { Input } from '../../src/components/ui/Input';
+import { Button } from '../../src/components/ui/Button';
+
+const PROFILE_COLORS = ['#1E6FD9', '#D97706', '#16A34A', '#7C3AED', '#DC2626', '#0891B2'];
 
 export default function ClubScreen() {
   const router = useRouter();
   const { styles, colors, fonts, themeMode } = useStyles();
+  
+  // Fusión: Mantenemos insets de dev y updateProfile del fix
   const insets = useSafeAreaInsets();
-  const { activeProfile, coach } = useProfile();
+  const { activeProfile, coach, updateProfile } = useProfile();
+  
   const { isAuthenticated, isLoading: authLoading, logout } = useAuth();
   
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showEditClub, setShowEditClub] = useState(false);
+  const [clubName, setClubName] = useState('');
+  const [city, setCity] = useState('');
+  const [color, setColor] = useState('');
+
+  const openEditModal = () => {
+    setClubName(activeProfile?.clubName || '');
+    setCity(activeProfile?.city || '');
+    setColor(activeProfile?.color || PROFILE_COLORS[0]);
+    setShowEditClub(true);
+  };
+
+  const handleSaveClub = async () => {
+    if (!clubName.trim()) return;
+    try {
+      await updateProfile(activeProfile.id, {
+        clubName: clubName.trim(),
+        city: city.trim(),
+        color: color,
+        role: activeProfile.role,
+      });
+      setShowEditClub(false);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Redirect to login if not authenticated
   React.useEffect(() => {
@@ -53,6 +87,15 @@ export default function ClubScreen() {
               </Text>
             </View>
           </View>
+          
+          {/* Cambios de fix: Mantenemos el botón para editar */}
+          <TouchableOpacity 
+            onPress={openEditModal}
+            activeOpacity={0.7}
+            style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: colors.primary }}
+          >
+            <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.primary }}>EDITAR</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -87,8 +130,53 @@ export default function ClubScreen() {
             />
           </View>
         </View>
-
       </ScrollView>
+
+      {/* ── Edit Club Modal ── */}
+      <Modal visible={showEditClub} onClose={() => setShowEditClub(false)}>
+        <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain, marginBottom: 16 }}>
+          Editar Club
+        </Text>
+        
+        <Input 
+          label="NOMBRE DEL CLUB"
+          value={clubName} 
+          onChangeText={setClubName} 
+          placeholder="Ej: Club Atlético..."
+          containerStyle={{ marginBottom: 12 }}
+        />
+        
+        <Input 
+          label="CIUDAD / SEDE"
+          value={city} 
+          onChangeText={setCity} 
+          placeholder="Ej: Buenos Aires"
+          containerStyle={{ marginBottom: 20 }}
+        />
+
+        <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 12, letterSpacing: 1, color: colors.textSecondary, marginBottom: 8 }}>COLOR PRINCIPAL</Text>
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+          {PROFILE_COLORS.map(c => (
+            <TouchableOpacity 
+              key={c} 
+              onPress={() => setColor(c)} 
+              style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: c, justifyContent: 'center', alignItems: 'center' }}
+              activeOpacity={0.8}
+            >
+              {color === c && <Check size={16} color="#fff" />}
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Button 
+          variant="primary"
+          disabled={!clubName.trim()} 
+          onPress={handleSaveClub}
+          style={{ backgroundColor: clubName.trim() ? colors.success : colors.textMuted }}
+        >
+          GUARDAR CAMBIOS
+        </Button>
+      </Modal>
 
     </View>
   );

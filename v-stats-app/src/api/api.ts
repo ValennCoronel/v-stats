@@ -131,5 +131,35 @@ export const api = {
   post: <T>(path: string, body?: any) => request<T>('POST', path, body),
   put: <T>(path: string, body?: any) => request<T>('PUT', path, body),
   del: <T>(path: string) => request<T>('DELETE', path),
+  
+  getText: async (path: string): Promise<{ data: string | null; error: string | null }> => {
+    const token = await getToken();
+    const url = `${BASE_URL}${path}`;
+
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          await removeToken();
+        }
+        return { data: null, error: `Error ${response.status}` };
+      }
+
+      const text = await response.text();
+      return { data: text, error: null };
+    } catch (err: any) {
+      return { data: null, error: err.message || 'Error de conexión' };
+    }
+  },
+
   getBaseUrl: () => BASE_URL,
 };

@@ -30,6 +30,8 @@ export function TeamSummaryCard({
 }: TeamSummaryCardProps) {
   const router = useRouter();
   const { styles, fonts, colors } = useStyles();
+  const gender = activeTeam?.gender ? `Vóley ${activeTeam.gender}` : 'Vóley Femenino';
+  const category = activeTeam?.category || 'Primera';
 
   return (
     <View>
@@ -56,7 +58,7 @@ export function TeamSummaryCard({
             </View>
           </TouchableOpacity>
           <Text style={{ fontFamily: fonts.body, fontSize: 12, color: '#475569', marginBottom: 20 }}>
-            {""}
+            {gender} · {category}
           </Text>
 
           <View style={styles`flex-row justify-between mb-4`}>

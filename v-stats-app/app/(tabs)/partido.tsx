@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, Modal, TextInput, FlatList, ActivityIndicator, Dimensions, PanResponder, Animated, TouchableWithoutFeedback } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, Modal, TextInput, FlatList, ActivityIndicator, Dimensions, PanResponder, Animated, TouchableWithoutFeedback, Alert, Platform } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Play, Users, Calendar, BarChart3, ChevronDown, Shield, Shirt, History, Check, Clock, ArrowLeft } from 'lucide-react-native';
+import { Play, Users, Calendar, BarChart3, ChevronDown, Shield, Shirt, History, Check, Clock, ArrowLeft, X } from 'lucide-react-native';
 import { useStyles } from '../../src/hooks/useStyles';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfile } from '../../src/context/ProfileContext';
+import { storage } from '../../src/services/storage.service';
 import { Modal as CustomModal } from '../../src/components/ui/Modal';
 import { Button } from '../../src/components/ui/Button';
 import { MIN_PLAYERS_REQUIRED, canStartMatch as canStartMatchForm, hasMinimumPlayersSelected, toggleAllPlayers as toggleAllPlayersForm } from '../../src/features/matches/create-match-form';
@@ -100,9 +101,45 @@ export default function PartidoScreen() {
 
   const [activeTeamId, setActiveTeamId] = useState<string | null>(null);
   const [hasActiveMatch, setHasActiveMatch] = useState(false);
+  const [activeMatch, setActiveMatch] = useState<any>(null);
   const [showTeamSelector, setShowTeamSelector] = useState(false);
   const [showClubSelector, setShowClubSelector] = useState(false);
   const [showPlaceholderModal, setShowPlaceholderModal] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+
+  const lastConfirmDialog = useRef<any>(null);
+  if (confirmDialog) {
+    lastConfirmDialog.current = confirmDialog;
+  }
+
+  const checkActiveMatch = useCallback(async () => {
+    const saved = await storage.getItem('vstats-active-match');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setActiveMatch(parsed);
+        setHasActiveMatch(true);
+      } catch (e) {
+        console.error("Error parsing saved match", e);
+        setActiveMatch(null);
+        setHasActiveMatch(false);
+      }
+    } else {
+      setActiveMatch(null);
+      setHasActiveMatch(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      checkActiveMatch();
+    }, [checkActiveMatch])
+  );
 
   // Auto-select first team if available
   useEffect(() => {
@@ -176,7 +213,7 @@ export default function PartidoScreen() {
     if (!formRival.trim() || selectedPlayerIds.length < MIN_PLAYERS_REQUIRED || !activeTeam) return;
 
     setShowCreateModal(false);
-    
+
     // Pass data to the live match screen
     router.push({
       pathname: '/match/new',
@@ -244,42 +281,157 @@ export default function PartidoScreen() {
           </View>
         </View>
 
-        {/* Decorative Image */}
-        <View style={styles`items-center justify-center`}>
-          <View style={{ width: '90%', height: 240, position: 'relative', overflow: 'hidden' }}>
-            <Image
-              source={imageSource}
-              style={{ width: '100%', height: '100%', resizeMode: 'contain' }}
-            />
-            {/* Top gradient overlay */}
-            <LinearGradient
-              colors={[colors.screenBg, 'transparent']}
-              style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 5, zIndex: 1 }}
-            />
-            {/* Bottom gradient overlay */}
-            <LinearGradient
-              colors={['transparent', colors.screenBg]}
-              style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 5, zIndex: 1 }}
-            />
-            {/* Left gradient overlay */}
-            <LinearGradient
-              colors={[colors.screenBg, 'transparent']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 30, zIndex: 1 }}
-            />
-            {/* Right gradient overlay */}
-            <LinearGradient
-              colors={['transparent', colors.screenBg]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 30, zIndex: 1 }}
-            />
-          </View>
-        </View>
+        {hasActiveMatch && activeMatch ? (
+          <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24, borderWidth: 1.5, borderColor: '#1E6FD9', shadowColor: '#1E6FD9', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4 }}>
 
-        {!hasActiveMatch ? (
+            {/* Live Indicator */}
+            <View style={styles`flex-row items-center justify-between mb-4`}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(239, 68, 68, 0.1)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' }} />
+                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 11, color: '#EF4444', letterSpacing: 0.5 }}>EN VIVO</Text>
+              </View>
+              {activeMatch.metadata?.torneo ? (
+                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary }} numberOfLines={1}>
+                  {activeMatch.metadata.torneo}
+                </Text>
+              ) : null}
+            </View>
+
+            {/* Match Teams Title */}
+            <View style={styles`items-center mb-4`}>
+              <Text style={{ fontFamily: fonts.heading, fontSize: 24, color: colors.textMain, textAlign: 'center' }} numberOfLines={1}>
+                {activeProfile?.clubName || 'Mi Club'}
+              </Text>
+              <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.textSecondary, marginVertical: 4 }}>vs</Text>
+              <Text style={{ fontFamily: fonts.heading, fontSize: 24, color: '#1E6FD9', textAlign: 'center' }} numberOfLines={1}>
+                {activeMatch.metadata?.rival || 'Rival'}
+              </Text>
+            </View>
+
+            {/* Scoreboard Block */}
+            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bgMain, borderRadius: 16, paddingVertical: 16, paddingHorizontal: 24, marginBottom: 20, borderWidth: 1, borderColor: colors.borderLight }}>
+              {/* Home Score */}
+              <View style={styles`items-center flex-1`}>
+                <Text style={{ fontFamily: fonts.heading, fontSize: 48, color: '#1E6FD9', fontWeight: '700' }}>
+                  {activeMatch.homeScore}
+                </Text>
+                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 10, color: colors.textMuted, letterSpacing: 0.5 }}>LOCAL</Text>
+              </View>
+
+              {/* Set Score Divider */}
+              <View style={styles`items-center px-4`}>
+                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textMain }}>
+                  Set {activeMatch.currentSet}
+                </Text>
+                <Text style={{ fontFamily: fonts.heading, fontSize: 18, color: colors.textMuted, marginTop: 4 }}>
+                  {activeMatch.setsWon?.home ?? 0} - {activeMatch.setsWon?.away ?? 0}
+                </Text>
+              </View>
+
+              {/* Away Score */}
+              <View style={styles`items-center flex-1`}>
+                <Text style={{ fontFamily: fonts.heading, fontSize: 48, color: colors.textMain, fontWeight: '700' }}>
+                  {activeMatch.awayScore}
+                </Text>
+                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 10, color: colors.textMuted, letterSpacing: 0.5 }}>RIVAL</Text>
+              </View>
+            </View>
+
+            {/* Actions */}
+            <View style={styles`gap-3`}>
+              <TouchableOpacity
+                onPress={() => {
+                  router.push({
+                    pathname: '/match/new',
+                    params: { resume: 'true' }
+                  });
+                }}
+                activeOpacity={0.8}
+                style={{
+                  backgroundColor: '#1E6FD9',
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  gap: 8,
+                  elevation: 2,
+                  shadowColor: '#1E6FD9',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4
+                }}
+              >
+                <Play size={16} color="#fff" fill="#fff" style={{ marginLeft: 2 }} />
+                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff', letterSpacing: 0.5 }}>
+                  REANUDAR PARTIDO
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setConfirmDialog({
+                    visible: true,
+                    title: "Eliminar partido",
+                    message: "¿Estás seguro de que querés eliminar el partido en curso? Se perderá todo el progreso.",
+                    onConfirm: async () => {
+                      await storage.removeItem('vstats-active-match');
+                      setActiveMatch(null);
+                      setHasActiveMatch(false);
+                    }
+                  });
+                }}
+                activeOpacity={0.7}
+                style={{
+                  paddingVertical: 12,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: colors.danger,
+                  alignItems: 'center'
+                }}
+              >
+                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.danger }}>
+                  Eliminar partido en curso
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
           <>
+            {/* Decorative Image */}
+            <View style={styles`items-center justify-center`}>
+              <View style={{ width: '90%', height: 240, position: 'relative', overflow: 'hidden' }}>
+                <Image
+                  source={imageSource}
+                  style={{ width: '100%', height: '100%', resizeMode: 'contain' }}
+                />
+                {/* Top gradient overlay */}
+                <LinearGradient
+                  colors={[colors.screenBg, 'transparent']}
+                  style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 5, zIndex: 1 }}
+                />
+                {/* Bottom gradient overlay */}
+                <LinearGradient
+                  colors={['transparent', colors.screenBg]}
+                  style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 5, zIndex: 1 }}
+                />
+                {/* Left gradient overlay */}
+                <LinearGradient
+                  colors={[colors.screenBg, 'transparent']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 30, zIndex: 1 }}
+                />
+                {/* Right gradient overlay */}
+                <LinearGradient
+                  colors={['transparent', colors.screenBg]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 30, zIndex: 1 }}
+                />
+              </View>
+            </View>
+
             <View style={styles`items-center mb-6`}>
               <Text style={{ fontFamily: fonts.heading, fontSize: 28, color: colors.textMain, letterSpacing: 1, marginBottom: 8 }}>
                 SIN PARTIDO ACTIVO
@@ -338,34 +490,32 @@ export default function PartidoScreen() {
                 INICIAR PARTIDO
               </Text>
             </TouchableOpacity>
-
-            {/* Quick Access */}
-            <View style={{ marginTop: 40 }}>
-              <View style={styles`flex-row items-center justify-center mb-6`}>
-                <View style={{ flex: 1, height: 1, backgroundColor: colors.borderLight }} />
-                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.textMuted, letterSpacing: 1, marginHorizontal: 12 }}>
-                  ACCESOS RÁPIDOS
-                </Text>
-                <View style={{ flex: 1, height: 1, backgroundColor: colors.borderLight }} />
-              </View>
-
-              <View style={styles`flex-row justify-between gap-3`}>
-                <QuickAccessCard icon={<Users size={20} color={colors.primary} />} title="Ver jugadores" subtitle="Del club" onPress={() => router.push('/manage-players?from=partido')} />
-                <QuickAccessCard icon={<Calendar size={20} color={colors.primary} />} title="Próximo partido" subtitle="Próximamente" onPress={() => setShowPlaceholderModal(true)} />
-                <QuickAccessCard icon={<BarChart3 size={20} color={colors.primary} />} title="Estadísticas" subtitle="Vista rápida" onPress={() => router.push('/stats/general')} />
-              </View>
-            </View>
           </>
-        ) : (
-          <View />
         )}
+
+        {/* Quick Access */}
+        <View style={{ marginTop: 24 }}>
+          <View style={styles`flex-row items-center justify-center mb-6`}>
+            <View style={{ flex: 1, height: 1, backgroundColor: colors.borderLight }} />
+            <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.textMuted, letterSpacing: 1, marginHorizontal: 12 }}>
+              ACCESOS RÁPIDOS
+            </Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: colors.borderLight }} />
+          </View>
+
+          <View style={styles`flex-row justify-between gap-3`}>
+            <QuickAccessCard icon={<Users size={20} color={colors.primary} />} title="Ver jugadores" subtitle="Del club" onPress={() => router.push('/manage-players?from=partido')} />
+            <QuickAccessCard icon={<Calendar size={20} color={colors.primary} />} title="Próximo partido" subtitle="Próximamente" onPress={() => setShowPlaceholderModal(true)} />
+            <QuickAccessCard icon={<BarChart3 size={20} color={colors.primary} />} title="Estadísticas" subtitle="Vista rápida" onPress={() => router.push('/stats/general')} />
+          </View>
+        </View>
       </ScrollView>
 
       {/* Club Selector Modal */}
       <CustomModal visible={showClubSelector} onClose={() => setShowClubSelector(false)}>
         <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain, marginBottom: 16 }}>Seleccionar Club</Text>
         {profiles?.map(profile => (
-          <TouchableOpacity 
+          <TouchableOpacity
             key={profile.id}
             style={{ paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
             onPress={() => {
@@ -387,7 +537,7 @@ export default function PartidoScreen() {
       <CustomModal visible={showTeamSelector} onClose={() => setShowTeamSelector(false)}>
         <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain, marginBottom: 16 }}>Seleccionar Equipo</Text>
         {activeProfile?.teams?.map(team => (
-          <TouchableOpacity 
+          <TouchableOpacity
             key={team.id}
             style={{ paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
             onPress={() => {
@@ -417,29 +567,29 @@ export default function PartidoScreen() {
       </CustomModal>
 
       {/* Create Match Modal */}
-      <Modal 
-        visible={showCreateModal} 
-        transparent 
+      <Modal
+        visible={showCreateModal}
+        transparent
         animationType="fade"
         onRequestClose={closeModalWithAnimation}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
           activeOpacity={1}
           onPress={closeModalWithAnimation}
         >
           <TouchableWithoutFeedback>
-            <Animated.View 
-              style={{ 
-                backgroundColor: '#fff', 
-                borderTopLeftRadius: 24, 
-                borderTopRightRadius: 24, 
+            <Animated.View
+              style={{
+                backgroundColor: '#fff',
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
                 maxHeight: Dimensions.get('window').height * 0.85,
                 transform: [{ translateY: panY }]
               }}
             >
               {/* Handle Draggable Area */}
-              <View 
+              <View
                 {...panResponder.panHandlers}
                 style={{ width: '100%', alignItems: 'center', paddingTop: 14, paddingBottom: 10 }}
               >
@@ -586,7 +736,14 @@ export default function PartidoScreen() {
                     onPress={closeModalWithAnimation}
                     style={{ flex: 1, borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}
                   >
-                    <Text style={{ fontFamily: 'Gotham Rounded Bold', fontSize: 16, fontWeight: '600', textAlign: 'center' }}>CANCELAR</Text>
+                    <Text 
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.7}
+                      style={{ fontFamily: 'Gotham Rounded Bold', fontSize: 14, fontWeight: '600', textAlign: 'center', width: '100%', paddingHorizontal: 4 }}
+                    >
+                      CANCELAR
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     testID="start-match-button"
@@ -597,7 +754,14 @@ export default function PartidoScreen() {
                       paddingVertical: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
                     }}
                   >
-                    <Text style={{ fontFamily: 'Gotham Rounded Bold', fontSize: 16, fontWeight: '600', color: '#fff', textAlign: 'center' }}>COMENZAR PARTIDO</Text>
+                    <Text 
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.7}
+                      style={{ fontFamily: 'Gotham Rounded Bold', fontSize: 14, fontWeight: '600', color: '#fff', textAlign: 'center', width: '100%', paddingHorizontal: 4 }}
+                    >
+                      COMENZAR PARTIDO
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -778,6 +942,44 @@ export default function PartidoScreen() {
                 style={{ flex: 1, backgroundColor: '#1E6FD9', borderRadius: 12, paddingVertical: 12, alignItems: 'center' }}
               >
                 <Text style={{ fontFamily: 'Gotham Rounded Bold', fontSize: 16, fontWeight: '600', color: '#fff' }}>LISTO</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Confirm Modal ── */}
+      <Modal visible={!!confirmDialog?.visible} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View style={{ flex: 1, paddingRight: 16 }}>
+                <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain }}>
+                  {confirmDialog?.title || lastConfirmDialog.current?.title}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setConfirmDialog(null)} style={{ padding: 4, backgroundColor: colors.borderLight, borderRadius: 16 }}>
+                <X size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, marginTop: 12, marginBottom: 24, lineHeight: 22 }}>
+              {confirmDialog?.message || lastConfirmDialog.current?.message}
+            </Text>
+            <View style={styles`flex-row gap-4`}>
+              <TouchableOpacity
+                onPress={() => setConfirmDialog(null)}
+                style={{ flex: 1, borderWidth: 1, borderColor: colors.border, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textMain }}>CANCELAR</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  if (confirmDialog?.onConfirm) confirmDialog.onConfirm();
+                  setConfirmDialog(null);
+                }}
+                style={{ flex: 1, backgroundColor: colors.danger, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff' }}>ELIMINAR</Text>
               </TouchableOpacity>
             </View>
           </View>
