@@ -51,13 +51,21 @@ export function SwitchRow({ label, desc, value, onChange }: { label: string; des
 
 export type AccessRole = 'admin' | 'coach' | 'assistant';
 
+const ROLE_MAP: Record<AccessRole, { label: string; color: string; bg: string }> = {
+  admin: { label: 'Admin', color: '#1E6FD9', bg: 'rgba(30,111,217,0.1)' },
+  coach: { label: 'Entrenador', color: '#D97706', bg: 'rgba(217,119,6,0.1)' },
+  assistant: { label: 'Asistente', color: '#64748B', bg: 'rgba(100,116,139,0.1)' },
+};
+
+export function normalizeAccessRole(role: string | null | undefined): AccessRole {
+  if (role === 'admin' || role === 'coach' || role === 'assistant') {
+    return role;
+  }
+  return 'coach';
+}
+
 export function RolePill({ role, small }: { role: AccessRole; small?: boolean }) {
-  const map: Record<AccessRole, { label: string; color: string; bg: string }> = {
-    admin: { label: 'Admin', color: '#1E6FD9', bg: 'rgba(30,111,217,0.1)' },
-    coach: { label: 'Entrenador', color: '#D97706', bg: 'rgba(217,119,6,0.1)' },
-    assistant: { label: 'Asistente', color: '#64748B', bg: 'rgba(100,116,139,0.1)' },
-  };
-  const { label, color, bg } = map[role];
+  const { label, color, bg } = ROLE_MAP[normalizeAccessRole(role)];
   return (
     <View style={{ backgroundColor: bg, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 12 }}>
       <Text style={{ fontFamily: 'Gotham Rounded', fontSize: small ? 11 : 12, letterSpacing: 0.5, color, fontWeight: '600' }}>{label}</Text>

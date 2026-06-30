@@ -1,10 +1,30 @@
 import { NextResponse } from "next/server"
 import { getAuthUserFromRequest } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import bcrypt from "bcryptjs"
 
 export const dynamic = "force-dynamic"
 
-// GET /api/clubs — List all clubs for the user
+async function ensureRecoveredUser(authUser: { userId: string; email: string }) {
+  const existingUser = await prisma.user.findUnique({ where: { id: authUser.userId } })
+  if (existingUser) {
+    return existingUser
+  }
+
+  const passwordHash = await bcrypt.hash(`recovered:${authUser.userId}`, 12)
+
+  return prisma.user.create({
+    data: {
+      id: authUser.userId,
+      email: authUser.email,
+      passwordHash,
+      role: "COACH",
+      displayName: "Coach",
+    },
+  })
+}
+
+// GET /api/clubs - List all clubs for the user
 export async function GET(request: Request) {
   try {
     const authUser = await getAuthUserFromRequest(request)
@@ -12,19 +32,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     }
 
-    // Dev workaround: if DB was reset, recreate the user
-    let dbUser = await prisma.user.findUnique({ where: { id: authUser.userId } })
-    if (!dbUser) {
-      dbUser = await prisma.user.create({
-        data: {
-          id: authUser.userId,
-          email: authUser.email,
-          passwordHash: "dummy",
-          role: "COACH",
-          displayName: "Coach",
-        }
-      })
-    }
+    await ensureRecoveredUser(authUser)
 
     const clubs = await prisma.club.findMany({
       where: { ownerId: authUser.userId },
@@ -32,14 +40,14 @@ export async function GET(request: Request) {
         teams: {
           include: {
             _count: {
-              select: { players: true, matches: true }
-            }
-          }
+              select: { players: true, matches: true },
+            },
+          },
         },
       },
       orderBy: { createdAt: "asc" },
     })
-    
+
     return NextResponse.json({ clubs })
   } catch (error) {
     console.error("Clubs GET error:", error)
@@ -47,7 +55,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/clubs — Create a new club
+// POST /api/clubs - Create a new club
 export async function POST(request: Request) {
   try {
     const authUser = await getAuthUserFromRequest(request)
@@ -55,19 +63,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     }
 
-    // Dev workaround: if DB was reset, recreate the user
-    let dbUser = await prisma.user.findUnique({ where: { id: authUser.userId } })
-    if (!dbUser) {
-      dbUser = await prisma.user.create({
-        data: {
-          id: authUser.userId,
-          email: authUser.email,
-          passwordHash: "dummy",
-          role: "COACH",
-          displayName: "Coach",
-        }
-      })
-    }
+    await ensureRecoveredUser(authUser)
 
     const body = await request.json()
     const { name, city, color, role } = body

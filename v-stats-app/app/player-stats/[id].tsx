@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Platform, ScrollView, Share as NativeShare, Text, TouchableOpacity, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Activity, ArrowLeft, Award, BarChart3, Building2, Home, Shield, Target, TrendingUp, Zap } from 'lucide-react-native';
+import { Activity, ArrowLeft, Award, BarChart3, Building2, Home, Share2, Shield, Target, TrendingUp, Zap } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useStyles } from '../../src/hooks/useStyles';
 import { useProfile } from '../../src/context/ProfileContext';
 import { PlayerStats, statsService } from '../../src/services/stats.service';
+import { shareLinksService } from '../../src/services/share-links.service';
 
 const POSITIONS = [
   { id: 'SETTER', label: 'Armador' },
@@ -53,6 +54,61 @@ export default function PlayerStatsScreen() {
     }
     setIsLoading(false);
   };
+
+  const handleSharePlayerStats = useCallback(async () => {
+    if (!stats) return;
+
+    const { player, totals } = stats;
+    const summary = [
+      `Estadisticas de ${player.name}`,
+      stats.selectedTeam?.name ? `Equipo: ${stats.selectedTeam.name}` : `Club: ${activeProfile.clubName}`,
+      `Partidos: ${stats.totalMatches}`,
+      `Puntos: ${totals.puntos}`,
+      `Eficiencia: ${stats.efficiency}%`,
+      `Record: ${stats.wins}-${stats.losses}`,
+    ].join('\n');
+
+    let url: string | undefined;
+    if (stats.selectedTeam && activeProfile.id !== '__empty__') {
+      try {
+        const response = await shareLinksService.createTeamShareLink(activeProfile.id, stats.selectedTeam.id);
+        url = response.data?.shareLink?.url
+          ? `${response.data.shareLink.url}?playerId=${player.id}`
+          : undefined;
+      } catch (error) {
+        console.error('Player share link error', error);
+      }
+    }
+
+    if (Platform.OS === 'web') {
+      const browserNavigator = typeof navigator !== 'undefined' ? navigator : undefined;
+      const textToShare = url ? `${summary}\n\nDashboard publico del equipo: ${url}` : summary;
+
+      if (browserNavigator?.share) {
+        await browserNavigator.share({
+          title: `${player.name} - V-Stats`,
+          text: textToShare,
+          url,
+        });
+        return;
+      }
+
+      if (browserNavigator?.clipboard?.writeText) {
+        await browserNavigator.clipboard.writeText(textToShare);
+        Alert.alert('Resumen copiado', 'Copiamos el resumen del jugador para que puedas pegarlo y enviarlo.');
+        return;
+      }
+
+      Alert.alert('Resumen listo', textToShare);
+      return;
+    }
+
+    await NativeShare.share({
+      title: `${player.name} - V-Stats`,
+      message: url ? `${summary}\n\nDashboard publico del equipo: ${url}` : summary,
+      url,
+    });
+  }, [activeProfile.clubName, activeProfile.id, stats]);
 
   if (isLoading) {
     return (
@@ -127,6 +183,13 @@ export default function PlayerStatsScreen() {
           <View style={{ width: 48, height: 48, borderRadius: 18, backgroundColor: activeProfile.color, justifyContent: 'center', alignItems: 'center' }}>
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 17, fontWeight: '700', color: '#fff' }}>{getInitials(player.name)}</Text>
           </View>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleSharePlayerStats}
+            style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.14)', justifyContent: 'center', alignItems: 'center' }}
+          >
+            <Share2 size={16} color="#fff" />
+          </TouchableOpacity>
 
           <View style={styles`flex-1 min-w-0`}>
             <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.55)' }}>PERFIL ESTADÍSTICO</Text>

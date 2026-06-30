@@ -37,11 +37,15 @@ export default function RootLayout() {
   }
 
   return (
+    // Cambios de dev: Envolvemos todo en el SafeAreaProvider
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
           <ProfileProvider>
             <Stack screenOptions={{ headerShown: false }}>
+              {/* Cambios de tu compañera: Mantenemos las pantallas que ella sumó */}
+              <Stack.Screen name="index" />
+              <Stack.Screen name="register" />
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="manage-settings" options={{ presentation: 'card', animation: 'slide_from_right' }} />
             </Stack>
@@ -50,4 +54,4 @@ export default function RootLayout() {
       </ThemeProvider>
     </SafeAreaProvider>
   );
-}
+}
