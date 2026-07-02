@@ -131,7 +131,7 @@ export const api = {
   post: <T>(path: string, body?: any) => request<T>('POST', path, body),
   put: <T>(path: string, body?: any) => request<T>('PUT', path, body),
   del: <T>(path: string) => request<T>('DELETE', path),
-  
+
   getText: async (path: string): Promise<{ data: string | null; error: string | null }> => {
     const token = await getToken();
     const url = `${BASE_URL}${path}`;
