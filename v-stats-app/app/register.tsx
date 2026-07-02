@@ -13,7 +13,7 @@ WebBrowser.maybeCompleteAuthSession();
 if (Platform.OS !== 'web') {
   const { GoogleSignin } = require('@react-native-google-signin/google-signin');
   GoogleSignin.configure({
-    webClientId: '464864081976-eg3nt8ll3r510hd2o477mdk9str884j7.apps.googleusercontent.com',
+    webClientId: '443822343518-7kd3erur2pm6gfsiemcf87fh9tcjq7m5.apps.googleusercontent.com',
     offlineAccess: true,
   });
 }
@@ -112,7 +112,7 @@ export default function RegisterScreen() {
           scheme: 'vstats'
         });
         
-        const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '464864081976-eg3nt8ll3r510hd2o477mdk9str884j7.apps.googleusercontent.com';
+        const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '443822343518-7kd3erur2pm6gfsiemcf87fh9tcjq7m5.apps.googleusercontent.com';
 
         const queryParams = new URLSearchParams({
           client_id: clientId,
