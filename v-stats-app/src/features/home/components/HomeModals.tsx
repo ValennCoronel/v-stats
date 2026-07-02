@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { Share } from 'lucide-react-native';
 import { useStyles } from '../../../hooks/useStyles';
 import { Modal } from '../../../components/ui/Modal';
@@ -13,7 +12,7 @@ export function ClubSelectorModal({ visible, onClose, profiles, activeProfileId,
     <Modal visible={visible} onClose={onClose}>
       <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain, marginBottom: 16 }}>Seleccionar Club</Text>
       {profiles?.map((profile: any) => (
-        <TouchableOpacity 
+        <TouchableOpacity
           key={profile.id}
           style={{ paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
           onPress={() => onSelect(profile.id)}
@@ -36,7 +35,7 @@ export function TeamSelectorModal({ visible, onClose, teams, activeTeamId, onSel
     <Modal visible={visible} onClose={onClose}>
       <Text style={{ fontFamily: fonts.heading, fontSize: 22, color: colors.textMain, marginBottom: 16 }}>Seleccionar Equipo</Text>
       {teams?.map((team: any) => (
-        <TouchableOpacity 
+        <TouchableOpacity
           key={team.id}
           style={{ paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
           onPress={() => onSelect(team.id)}
@@ -52,7 +51,7 @@ export function TeamSelectorModal({ visible, onClose, teams, activeTeamId, onSel
   );
 }
 
-export function SharePlaceholderModal({ visible, onClose }: any) {
+export function ShareStatsModal({ visible, onClose, teamName, shareUrl, isLoading, errorMessage, onShareAgain }: any) {
   const { fonts, colors } = useStyles();
 
   return (
@@ -60,11 +59,42 @@ export function SharePlaceholderModal({ visible, onClose }: any) {
       <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: colors.primaryLight, justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
         <Share size={32} color={colors.primary} />
       </View>
-      <Text style={{ fontFamily: fonts.heading, fontSize: 28, color: colors.textMain, marginBottom: 8 }}>Próximamente</Text>
-      <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, textAlign: 'center', marginBottom: 24 }}>
-        Esta funcionalidad aún no está disponible, pero lo estará próximamente. Vas a poder compartir el dashboard público con tu equipo.
+      <Text style={{ fontFamily: fonts.heading, fontSize: 28, color: colors.textMain, marginBottom: 8 }}>
+        Compartir estadísticas
       </Text>
-      <Button variant="primary" onPress={onClose}>Entendido</Button>
+
+      {isLoading ? (
+        <View style={{ alignItems: 'center', marginBottom: 24 }}>
+          <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, textAlign: 'center', marginTop: 14 }}>
+            Generando el link público para {teamName || 'tu equipo'}...
+          </Text>
+        </View>
+      ) : (
+        <>
+          <Text style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textSecondary, textAlign: 'center', marginBottom: 16 }}>
+            Comparte este link con {teamName || 'tu equipo'} para que puedan abrir el dashboard público desde cualquier navegador.
+          </Text>
+          {errorMessage ? (
+            <View style={{ width: '100%', borderRadius: 16, borderWidth: 1, borderColor: '#FCA5A5', backgroundColor: '#FEF2F2', padding: 14, marginBottom: 12 }}>
+              <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 13, color: '#B91C1C' }}>
+                {errorMessage}
+              </Text>
+            </View>
+          ) : null}
+          <View style={{ width: '100%', borderRadius: 16, borderWidth: 1, borderColor: colors.borderLight, backgroundColor: colors.bgMain, padding: 14, marginBottom: 20 }}>
+            <Text selectable style={{ fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textMain }}>
+              {shareUrl || 'Todavía no se generó ningún link. Tocá el botón para crearlo.'}
+            </Text>
+          </View>
+          <View style={{ width: '100%', gap: 10 }}>
+            <Button variant="primary" onPress={onShareAgain} isLoading={isLoading}>
+              {shareUrl ? 'Compartir link' : 'Generar link'}
+            </Button>
+            <Button variant="outline" onPress={onClose}>Cerrar</Button>
+          </View>
+        </>
+      )}
     </Modal>
   );
 }
@@ -81,7 +111,7 @@ export function ActiveMatchModal({ visible, onClose, activeMatch, onResume, onDe
       <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, textAlign: 'center', marginBottom: 16 }}>
         Tenés un partido sin finalizar contra:
       </Text>
-      
+
       {activeMatch && (
         <View style={{ backgroundColor: colors.bgMain, borderRadius: 16, padding: 16, width: '100%', alignItems: 'center', marginBottom: 24, borderWidth: 1, borderColor: colors.borderLight }}>
           <Text style={{ fontFamily: fonts.heading, fontSize: 20, color: colors.primary }}>

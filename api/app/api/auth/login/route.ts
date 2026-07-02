@@ -9,44 +9,48 @@ export async function POST(request: Request) {
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: "Email y contraseña son requeridos" },
+        { error: "Email y contrasena son requeridos" },
         { status: 400 }
       )
     }
 
-    // Find user
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     })
 
     if (!user) {
       return NextResponse.json(
-        { error: "Credenciales inválidas" },
+        { error: "Credenciales invalidas" },
         { status: 401 }
       )
     }
 
-    // Verify password
-    const validPassword = await bcrypt.compare(password, user.passwordHash)
+    // Legacy/local recovery users may have a malformed stored hash.
+    let validPassword = false
+    try {
+      validPassword = await bcrypt.compare(password, user.passwordHash)
+    } catch {
+      return NextResponse.json(
+        { error: "Credenciales invalidas" },
+        { status: 401 }
+      )
+    }
 
     if (!validPassword) {
       return NextResponse.json(
-        { error: "Credenciales inválidas" },
+        { error: "Credenciales invalidas" },
         { status: 401 }
       )
     }
 
-    // Generate token
     const token = await signToken({
       userId: user.id,
       email: user.email,
       role: user.role,
     })
 
-    // Set HTTP-only cookie (for web clients)
     await setAuthCookie(token)
 
-    // Return token in body (for native app clients)
     return NextResponse.json({
       user: {
         id: user.id,

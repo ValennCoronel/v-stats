@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Check, Info } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -9,6 +9,15 @@ import { useStyles } from '../src/hooks/useStyles';
 import { useAuth } from '../src/context/AuthContext';
 
 WebBrowser.maybeCompleteAuthSession();
+
+if (Platform.OS !== 'web') {
+  const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+  GoogleSignin.configure({
+    webClientId: '443822343518-rg8659qqu5ltgdti8v7ove2iimfi62h8.apps.googleusercontent.com',
+    offlineAccess: true,
+    scopes: ['profile', 'email'],
+  });
+}
 
 const GoogleIcon = ({ size = 20 }: { size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24">
@@ -98,47 +107,65 @@ export default function RegisterScreen() {
       setIsLoading(true);
       setError('');
 
-      const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
-      const redirectUri = AuthSession.makeRedirectUri({
-        scheme: 'vstats'
-      });
-      
-      // Google Client ID (Web Client ID format for Expo / web testing)
-      const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '464864081976-eg3nt8ll3r510hd2o477mdk9str884j7.apps.googleusercontent.com';
+      if (Platform.OS === 'web') {
+        const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+        const redirectUri = AuthSession.makeRedirectUri({
+          scheme: 'vstats'
+        });
+        
+        const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '443822343518-7kd3erur2pm6gfsiemcf87fh9tcjq7m5.apps.googleusercontent.com';
 
-      const queryParams = new URLSearchParams({
-        client_id: clientId,
-        redirect_uri: redirectUri,
-        response_type: 'id_token',
-        scope: 'openid email profile',
-        prompt: 'select_account',
-        nonce: Math.random().toString(36).substring(2),
-      });
+        const queryParams = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: redirectUri,
+          response_type: 'id_token',
+          scope: 'openid email profile',
+          prompt: 'select_account',
+          nonce: Math.random().toString(36).substring(2),
+        });
 
-      const fullAuthUrl = `${authUrl}?${queryParams.toString()}`;
-      const result = await WebBrowser.openAuthSessionAsync(fullAuthUrl, redirectUri);
-      
-      if (result.type === 'success' && result.url) {
-        const hash = result.url.split('#')[1] || result.url.split('?')[1];
-        if (hash) {
-          const params = new URLSearchParams(hash);
-          const idToken = params.get('id_token');
-          if (idToken) {
-            const res = await loginWithGoogleToken(idToken);
-            if (res.success) {
-              router.replace('/(tabs)');
-              return;
+        const fullAuthUrl = `${authUrl}?${queryParams.toString()}`;
+        const result = await WebBrowser.openAuthSessionAsync(fullAuthUrl, redirectUri);
+        
+        if (result.type === 'success' && result.url) {
+          const hash = result.url.split('#')[1] || result.url.split('?')[1];
+          if (hash) {
+            const params = new URLSearchParams(hash);
+            const idToken = params.get('id_token');
+            if (idToken) {
+              const res = await loginWithGoogleToken(idToken);
+              if (res.success) {
+                router.replace('/(tabs)');
+                return;
+              } else {
+                setError(res.error || 'Error en la autenticación de Google');
+              }
             } else {
-              setError(res.error || 'Error en la autenticación de Google');
+              setError('No se pudo obtener el token de identidad de Google.');
             }
           } else {
-            setError('No se pudo obtener el token de identidad de Google.');
+            setError('Respuesta de autenticación de Google inválida.');
+          }
+        } else if (result.type === 'cancel') {
+          setError('Inicio de sesión cancelado.');
+        }
+      } else {
+        const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+        await GoogleSignin.hasPlayServices();
+        const userInfo = await GoogleSignin.signIn();
+        const idToken = userInfo.idToken;
+        
+        if (idToken) {
+          const res = await loginWithGoogleToken(idToken);
+          if (res.success) {
+            router.replace('/(tabs)');
+            return;
+          } else {
+            setError(res.error || 'Error en la autenticación de Google');
           }
         } else {
-          setError('Respuesta de autenticación de Google inválida.');
+          setError('No se pudo obtener el token de identidad de Google.');
         }
-      } else if (result.type === 'cancel') {
-        setError('Inicio de sesión cancelado.');
       }
     } catch (err: any) {
       console.error(err);

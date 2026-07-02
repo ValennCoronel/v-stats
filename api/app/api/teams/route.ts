@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { clubId, name, logoUrl } = body
+    const { clubId, name, logoUrl, gender, category } = body
 
     if (!clubId || !name) {
       return NextResponse.json({ error: "ID de club y nombre son requeridos" }, { status: 400 })
@@ -68,6 +68,8 @@ export async function POST(request: Request) {
         clubId,
         name,
         logoUrl: logoUrl || null,
+        gender: gender || null,
+        category: category || null,
       },
     })
 
@@ -87,7 +89,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { id, name, logoUrl } = body
+    const { id, name, logoUrl, gender, category } = body
 
     if (!id) {
       return NextResponse.json({ error: "ID del equipo es requerido" }, { status: 400 })
@@ -102,9 +104,11 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Equipo no encontrado" }, { status: 404 })
     }
 
-    const updateData: { name?: string; logoUrl?: string | null } = {}
+    const updateData: { name?: string; logoUrl?: string | null; gender?: string | null; category?: string | null } = {}
     if (name !== undefined) updateData.name = name
     if (logoUrl !== undefined) updateData.logoUrl = logoUrl
+    if (gender !== undefined) updateData.gender = gender
+    if (category !== undefined) updateData.category = category
 
     const updatedTeam = await prisma.team.update({
       where: { id: team.id },

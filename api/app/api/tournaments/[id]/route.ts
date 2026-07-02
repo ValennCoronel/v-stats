@@ -68,7 +68,7 @@ export async function DELETE(
     const matchCount = await prisma.match.count({
       where: {
         tournament: existing.name,
-        team: { ownerId: authUser.userId },
+        team: { club: { ownerId: authUser.userId } },
       },
     })
 

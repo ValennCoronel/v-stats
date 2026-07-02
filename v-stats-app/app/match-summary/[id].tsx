@@ -46,7 +46,7 @@ export default function MatchSummaryScreen() {
 
   const opponentName = match.opponentTeam?.name || match.opponent || 'Rival';
   const tournamentName = match.tournamentRef?.name || match.tournament || '';
-  const matchDate = match.date ? new Date(match.date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+  const matchDate = match.date ? new Date(match.date).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '';
   const matchTime = match.date ? new Date(match.date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
 
   const iconMap: Record<string, any> = { MVP: Trophy, Muro: Shield, Saque: Zap };
@@ -145,7 +145,7 @@ export default function MatchSummaryScreen() {
             </View>
             <View>
               <Text style={{ fontSize: 11, color: '#94A3B8' }}>Fecha</Text>
-              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{matchDate || '-'}</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 13, fontWeight: '600', color: '#0D1F33' }}>{matchDate || '-'}</Text>
             </View>
           </View>
           <View style={[styles`flex-1 bg-white p-3 rounded-xl flex-row items-center gap-3`, { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.03)' }]}>
@@ -154,7 +154,7 @@ export default function MatchSummaryScreen() {
             </View>
             <View>
               <Text style={{ fontSize: 11, color: '#94A3B8' }}>Hora</Text>
-              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{matchTime || '-'}</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 13, fontWeight: '600', color: '#0D1F33' }}>{matchTime || '-'}</Text>
             </View>
           </View>
           <View style={[styles`flex-1 bg-white p-3 rounded-xl flex-row items-center gap-3`, { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.03)' }]}>
@@ -163,7 +163,7 @@ export default function MatchSummaryScreen() {
             </View>
             <View>
               <Text style={{ fontSize: 11, color: '#94A3B8' }}>Puntos</Text>
-              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 15, fontWeight: '600', color: '#0D1F33' }}>{data.teamStats.puntosTotales}</Text>
+              <Text style={{ fontFamily: 'Gotham Rounded', fontSize: 13, fontWeight: '600', color: '#0D1F33' }}>{data.teamStats.puntosTotales}</Text>
             </View>
           </View>
         </View>
