@@ -13,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ggerezmauri.vstatsapp"
     },
     "android": {
       "adaptiveIcon": {
@@ -30,8 +31,6 @@
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store",
-      "expo-web-browser",
       "expo-font",
       "@react-native-google-signin/google-signin"
     ],
