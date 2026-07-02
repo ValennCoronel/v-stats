@@ -13,8 +13,9 @@ WebBrowser.maybeCompleteAuthSession();
 if (Platform.OS !== 'web') {
   const { GoogleSignin } = require('@react-native-google-signin/google-signin');
   GoogleSignin.configure({
-    webClientId: '443822343518-7kd3erur2pm6gfsiemcf87fh9tcjq7m5.apps.googleusercontent.com',
+    webClientId: '443822343518-rg8659qqu5ltgdti8v7ove2iimfi62h8.apps.googleusercontent.com',
     offlineAccess: true,
+    scopes: ['profile', 'email'],
   });
 }
 
@@ -152,7 +153,7 @@ export default function RegisterScreen() {
         const { GoogleSignin } = require('@react-native-google-signin/google-signin');
         await GoogleSignin.hasPlayServices();
         const userInfo = await GoogleSignin.signIn();
-        const idToken = userInfo.data?.idToken;
+        const idToken = userInfo.idToken;
         
         if (idToken) {
           const res = await loginWithGoogleToken(idToken);
